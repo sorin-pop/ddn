@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/BurntSushi/toml"
@@ -14,7 +13,7 @@ var (
 
 func main() {
 
-	properties, err := checkProperties()
+	properties, err := checkProps()
 	if err != nil {
 		path, err := generateProps()
 		if err != nil {
@@ -24,7 +23,6 @@ func main() {
 	}
 
 	if _, err := toml.DecodeFile(properties, &conf); err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
 

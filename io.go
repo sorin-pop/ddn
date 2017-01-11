@@ -6,13 +6,13 @@ import (
 	"os/user"
 )
 
-func checkProperties() (string, error) {
-	prop, err := checkLocalProperties()
+func checkProps() (string, error) {
+	prop, err := checkLocalProps()
 	if err == nil {
 		return prop, err
 	}
 
-	prop, err = checkHomeProperties()
+	prop, err = checkHomeProps()
 	if err == nil {
 		return prop, err
 	}
@@ -20,7 +20,7 @@ func checkProperties() (string, error) {
 	return "", err
 }
 
-func checkLocalProperties() (string, error) {
+func checkLocalProps() (string, error) {
 	if _, err := os.Stat("ddnc.properties"); err != nil {
 		if os.IsNotExist(err) {
 			log.Println("ddnc.properties not found next to executable")
@@ -31,7 +31,7 @@ func checkLocalProperties() (string, error) {
 	return "ddnc.properties", nil
 }
 
-func checkHomeProperties() (string, error) {
+func checkHomeProps() (string, error) {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
