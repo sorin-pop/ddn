@@ -12,6 +12,9 @@ var (
 	conn string
 	db   *sql.DB
 	err  error
+
+	dbname    = "ddnc"
+	tablename = "info"
 )
 
 func prepDatabase() {
@@ -39,7 +42,7 @@ func validateConn() {
 func validateMetaDB() {
 	var count int
 
-	err := db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", "ddnc_info").Scan(&count)
+	err := db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", dbname).Scan(&count)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,4 +51,33 @@ func validateMetaDB() {
 		return
 	}
 
+	createDB()
+}
+
+func createDB() {
+	log.Println("Creating database and meta table")
+
+	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s CHARSET UTF8", dbname))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	createDBStatement := `CREATE TABLE %s.%s (
+  ID INT NOT NULL AUTO_INCREMENT,
+  databaseName VARCHAR(255) NULL,
+  tablespaceName VARCHAR(255) NULL,
+  tablespaceFileLocation MEDIUMTEXT NULL,
+  dbUser VARCHAR(255) NULL,
+  dbPass VARCHAR(255) NULL,
+  createDate TIMESTAMP NULL,
+  requestedBy VARCHAR(255) NULL,
+  importFileLocation MEDIUMTEXT NULL,
+  hidden INT NULL,
+  PRIMARY KEY (ID));`
+
+	_, err = db.Exec(fmt.Sprintf(createDBStatement, dbname, tablename))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// TODO continue
 }
