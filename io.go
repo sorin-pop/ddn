@@ -53,12 +53,13 @@ func generateProps() (string, error) {
 	log.Println("Generating properties file for MySQL")
 
 	prop := `
-        vendor="mysql"
-        version="5.5.53"
-        executable="/usr/bin/mysql"
-        username="root"
-        password="root"
-        masterAddress="127.0.0.1"`
+vendor="mysql"
+version="5.5.53"
+executable="/usr/bin/mysql"
+port="3306"
+username="root"
+password="root"
+masterAddress="127.0.0.1"`
 
 	usr, err := user.Current()
 	if err != nil {
