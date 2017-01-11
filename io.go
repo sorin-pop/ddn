@@ -56,7 +56,7 @@ func generateProps() (string, error) {
 vendor="mysql"
 version="5.5.53"
 executable="/usr/bin/mysql"
-port="3306"
+dbport="3306"
 username="root"
 password="root"
 masterAddress="127.0.0.1"`
