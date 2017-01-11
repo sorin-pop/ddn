@@ -3,12 +3,15 @@ package main
 import (
 	"log"
 
+	"net/http"
+
 	"github.com/BurntSushi/toml"
 )
 
 var (
 	properties string
 	conf       Config
+	port       = ":7000"
 )
 
 func main() {
@@ -33,5 +36,11 @@ func main() {
 	log.Println("Username:\t\t", conf.User)
 	log.Println("Password:\t\t ******")
 	log.Println("Master address:\t", conf.MasterAddress)
+
+	router := Router()
+
+	log.Println("Starting to listen on port", port)
+
+	log.Fatal(http.ListenAndServe(port, router))
 
 }
