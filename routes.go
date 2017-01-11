@@ -17,12 +17,12 @@ var routes = Routes{
 		"Index",
 		"GET",
 		"/",
-		Index,
+		index,
 	},
 	route{
 		"ListDatabase",
 		"GET",
 		"/list-databases",
-		ListDatabase,
+		listDatabase,
 	},
 }

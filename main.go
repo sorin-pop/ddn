@@ -38,9 +38,11 @@ func main() {
 	log.Println("Password:\t\t ******")
 	log.Println("Master address:\t", conf.MasterAddress)
 
-	router := Router()
+	validateConn()
 
 	log.Println("Starting to listen on port", port)
+
+	router := Router()
 
 	log.Fatal(http.ListenAndServe(port, router))
 
