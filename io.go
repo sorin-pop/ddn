@@ -52,15 +52,6 @@ func checkHomeProps() (string, error) {
 func generateProps() (string, error) {
 	log.Println("Generating properties file for MySQL")
 
-	prop := `
-vendor="mysql"
-version="5.5.53"
-executable="/usr/bin/mysql"
-dbport="3306"
-username="root"
-password="root"
-masterAddress="127.0.0.1"`
-
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -83,6 +74,15 @@ masterAddress="127.0.0.1"`
 		log.Fatal(err)
 	}
 	defer file.Close()
+
+	prop := `
+vendor="mysql"
+version="5.5.53"
+executable="/usr/bin/mysql"
+dbport="3306"
+username="root"
+password="root"
+masterAddress="127.0.0.1"`
 
 	_, err = file.WriteString(prop)
 	if err != nil {
