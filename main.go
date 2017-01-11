@@ -42,8 +42,6 @@ func main() {
 
 	log.Println("Starting to listen on port", port)
 
-	router := Router()
-
-	log.Fatal(http.ListenAndServe(port, router))
+	log.Fatal(http.ListenAndServe(port, Router()))
 
 }
