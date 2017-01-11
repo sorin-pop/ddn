@@ -20,7 +20,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Fatalf("Generated %s with dummy values inside. Please edit it and restart the client", path)
+		log.Fatalf("Generated %s with dummy values inside. Please update it with real values and restart the client", path)
 	}
 
 	if _, err := toml.DecodeFile(properties, &conf); err != nil {
