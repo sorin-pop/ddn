@@ -32,6 +32,7 @@ func main() {
 	log.Println("Starting with properties:")
 	log.Println("Vendor:\t\t", conf.Vendor)
 	log.Println("Version:\t\t", conf.Version)
+	log.Println("Database port:\t", conf.DBPort)
 	log.Println("Executable:\t\t", conf.Exec)
 	log.Println("Username:\t\t", conf.User)
 	log.Println("Password:\t\t ******")
