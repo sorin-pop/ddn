@@ -14,7 +14,7 @@ type Routes []route
 
 var routes = Routes{
 	route{
-		"Index",
+		"ListDatabase",
 		"GET",
 		"/list-databases",
 		ListDatabase,
