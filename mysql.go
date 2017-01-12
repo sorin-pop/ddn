@@ -51,12 +51,14 @@ func validateMetaDB() {
 		return
 	}
 
+	log.Printf("Database '%s' does not exist", dbname)
+
 	createDB()
+
+	log.Printf("Database '%s' and table '%s' created", dbname, tablename)
 }
 
 func createDB() {
-	log.Println("Creating database and meta table")
-
 	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s CHARSET UTF8", dbname))
 	if err != nil {
 		log.Fatal(err)
