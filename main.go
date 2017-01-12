@@ -20,11 +20,12 @@ func main() {
 
 	properties, err := checkProps()
 	if err != nil {
-		path, err := generateProps()
+		log.Println("Couldn't find properties file, generating one")
+		file, err := generateProps()
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Fatalf("Generated %s with dummy values inside. Please update it with real values and restart the client", path)
+		log.Fatalf("Generated %s with dummy values next to executable. Please update it with real values and restart the connector", file)
 	}
 
 	if _, err := toml.DecodeFile(properties, &conf); err != nil {
