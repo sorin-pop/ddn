@@ -40,11 +40,11 @@ func main() {
 
 	db, err := validateConnection()
 	if err != nil {
-		log.Fatal("Could not validate connection:\n\t\t", err.Error())
+		log.Fatal("Could not establish database connection:\n\t\t", err.Error())
 	}
 	defer db.Close()
 
-	log.Println("Database connection validated")
+	log.Println("Database connection established")
 
 	log.Println("Starting to listen on port", port)
 
