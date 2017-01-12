@@ -50,7 +50,26 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 }
 
 func whoami(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to whoami!")
+
+	info := make(map[string]string)
+
+	info["vendor"] = conf.Vendor
+	info["version"] = conf.Version
+
+	// TODO add other information if needed
+	var msg MapMessage
+
+	msg.Status = http.StatusOK
+	msg.Message = info
+
+	b, err := json.Marshal(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	writeHeader(w, http.StatusOK)
+
+	w.Write(b)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {

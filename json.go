@@ -11,3 +11,9 @@ type ListMessage struct {
 	Status  int
 	Message []string
 }
+
+// MapMessage is a struct to hold a status and a key+value type response
+type MapMessage struct {
+	Status  int
+	Message map[string]string
+}
