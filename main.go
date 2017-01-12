@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"net/http"
@@ -12,8 +13,7 @@ var (
 	properties string
 	conf       Config
 	db         database
-
-	port = ":7000"
+	port       string
 )
 
 func main() {
@@ -36,6 +36,7 @@ func main() {
 	log.Println("Vendor:\t\t", conf.Vendor)
 	log.Println("Version:\t\t", conf.Version)
 	log.Println("Database port:\t", conf.DBPort)
+	log.Println("Connector port:\t", conf.ConnectorPort)
 	log.Println("Executable:\t\t", conf.Exec)
 	log.Println("Username:\t\t", conf.User)
 	log.Println("Password:\t\t ******")
@@ -48,7 +49,10 @@ func main() {
 	defer db.Close()
 
 	log.Println("Database connection established")
-	log.Println("Starting to listen on port", port)
+
+	port = fmt.Sprintf(":%s", conf.ConnectorPort)
+
+	log.Println("Starting to listen on port", conf.ConnectorPort)
 
 	log.Fatal(http.ListenAndServe(port, Router()))
 

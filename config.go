@@ -6,6 +6,7 @@ type Config struct {
 	Version       string `toml:"version"`
 	Exec          string `toml:"executable"`
 	DBPort        string `toml:"dbport"`
+	ConnectorPort string `toml:"connectorPort"`
 	User          string `toml:"username"`
 	Password      string `toml:"password"`
 	MasterAddress string `toml:"masterAddress"`
