@@ -28,6 +28,8 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	writeHeader(w, http.StatusOK)
+
 	w.Write(b)
 }
 
