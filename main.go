@@ -38,7 +38,7 @@ func main() {
 	log.Println("Password:\t\t ******")
 	log.Println("Master address:\t", conf.MasterAddress)
 
-	prepDatabase()
+	validateConnection()
 
 	log.Println("Starting to listen on port", port)
 
