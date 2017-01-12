@@ -11,7 +11,8 @@ import (
 var (
 	properties string
 	conf       Config
-	port       = ":7000"
+
+	port = ":7000"
 )
 
 func main() {
