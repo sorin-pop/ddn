@@ -75,6 +75,8 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 func heartbeat(w http.ResponseWriter, r *http.Request) {
 	var msg Message
 
+	// TODO: db.Ping() always returns true for some reason. Need to check why
+
 	err := db.Ping()
 	if err != nil {
 		msg.Status = http.StatusServiceUnavailable
