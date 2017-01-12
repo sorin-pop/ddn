@@ -21,12 +21,11 @@ func checkProps() (string, error) {
 }
 
 func checkLocalProps() (string, error) {
-	if _, err := os.Stat("ddnc.properties"); err != nil {
-		if os.IsNotExist(err) {
-			log.Println("ddnc.properties not found next to executable")
-			return "", err
-		}
+	if _, err := os.Stat("ddnc.properties"); os.IsNotExist(err) {
+		log.Println("ddnc.properties not found next to executable")
+		return "", err
 	}
+
 	log.Println("ddnc.properties found next to executable")
 	return "ddnc.properties", nil
 }
@@ -38,12 +37,11 @@ func checkHomeProps() (string, error) {
 	}
 
 	path := usr.HomeDir + "/.ddnc/ddnc.properties"
-	if _, err = os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			log.Println("ddnc.properties not found at", path)
-			return "", err
-		}
+	if _, err = os.Stat(path); os.IsNotExist(err) {
+		log.Println("ddnc.properties not found at", path)
+		return "", err
 	}
+
 	log.Println("ddnc.properties found at", path)
 
 	return path, nil

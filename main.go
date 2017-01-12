@@ -46,7 +46,6 @@ func main() {
 	defer db.Close()
 
 	log.Println("Database connection established")
-
 	log.Println("Starting to listen on port", port)
 
 	log.Fatal(http.ListenAndServe(port, Router()))
