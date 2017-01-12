@@ -21,6 +21,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+	var msg Message
 
 	if dbinfo.DatabaseName == "" || dbinfo.Username == "" || dbinfo.Password == "" {
 		log.Println("Missing required field from JSON message:")
@@ -28,19 +29,24 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		log.Println("> Username:\t\t", dbinfo.Username)
 		log.Println("> Password:\t\t", dbinfo.Password)
 
-		var msg Message
-
 		msg.Status = http.StatusBadRequest
 		msg.Message = "One or more required fields are missing from the call"
-
-		writeHeader(w, msg.Status)
-
-		b := compose(msg)
-
-		w.Write(b)
 	} else {
-
+		err = db.createDatabase(dbinfo)
+		if err != nil {
+			msg.Status = http.StatusInternalServerError
+			msg.Message = err.Error()
+		} else {
+			msg.Status = http.StatusOK
+			msg.Message = "Successfully created the Database and user!"
+		}
 	}
+
+	writeHeader(w, msg.Status)
+
+	b := compose(msg)
+
+	w.Write(b)
 }
 
 // listDatabase lists the supervised databases in a JSON format

@@ -78,3 +78,60 @@ func (db *database) listDatabase() []string {
 
 	return list
 }
+
+func (db *database) createDatabase(cr CreateRequest) error {
+	var (
+		count int
+		err   error
+	)
+
+	err = db.conn.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", cr.DatabaseName).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return fmt.Errorf("Database '%s' already exists", cr.DatabaseName)
+	}
+
+	// Begin transaction so that we can roll it back at any point something goes wrong.
+	tx, err := db.conn.Begin()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", cr.Username).Scan(&count)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if count != 0 {
+		tx.Rollback()
+		return fmt.Errorf("User '%s' already exists", cr.Username)
+	}
+
+	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %s CHARSET utf8;", cr.DatabaseName))
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = db.conn.Exec(fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", cr.Username, cr.Password))
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = db.conn.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';", cr.DatabaseName, cr.Username, "%"))
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
