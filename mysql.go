@@ -54,7 +54,8 @@ func (d *database) listDatabase() []string {
 			log.Fatal(err)
 		}
 
-		if database == "information_schema" || database == "mysql" || database == "performance_schema" {
+		if database == "information_schema" || database == "mysql" ||
+			database == "performance_schema" || database == "nbinfo" {
 			continue
 		}
 
