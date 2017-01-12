@@ -25,11 +25,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Fatalf("Generated %s with dummy values next to executable. Please update it with real values and restart the connector", file)
+		log.Fatalf("Generated '%s' with dummy values next to executable. Please update it with real values and restart the connector", file)
 	}
 
 	if _, err := toml.DecodeFile(properties, &conf); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	log.Println("Starting with properties:")
