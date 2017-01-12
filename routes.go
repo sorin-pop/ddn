@@ -14,15 +14,51 @@ type Routes []route
 
 var routes = Routes{
 	route{
-		"Index",
+		"index",
 		"GET",
 		"/",
 		index,
 	},
 	route{
-		"ListDatabase",
+		"createDatabase",
+		"GET",
+		"/create-database",
+		createDatabase,
+	},
+	route{
+		"listDatabase",
 		"GET",
 		"/list-databases",
 		listDatabase,
+	},
+	route{
+		"getDatabase",
+		"GET",
+		"/get-database",
+		getDatabase,
+	},
+	route{
+		"dropDatabase",
+		"GET",
+		"/drop-database",
+		dropDatabase,
+	},
+	route{
+		"importDatabase",
+		"GET",
+		"/import-database",
+		importDatabase,
+	},
+	route{
+		"whoami",
+		"GET",
+		"/whoami",
+		whoami,
+	},
+	route{
+		"heartbeat",
+		"GET",
+		"/heartbeat",
+		heartbeat,
 	},
 }
