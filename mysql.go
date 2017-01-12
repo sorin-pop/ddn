@@ -9,23 +9,23 @@ import (
 )
 
 type database struct {
-	conn string
-	db   *sql.DB
+	datasource string
+	conn       *sql.DB
 }
 
 // Connect creates and initialises a Database struct
 func (d *database) Connect(server, user, password, DBPort string) error {
 	var err error
 
-	d.conn = fmt.Sprintf("%s:%s@/", user, password)
-	d.db, err = sql.Open(server, d.conn)
+	d.datasource = fmt.Sprintf("%s:%s@/", user, password)
+	d.conn, err = sql.Open(server, d.datasource)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = d.db.Ping()
+	err = d.conn.Ping()
 	if err != nil {
-		d.db.Close()
+		d.conn.Close()
 		return err
 	}
 
@@ -33,17 +33,29 @@ func (d *database) Connect(server, user, password, DBPort string) error {
 }
 
 func (d *database) Close() {
-	d.db.Close()
+	d.conn.Close()
 }
 
 func (d *database) Ping() error {
-	return d.db.Ping()
+	err := d.conn.Ping()
+	if err != nil {
+		log.Println("There's an error")
+	} else {
+		log.Println("There's no error")
+	}
+
+	return err
 }
 
 func (d *database) listDatabase() []string {
 	var err error
 
-	rows, err := d.db.Query("show databases")
+	err = d.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows, err := d.conn.Query("show databases")
 	if err != nil {
 		log.Fatal(err)
 	}
