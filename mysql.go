@@ -14,41 +14,41 @@ type database struct {
 }
 
 // Connect creates and initialises a Database struct
-func (d *database) Connect(server, user, password, DBPort string) error {
+func (db *database) Connect(server, user, password, DBPort string) error {
 	var err error
 
-	d.datasource = fmt.Sprintf("%s:%s@/", user, password)
-	d.conn, err = sql.Open(server, d.datasource)
+	db.datasource = fmt.Sprintf("%s:%s@/", user, password)
+	db.conn, err = sql.Open(server, db.datasource)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = d.conn.Ping()
+	err = db.conn.Ping()
 	if err != nil {
-		d.conn.Close()
+		db.conn.Close()
 		return err
 	}
 
 	return nil
 }
 
-func (d *database) Close() {
-	d.conn.Close()
+func (db *database) Close() {
+	db.conn.Close()
 }
 
-func (d *database) Ping() error {
-	return d.conn.Ping()
+func (db *database) Ping() error {
+	return db.conn.Ping()
 }
 
-func (d *database) listDatabase() []string {
+func (db *database) listDatabase() []string {
 	var err error
 
-	err = d.Ping()
+	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	rows, err := d.conn.Query("show databases")
+	rows, err := db.conn.Query("show databases")
 	if err != nil {
 		log.Fatal(err)
 	}
