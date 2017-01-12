@@ -11,6 +11,7 @@ import (
 var (
 	properties string
 	conf       Config
+	db         database
 
 	port = ":7000"
 )
@@ -39,7 +40,7 @@ func main() {
 	log.Println("Password:\t\t ******")
 	log.Println("Master address:\t", conf.MasterAddress)
 
-	db, err := validateConnection()
+	err = db.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
 	if err != nil {
 		log.Fatal("Could not establish database connection:\n\t\t", err.Error())
 	}

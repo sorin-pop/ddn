@@ -17,7 +17,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 
 // listDatabase lists the supervised databases in a JSON format
 func listDatabases(w http.ResponseWriter, r *http.Request) {
-	list := databaseList()
+	list := db.listDatabase()
 	enc := json.NewEncoder(w)
 	enc.Encode(list)
 }
