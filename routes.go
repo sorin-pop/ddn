@@ -26,10 +26,10 @@ var routes = Routes{
 		createDatabase,
 	},
 	route{
-		"listDatabase",
+		"listDatabases",
 		"GET",
 		"/list-databases",
-		listDatabase,
+		listDatabases,
 	},
 	route{
 		"getDatabase",
