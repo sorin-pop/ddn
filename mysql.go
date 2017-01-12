@@ -37,14 +37,7 @@ func (d *database) Close() {
 }
 
 func (d *database) Ping() error {
-	err := d.conn.Ping()
-	if err != nil {
-		log.Println("There's an error")
-	} else {
-		log.Println("There's no error")
-	}
-
-	return err
+	return d.conn.Ping()
 }
 
 func (d *database) listDatabase() []string {
