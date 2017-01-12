@@ -28,7 +28,7 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	writeHeader(w, http.StatusOK)
+	writeHeader(w, msg.Status)
 
 	w.Write(b)
 }
@@ -67,11 +67,29 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	writeHeader(w, http.StatusOK)
+	writeHeader(w, msg.Status)
 
 	w.Write(b)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to heartbeat!")
+	var msg Message
+
+	err := db.Ping()
+	if err != nil {
+		msg.Status = http.StatusServiceUnavailable
+		msg.Message = err.Error()
+	} else {
+		msg.Status = http.StatusOK
+		msg.Message = "Still alive"
+	}
+
+	b, err := json.Marshal(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	writeHeader(w, msg.Status)
+
+	w.Write(b)
 }

@@ -36,6 +36,10 @@ func (d *database) Close() {
 	d.db.Close()
 }
 
+func (d *database) Ping() error {
+	return d.db.Ping()
+}
+
 func (d *database) listDatabase() []string {
 	var err error
 
