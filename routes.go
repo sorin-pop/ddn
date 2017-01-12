@@ -21,7 +21,7 @@ var routes = Routes{
 	},
 	route{
 		"createDatabase",
-		"GET",
+		"POST",
 		"/create-database",
 		createDatabase,
 	},

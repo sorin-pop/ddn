@@ -1,5 +1,10 @@
 package main
 
+import (
+	"encoding/json"
+	"log"
+)
+
 // Message is a struct to hold a simple status-message type response
 type Message struct {
 	Status  int
@@ -16,4 +21,14 @@ type ListMessage struct {
 type MapMessage struct {
 	Status  int
 	Message map[string]string
+}
+
+// Compose creates a JSON formatted byte slice from the Message
+func compose(msg interface{}) []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return b
 }
