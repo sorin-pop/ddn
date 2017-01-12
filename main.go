@@ -38,7 +38,13 @@ func main() {
 	log.Println("Password:\t\t ******")
 	log.Println("Master address:\t", conf.MasterAddress)
 
-	validateConnection()
+	db, err := validateConnection()
+	if err != nil {
+		log.Fatal("Could not validate connection:\n\t\t", err.Error())
+	}
+	defer db.Close()
+
+	log.Println("Database connection validated")
 
 	log.Println("Starting to listen on port", port)
 

@@ -17,20 +17,51 @@ var (
 	tablename = "info"
 )
 
-func validateConnection() {
+func validateConnection() (*sql.DB, error) {
 	conn = fmt.Sprintf("%s:%s@/", conf.User, conf.Password)
 	db, err = sql.Open("mysql", conn)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
 
 	err := db.Ping()
 	if err != nil {
-		log.Fatalf("Could not validate database connection:\n\t%s", err.Error())
+		db.Close()
+		return nil, err
 	}
 
-	log.Println("MySQL connection validated")
+	return db, nil
+}
+
+func databaseList() []string {
+	rows, err := db.Query("show databases")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	list := make([]string, 0, 10)
+	var database string
+
+	for rows.Next() {
+		err = rows.Scan(&database)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if database == "information_schema" || database == "mysql" {
+			continue
+		}
+
+		list = append(list, database)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return list
 }
 
 func prepDatabase() {

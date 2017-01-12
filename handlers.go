@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -15,8 +16,10 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 }
 
 // listDatabase lists the supervised databases in a JSON format
-func listDatabase(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to listDatabase")
+func listDatabases(w http.ResponseWriter, r *http.Request) {
+	list := databaseList()
+	enc := json.NewEncoder(w)
+	enc.Encode(list)
 }
 
 // getDatabase will get a specific database with a specific name
