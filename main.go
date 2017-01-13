@@ -50,9 +50,9 @@ func main() {
 
 	log.Println("Database connection established")
 
-	port = fmt.Sprintf(":%s", conf.ConnectorPort)
-
 	log.Println("Starting to listen on port", conf.ConnectorPort)
+
+	port = fmt.Sprintf(":%s", conf.ConnectorPort)
 
 	log.Fatal(http.ListenAndServe(port, Router()))
 
