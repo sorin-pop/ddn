@@ -6,6 +6,8 @@ import (
 
 	"net/http"
 
+	"os/user"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -14,9 +16,16 @@ var (
 	conf       Config
 	db         database
 	port       string
+	usr        *user.User
 )
 
 func main() {
+	var err error
+
+	usr, err = user.Current()
+	if err != nil {
+		log.Fatal("Couldn't get default user.")
+	}
 
 	properties, err := checkProps()
 	if err != nil {
