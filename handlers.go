@@ -15,9 +15,10 @@ func index(w http.ResponseWriter, r *http.Request) {
 func createDatabase(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
-	var dbinfo CreateRequest
-
-	var msg Message
+	var (
+		dbinfo CreateRequest
+		msg    Message
+	)
 
 	err := decoder.Decode(&dbinfo)
 	if err != nil {
@@ -99,7 +100,9 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: db.Ping() always returns true for some reason. Need to check why
 
-	err := db.Ping()
+	var dbToDiscard database
+
+	err := dbToDiscard.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
 	if err != nil {
 		msg.Status = http.StatusServiceUnavailable
 		msg.Message = err.Error()
@@ -107,6 +110,8 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 		msg.Status = http.StatusOK
 		msg.Message = "Still alive"
 	}
+
+	defer dbToDiscard.Close()
 
 	sendResponse(w, msg)
 }
