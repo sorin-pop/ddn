@@ -92,7 +92,7 @@ func (db *database) listDatabase() ([]string, error) {
 	return list, nil
 }
 
-func (db *database) createDatabase(cr CreateRequest) error {
+func (db *database) createDatabase(cr DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {

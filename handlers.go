@@ -16,7 +16,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	var (
-		dbinfo CreateRequest
+		dbinfo DBRequest
 		msg    Message
 	)
 
