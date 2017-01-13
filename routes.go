@@ -45,7 +45,7 @@ var routes = Routes{
 	},
 	route{
 		"importDatabase",
-		"GET",
+		"POST",
 		"/import-database",
 		importDatabase,
 	},

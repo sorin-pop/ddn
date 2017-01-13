@@ -105,9 +105,52 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 }
 
 // importDatabase will import the specified dumpfile to the database
-// creating the database, tablespace and user as needed
+// creating the database, tablespace and user
 func importDatabase(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to importDatabase")
+	var (
+		dbreq DBRequest
+		msg   Message
+	)
+
+	decoder := json.NewDecoder(r.Body)
+
+	err := decoder.Decode(&dbreq)
+	if err != nil {
+		msg = errorJSONResponse(err)
+		sendResponse(w, msg)
+
+		return
+	}
+
+	if valid := validDBReq(dbreq.DumpLocation, dbreq.DatabaseName, dbreq.Username, dbreq.Password); valid != true {
+		msg := invalidResponse()
+		sendResponse(w, msg)
+		return
+	}
+
+	if exists := fileExists(dbreq.DumpLocation); exists == false {
+		msg.Status = http.StatusNotFound
+		msg.Message = "Specified file doesn't exist or is not reachable."
+
+		sendResponse(w, msg)
+		return
+	}
+
+	err = db.createDatabase(dbreq)
+	if err != nil {
+		msg.Status = http.StatusInternalServerError
+		msg.Message = err.Error()
+
+		sendResponse(w, msg)
+		return
+	}
+
+	msg.Status = http.StatusOK
+	msg.Message = "Understood request, starting import process."
+
+	sendResponse(w, msg)
+
+	go startImport(dbreq)
 }
 
 func whoami(w http.ResponseWriter, r *http.Request) {
