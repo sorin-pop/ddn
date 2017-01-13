@@ -36,16 +36,29 @@ func (db *database) Close() {
 	db.conn.Close()
 }
 
-func (db *database) Ping() error {
-	return db.conn.Ping()
+func (db *database) Alive() error {
+	defer func() {
+		if p := recover(); p != nil {
+			log.Println("Panic Attack! Database seems to be down.")
+		}
+	}()
+
+	_, err := db.conn.Exec("select * from mysql.user WHERE 1 = 0")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (db *database) listDatabase() []string {
+func (db *database) listDatabase() ([]string, error) {
+
 	var err error
 
-	err = db.Ping()
+	err = db.Alive()
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Died:", err)
+		return nil, err
 	}
 
 	rows, err := db.conn.Query("show databases")
@@ -76,7 +89,7 @@ func (db *database) listDatabase() []string {
 		log.Fatal(err)
 	}
 
-	return list
+	return list, nil
 }
 
 func (db *database) createDatabase(cr CreateRequest) error {

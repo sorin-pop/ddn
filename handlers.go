@@ -55,10 +55,18 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 
 // listDatabase lists the supervised databases in a JSON format
 func listDatabases(w http.ResponseWriter, r *http.Request) {
-	var msg ListMessage
+	var (
+		msg ListMessage
+		err error
+	)
 
 	msg.Status = http.StatusOK
-	msg.Message = db.listDatabase()
+	msg.Message, err = db.listDatabase()
+	if err != nil {
+		sendResponse(w, errorResponse())
+
+		return
+	}
 
 	sendResponse(w, msg)
 }
@@ -98,20 +106,13 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 func heartbeat(w http.ResponseWriter, r *http.Request) {
 	var msg Message
 
-	// TODO: db.Ping() always returns true for some reason. Need to check why
+	msg.Status = http.StatusOK
+	msg.Message = "Still alive"
 
-	var dbToDiscard database
-
-	err := dbToDiscard.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
+	err := db.Alive()
 	if err != nil {
-		msg.Status = http.StatusServiceUnavailable
-		msg.Message = err.Error()
-	} else {
-		msg.Status = http.StatusOK
-		msg.Message = "Still alive"
+		msg = errorResponse()
 	}
-
-	defer dbToDiscard.Close()
 
 	sendResponse(w, msg)
 }
@@ -122,4 +123,13 @@ func sendResponse(w http.ResponseWriter, msg JSONMessage) {
 	writeHeader(w, status)
 
 	w.Write(b)
+}
+
+func errorResponse() Message {
+	var errMsg Message
+
+	errMsg.Status = http.StatusServiceUnavailable
+	errMsg.Message = "The server is unable to process requests as the underlying database is down."
+
+	return errMsg
 }
