@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -28,8 +27,8 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, msg := validDBReq(dbreq.DatabaseName, dbreq.Username, dbreq.Password)
-	if !valid {
+	if valid := validDBReq(dbreq.DatabaseName, dbreq.Username, dbreq.Password); valid != true {
+		msg = invalidResponse()
 		sendResponse(w, msg)
 		return
 	}
@@ -86,8 +85,8 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, msg := validDBReq(dbreq.DatabaseName, dbreq.Username)
-	if !valid {
+	if valid := validDBReq(dbreq.DatabaseName, dbreq.Username); valid != true {
+		msg := invalidResponse()
 		sendResponse(w, msg)
 		return
 	}
@@ -149,37 +148,12 @@ func sendResponse(w http.ResponseWriter, msg JSONMessage) {
 	w.Write(b)
 }
 
-func errorResponse() Message {
-	var errMsg Message
-
-	errMsg.Status = http.StatusServiceUnavailable
-	errMsg.Message = "The server is unable to process requests as the underlying database is down."
-
-	return errMsg
-}
-
-func errorJSONResponse(err error) Message {
-	var msg Message
-
-	log.Println("Could not decode JSON message:", err.Error())
-
-	msg.Status = http.StatusBadRequest
-	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
-
-	return msg
-}
-
-func validDBReq(reqFields ...string) (bool, Message) {
-	var msg Message
-
+func validDBReq(reqFields ...string) bool {
 	for _, field := range reqFields {
 		if field == "" {
-			msg.Status = http.StatusBadRequest
-			msg.Message = "One or more required fields are missing from the call"
-
-			return false, msg
+			return false
 		}
 	}
 
-	return true, msg
+	return true
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
 )
 
 // JSONMessage is an interface that can hold many types of messages that
@@ -60,4 +62,33 @@ func (msg MapMessage) Compose() ([]byte, int) {
 	}
 
 	return b, msg.Status
+}
+
+func errorResponse() Message {
+	var errMsg Message
+
+	errMsg.Status = http.StatusServiceUnavailable
+	errMsg.Message = "The server is unable to process requests as the underlying database is down."
+
+	return errMsg
+}
+
+func errorJSONResponse(err error) Message {
+	var msg Message
+
+	log.Println("Could not decode JSON message:", err.Error())
+
+	msg.Status = http.StatusBadRequest
+	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
+
+	return msg
+}
+
+func invalidResponse() Message {
+	var msg Message
+
+	msg.Status = http.StatusBadRequest
+	msg.Message = "One or more required fields are missing from the call"
+
+	return msg
 }
