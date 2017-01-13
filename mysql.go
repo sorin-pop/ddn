@@ -94,20 +94,19 @@ func (db *database) createDatabase(cr CreateRequest) error {
 	}
 
 	// Begin transaction so that we can roll it back at any point something goes wrong.
+
+	err = db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", cr.Username).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return fmt.Errorf("User '%s' already exists", cr.Username)
+	}
+
 	tx, err := db.conn.Begin()
 	if err != nil {
 		tx.Rollback()
 		return err
-	}
-
-	err = db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", cr.Username).Scan(&count)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	if count != 0 {
-		tx.Rollback()
-		return fmt.Errorf("User '%s' already exists", cr.Username)
 	}
 
 	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %s CHARSET utf8;", cr.DatabaseName))
