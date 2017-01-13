@@ -76,6 +76,40 @@ curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "user
 {"Status":500,"Message":"User 'exampleUser' already exists"}
 ```
 
+### Import database (WIP)
+**API endpoint:** POST `/import-database`
+#### Explanation
+Starts an import process to import a dumpfile. The dumpfile should be reachable via a non-authenticated HTTP call. The file will be fetched by the Connector, imported, then discarded. A new database (with tablespace and user) will be created, privileges will be granted to the created user. (This is done by calling the `createDatabase` API)
+
+Returns immediately with a Failure if the JSON is malformed, there are missing fields (see below), creating the database and user fails or the file does not exist. Returns with true immediately if all of the above complete without an issue.
+
+Once done, a seperate routine is started to handle the import itself, pushing updates to the main server and logging them locally as well.
+
+#### Post request details
+|Key|Value|
+|---|---|
+|database_name|Valid name for a database. Must be non-empty|
+|tablespace_name|Valid name for a tablespace. Can be empty (in case db used does not use tablespaces)|
+|dumpfile_location|Valid location of dumpfile. Must be non-empty.|
+|username|Valid name for user. Must be non-empty|
+|password|Valid string for password. Must be non-empty|
+
+#### Example Curl request
+```
+curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "username":"exampleUser", "password":"liferay", "dumpfile_location":"http://r2d2.liferay.int/share/route/to/valid/dumpfile.sql"}' localhost:7000/import-database
+```
+
+#### Example responses
+**Success:**
+```
+{"Status":200,"Message":"Understood request, starting import process."}
+```
+**Failures:**
+The failures from `/create-database`, plus:
+```
+{"Status":404,"Message":"Specified file doesn't exist or is not reachable."}
+```
+
 ### Drop database
 **API endpoint:** POST `/drop-database`
 #### Explanation
