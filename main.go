@@ -8,6 +8,8 @@ import (
 
 	"os/user"
 
+	"os"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -50,6 +52,10 @@ func main() {
 	log.Println("Username:\t\t", conf.User)
 	log.Println("Password:\t\t ******")
 	log.Println("Master address:\t", conf.MasterAddress)
+
+	if _, err = os.Stat(conf.Exec); os.IsNotExist(err) {
+		log.Fatalf("Database executable '%s' doesn't exist.", conf.Exec)
+	}
 
 	err = db.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
 	if err != nil {

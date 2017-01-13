@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"os/exec"
 )
 
 func startImport(dbreq DBRequest) {
@@ -17,5 +19,17 @@ func startImport(dbreq DBRequest) {
 
 	log.Println("Download finished, starting import")
 
-	// TODO actually start an import..
+	userArg, pwArg, dbnameArg, pathArg := fmt.Sprintf("-u %s", conf.User), fmt.Sprintf("-p%s", conf.Password), dbreq.DatabaseName, fmt.Sprintf("< %s", filepath)
+
+	log.Println(conf.Exec, userArg, pwArg, dbnameArg, pathArg)
+
+	cmd := exec.Command(conf.Exec, userArg, pwArg, dbnameArg, pathArg)
+
+	err = cmd.Run()
+	if err != nil {
+		log.Println("This fails all the time due to some reason.. The exact same command works from terminal.")
+		log.Fatal(err)
+	}
+
+	log.Println("Import finished.")
 }
