@@ -17,11 +17,19 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 
 	var dbinfo CreateRequest
 
+	var msg Message
+
 	err := decoder.Decode(&dbinfo)
 	if err != nil {
-		log.Println(err)
+		log.Println("Could not decode JSON message:", err.Error())
+
+		msg.Status = http.StatusBadRequest
+		msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
+
+		sendResponse(w, msg)
+
+		return
 	}
-	var msg Message
 
 	if dbinfo.DatabaseName == "" || dbinfo.Username == "" || dbinfo.Password == "" {
 		log.Println("Missing required field from JSON message:")
@@ -41,12 +49,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 			msg.Message = "Successfully created the Database and user!"
 		}
 	}
-
-	writeHeader(w, msg.Status)
-
-	b := compose(msg)
-
-	w.Write(b)
+	sendResponse(w, msg)
 }
 
 // listDatabase lists the supervised databases in a JSON format
@@ -56,11 +59,7 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	msg.Status = http.StatusOK
 	msg.Message = db.listDatabase()
 
-	b := compose(msg)
-
-	writeHeader(w, msg.Status)
-
-	w.Write(b)
+	sendResponse(w, msg)
 }
 
 // getDatabase will get a specific database with a specific name
@@ -92,11 +91,7 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 	msg.Status = http.StatusOK
 	msg.Message = info
 
-	b := compose(msg)
-
-	writeHeader(w, msg.Status)
-
-	w.Write(b)
+	sendResponse(w, msg)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -113,9 +108,13 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 		msg.Message = "Still alive"
 	}
 
-	b := compose(msg)
+	sendResponse(w, msg)
+}
 
-	writeHeader(w, msg.Status)
+func sendResponse(w http.ResponseWriter, msg JSONMessage) {
+	b, status := msg.Compose()
+
+	writeHeader(w, status)
 
 	w.Write(b)
 }
