@@ -29,9 +29,13 @@ Currently, only `vendor`, `username`, `password` and `connectorPort` are used fo
 #### Explanation
 Used to list the available databases in a JSON format. Each entry in the list should contain the name of the database. Database server specific system databases should be omitted from the list.
 
-#### Example request:
+#### Example request
 Simply navigate to `http://ip-address:port/list-databases`
 
+#### Example response
+```
+{"Status":200,"Message":["61x","61xsamlidp","61xsamlsp","62x","62xcluster"]}
+```
 ### Create database
 **API endpoint:** POST `/create-database`
 #### Explanation
@@ -59,10 +63,23 @@ Returns immediately with a success message if creating the database, tablespace 
 curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "username":"exampleUser", "password":"liferay"}' localhost:7000/create-database
 ```
 
+#### Example responses
+**Success:**
+```
+{"Status":200,"Message":"Successfully created the database and user!"}
+```
+**Failures:**
+```
+{"Status":500,"Message":"Database 'exampleDatabase' already exists"}
+```
+```
+{"Status":500,"Message":"User 'exampleUser' already exists"}
+```
+
 ### Drop database
 **API endpoint:** POST `/drop-database`
 #### Explanation
-Used to drop the database. Dropping the database also drops the tablespace, its contents and datafiles (if any) and the user specified in the request.
+Used to drop the database. Dropping the database also drops the tablespace, its contents and datafiles (if any) and the user specified in the request. It responds with a success even if the database and user do not actually exist.
 
 #### Post request details
 |Key|Value|
@@ -73,14 +90,29 @@ Used to drop the database. Dropping the database also drops the tablespace, its 
 
 #### Example Curl request
 ```
-curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "username":"exampleUser"}' localhost:7001/drop-database
+curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "username":"exampleUser"}' localhost:7000/drop-database
 ```
+#### Example response
+```
+{"Status":200,"Message":"Successfully dropped the database and user!"}
+```
+
 ### Heartbeat
 **API endpoint:** GET `/heartbeat`
 #### Explanation
 Used to ping the connector to see if its up. Returns immediately with information on whether the database is up or not.
-#### Example request:
+#### Example request
 Simply navigate to `http://ip-address:port/heartbeat`
+
+#### Example responses
+**Success:**
+```
+{"Status":200,"Message":"Still alive"}
+```
+**Database down:**
+```
+{"Status":503,"Message":"The server is unable to process requests as the underlying database is down."}
+```
 
 ### Whoami
 **API endpoint:** GET `/whoami`
@@ -89,7 +121,24 @@ Used to query information about the connector, and its capabilities. Returns imm
 1. Configured database server vendor
 2. Configured database server version
 
-
-
 #### Example request:
-Simply navigate to `http://ip-address:port/heartbeat`
+Simply navigate to `http://ip-address:port/whoami`
+
+#### Example responses:
+```
+{"Status":200,"Message":{"vendor":"mysql","version":"5.5.53"}}
+```
+
+### Additional information
+If there are required fields and one or more of them are missing from the request, the following is sent back:
+```
+{"Status":400,"Message":"One or more required fields are missing from the call"}
+```
+
+If the a malformed request is sent (not JSON or invalid JSON):
+```
+{"Status":400,"Message":"Invalid JSON request, received error: unexpected EOF"}
+```
+```
+{"Status":400,"Message":"Invalid JSON request, received error: invalid character 's' looking for beginning of value"}
+```
