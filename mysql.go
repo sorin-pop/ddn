@@ -80,29 +80,17 @@ func (db *database) listDatabase() []string {
 }
 
 func (db *database) createDatabase(cr CreateRequest) error {
-	var (
-		count int
-		err   error
-	)
-
-	err = db.conn.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", cr.DatabaseName).Scan(&count)
+	err := db.dbExists(cr.DatabaseName)
 	if err != nil {
 		return err
 	}
-	if count != 0 {
-		return fmt.Errorf("Database '%s' already exists", cr.DatabaseName)
+
+	err = db.userExists(cr.Username)
+	if err != nil {
+		return err
 	}
 
 	// Begin transaction so that we can roll it back at any point something goes wrong.
-
-	err = db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", cr.Username).Scan(&count)
-	if err != nil {
-		return err
-	}
-	if count != 0 {
-		return fmt.Errorf("User '%s' already exists", cr.Username)
-	}
-
 	tx, err := db.conn.Begin()
 	if err != nil {
 		tx.Rollback()
@@ -130,6 +118,34 @@ func (db *database) createDatabase(cr CreateRequest) error {
 	err = tx.Commit()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (db *database) dbExists(databasename string) error {
+	var count int
+
+	err := db.conn.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", databasename).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return fmt.Errorf("Database '%s' already exists", databasename)
+	}
+
+	return nil
+}
+
+func (db *database) userExists(username string) error {
+	var count int
+
+	err := db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", username).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return fmt.Errorf("User '%s' already exists", username)
 	}
 
 	return nil
