@@ -93,7 +93,14 @@ func (db *database) listDatabase() ([]string, error) {
 }
 
 func (db *database) createDatabase(cr CreateRequest) error {
-	err := db.dbExists(cr.DatabaseName)
+
+	err := db.Alive()
+	if err != nil {
+		log.Println("Died:", err)
+		return fmt.Errorf("Unable to complete request as the underlying database is down")
+	}
+
+	err = db.dbExists(cr.DatabaseName)
 	if err != nil {
 		return err
 	}
