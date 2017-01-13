@@ -16,11 +16,11 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	var (
-		dbinfo DBRequest
-		msg    Message
+		dbreq DBRequest
+		msg   Message
 	)
 
-	err := decoder.Decode(&dbinfo)
+	err := decoder.Decode(&dbreq)
 	if err != nil {
 		msg = errorJSONResponse(err)
 		sendResponse(w, msg)
@@ -28,23 +28,19 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if dbinfo.DatabaseName == "" || dbinfo.Username == "" || dbinfo.Password == "" {
-		log.Println("Missing required field from JSON message:")
-		log.Println("> DatabaseName:\t", dbinfo.DatabaseName)
-		log.Println("> Username:\t\t", dbinfo.Username)
-		log.Println("> Password:\t\t", dbinfo.Password)
+	valid, msg := validDBReq(dbreq.DatabaseName, dbreq.Username, dbreq.Password)
+	if !valid {
+		sendResponse(w, msg)
+		return
+	}
 
-		msg.Status = http.StatusBadRequest
-		msg.Message = "One or more required fields are missing from the call"
+	err = db.createDatabase(dbreq)
+	if err != nil {
+		msg.Status = http.StatusInternalServerError
+		msg.Message = err.Error()
 	} else {
-		err = db.createDatabase(dbinfo)
-		if err != nil {
-			msg.Status = http.StatusInternalServerError
-			msg.Message = err.Error()
-		} else {
-			msg.Status = http.StatusOK
-			msg.Message = "Successfully created the database and user!"
-		}
+		msg.Status = http.StatusOK
+		msg.Message = "Successfully created the database and user!"
 	}
 
 	sendResponse(w, msg)
@@ -90,22 +86,19 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if dbreq.DatabaseName == "" || dbreq.Username == "" {
-		log.Println("Missing required field from JSON message:")
-		log.Println("> DatabaseName:\t", dbreq.DatabaseName)
-		log.Println("> Username:\t\t", dbreq.Username)
+	valid, msg := validDBReq(dbreq.DatabaseName, dbreq.Username)
+	if !valid {
+		sendResponse(w, msg)
+		return
+	}
 
-		msg.Status = http.StatusBadRequest
-		msg.Message = "One or more required fields are missing from the call"
+	err = db.dropDatabase(dbreq)
+	if err != nil {
+		msg.Status = http.StatusInternalServerError
+		msg.Message = err.Error()
 	} else {
-		err = db.dropDatabase(dbreq)
-		if err != nil {
-			msg.Status = http.StatusInternalServerError
-			msg.Message = err.Error()
-		} else {
-			msg.Status = http.StatusOK
-			msg.Message = "Successfully dropped the database and user!"
-		}
+		msg.Status = http.StatusOK
+		msg.Message = "Successfully dropped the database and user!"
 	}
 
 	sendResponse(w, msg)
@@ -174,4 +167,19 @@ func errorJSONResponse(err error) Message {
 	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
 
 	return msg
+}
+
+func validDBReq(reqFields ...string) (bool, Message) {
+	var msg Message
+
+	for _, field := range reqFields {
+		if field == "" {
+			msg.Status = http.StatusBadRequest
+			msg.Message = "One or more required fields are missing from the call"
+
+			return false, msg
+		}
+	}
+
+	return true, msg
 }
