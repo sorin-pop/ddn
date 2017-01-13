@@ -92,7 +92,7 @@ func (db *database) listDatabase() ([]string, error) {
 	return list, nil
 }
 
-func (db *database) createDatabase(cr DBRequest) error {
+func (db *database) createDatabase(dbRequest DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {
@@ -100,14 +100,20 @@ func (db *database) createDatabase(cr DBRequest) error {
 		return fmt.Errorf("Unable to complete request as the underlying database is down")
 	}
 
-	err = db.dbExists(cr.DatabaseName)
+	exists, err := db.dbExists(dbRequest.DatabaseName)
 	if err != nil {
 		return err
 	}
+	if exists {
+		return fmt.Errorf("Database '%s' already exists", dbRequest.DatabaseName)
+	}
 
-	err = db.userExists(cr.Username)
+	exists, err = db.userExists(dbRequest.Username)
 	if err != nil {
 		return err
+	}
+	if exists {
+		return fmt.Errorf("User '%s' already exists", dbRequest.Username)
 	}
 
 	// Begin transaction so that we can roll it back at any point something goes wrong.
@@ -117,19 +123,19 @@ func (db *database) createDatabase(cr DBRequest) error {
 		return err
 	}
 
-	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %s CHARSET utf8;", cr.DatabaseName))
+	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %s CHARSET utf8;", dbRequest.DatabaseName))
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	_, err = db.conn.Exec(fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", cr.Username, cr.Password))
+	_, err = db.conn.Exec(fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", dbRequest.Username, dbRequest.Password))
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	_, err = db.conn.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';", cr.DatabaseName, cr.Username, "%"))
+	_, err = db.conn.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';", dbRequest.DatabaseName, dbRequest.Username, "%"))
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -143,30 +149,72 @@ func (db *database) createDatabase(cr DBRequest) error {
 	return nil
 }
 
-func (db *database) dbExists(databasename string) error {
-	var count int
-
-	err := db.conn.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", databasename).Scan(&count)
+func (db *database) dropDatabase(dbRequest DBRequest) error {
+	err := db.Alive()
 	if err != nil {
+		log.Println("Died:", err)
+		return fmt.Errorf("Unable to complete request as the underlying database is down")
+	}
+
+	tx, err := db.conn.Begin()
+	if err != nil {
+		tx.Rollback()
 		return err
 	}
-	if count != 0 {
-		return fmt.Errorf("Database '%s' already exists", databasename)
+
+	_, err = db.conn.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbRequest.DatabaseName))
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	exists, err := db.userExists(dbRequest.Username)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if exists {
+		_, err = db.conn.Exec(fmt.Sprintf("DROP USER %s", dbRequest.Username))
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
 	}
 
 	return nil
 }
 
-func (db *database) userExists(username string) error {
+func (db *database) dbExists(databasename string) (bool, error) {
+	var count int
+
+	err := db.conn.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", databasename).Scan(&count)
+	if err != nil {
+		return true, err
+	}
+	if count != 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (db *database) userExists(username string) (bool, error) {
 	var count int
 
 	err := db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", username).Scan(&count)
 	if err != nil {
-		return err
+		return true, err
 	}
 	if count != 0 {
-		return fmt.Errorf("User '%s' already exists", username)
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }

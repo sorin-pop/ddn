@@ -22,11 +22,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&dbinfo)
 	if err != nil {
-		log.Println("Could not decode JSON message:", err.Error())
-
-		msg.Status = http.StatusBadRequest
-		msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
-
+		msg = errorJSONResponse(err)
 		sendResponse(w, msg)
 
 		return
@@ -79,7 +75,41 @@ func getDatabase(w http.ResponseWriter, r *http.Request) {
 
 // dropDatabase will drop the named database with its tablespace and user
 func dropDatabase(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to dropDatabase")
+	var (
+		dbreq DBRequest
+		msg   Message
+	)
+
+	decoder := json.NewDecoder(r.Body)
+
+	err := decoder.Decode(&dbreq)
+	if err != nil {
+		msg = errorJSONResponse(err)
+		sendResponse(w, msg)
+
+		return
+	}
+
+	if dbreq.DatabaseName == "" || dbreq.Username == "" {
+		log.Println("Missing required field from JSON message:")
+		log.Println("> DatabaseName:\t", dbreq.DatabaseName)
+		log.Println("> Username:\t\t", dbreq.Username)
+
+		msg.Status = http.StatusBadRequest
+		msg.Message = "One or more required fields are missing from the call"
+	} else {
+		err = db.dropDatabase(dbreq)
+		if err != nil {
+			msg.Status = http.StatusInternalServerError
+			msg.Message = err.Error()
+		} else {
+			msg.Status = http.StatusOK
+			msg.Message = "Successfully dropped the database and user!"
+		}
+	}
+
+	sendResponse(w, msg)
+
 }
 
 // importDatabase will import the specified dumpfile to the database
@@ -133,4 +163,15 @@ func errorResponse() Message {
 	errMsg.Message = "The server is unable to process requests as the underlying database is down."
 
 	return errMsg
+}
+
+func errorJSONResponse(err error) Message {
+	var msg Message
+
+	log.Println("Could not decode JSON message:", err.Error())
+
+	msg.Status = http.StatusBadRequest
+	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
+
+	return msg
 }

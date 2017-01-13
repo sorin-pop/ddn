@@ -39,7 +39,7 @@ var routes = Routes{
 	},
 	route{
 		"dropDatabase",
-		"GET",
+		"POST",
 		"/drop-database",
 		dropDatabase,
 	},
