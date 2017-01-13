@@ -47,9 +47,10 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 			msg.Message = err.Error()
 		} else {
 			msg.Status = http.StatusOK
-			msg.Message = "Successfully created the Database and user!"
+			msg.Message = "Successfully created the database and user!"
 		}
 	}
+
 	sendResponse(w, msg)
 }
 
