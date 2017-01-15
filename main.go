@@ -14,7 +14,7 @@ import (
 var (
 	properties string
 	conf       Config
-	db         database
+	db         Database
 	port       string
 	usr        *user.User
 )
@@ -50,6 +50,8 @@ func main() {
 	log.Println("Username:\t\t", conf.User)
 	log.Println("Password:\t\t ******")
 	log.Println("Master address:\t", conf.MasterAddress)
+
+	db = new(mysql)
 
 	err = db.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
 	if err != nil {

@@ -8,17 +8,16 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type database struct {
-	datasource string
-	conn       *sql.DB
+type mysql struct {
+	conn *sql.DB
 }
 
 // Connect creates and initialises a Database struct
-func (db *database) Connect(server, user, password, DBPort string) error {
+func (db *mysql) Connect(server, user, password, DBPort string) error {
 	var err error
 
-	db.datasource = fmt.Sprintf("%s:%s@/", user, password)
-	db.conn, err = sql.Open(server, db.datasource)
+	datasource := fmt.Sprintf("%s:%s@/", user, password)
+	db.conn, err = sql.Open(server, datasource)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,11 +31,11 @@ func (db *database) Connect(server, user, password, DBPort string) error {
 	return nil
 }
 
-func (db *database) Close() {
+func (db *mysql) Close() {
 	db.conn.Close()
 }
 
-func (db *database) Alive() error {
+func (db *mysql) Alive() error {
 	defer func() {
 		if p := recover(); p != nil {
 			log.Println("Panic Attack! Database seems to be down.")
@@ -53,7 +52,7 @@ func (db *database) Alive() error {
 
 // ListDatabase returns a list of strings - the names of the databases in the server
 // All system tables are omitted from the returned list. If there's an error, it is returned.
-func (db *database) ListDatabase() ([]string, error) {
+func (db *mysql) ListDatabase() ([]string, error) {
 
 	var err error
 
@@ -97,7 +96,7 @@ func (db *database) ListDatabase() ([]string, error) {
 
 // CreateDatabase creates a Database along with a user, to which all privileges
 // are granted on the created database. Fails if database or user already exists.
-func (db *database) CreateDatabase(dbRequest DBRequest) error {
+func (db *mysql) CreateDatabase(dbRequest DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {
@@ -156,7 +155,7 @@ func (db *database) CreateDatabase(dbRequest DBRequest) error {
 
 // DropDatabase drops a database and a user. Always succeeds, even if droppable database or
 // user does not exist
-func (db *database) DropDatabase(dbRequest DBRequest) error {
+func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 	err := db.Alive()
 	if err != nil {
 		log.Println("Died:", err)
@@ -198,7 +197,7 @@ func (db *database) DropDatabase(dbRequest DBRequest) error {
 	return nil
 }
 
-func (db *database) dbExists(databasename string) (bool, error) {
+func (db *mysql) dbExists(databasename string) (bool, error) {
 	var count int
 
 	err := db.conn.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", databasename).Scan(&count)
@@ -212,7 +211,7 @@ func (db *database) dbExists(databasename string) (bool, error) {
 	return false, nil
 }
 
-func (db *database) userExists(username string) (bool, error) {
+func (db *mysql) userExists(username string) (bool, error) {
 	var count int
 
 	err := db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", username).Scan(&count)
