@@ -1,9 +1,6 @@
 package main
 
-import (
-	"log"
-	"os"
-)
+import "log"
 
 func startImport(dbreq DBRequest) {
 	log.Println("Starting download")
@@ -12,12 +9,15 @@ func startImport(dbreq DBRequest) {
 	if err != nil {
 		log.Println("Downloading file failed:", err.Error())
 	}
-	defer os.Remove(filepath)
+	//	defer os.Remove(filepath)
+
+	dbreq.DumpLocation = filepath
 
 	log.Println("Download finished, starting import")
 
 	if err = db.ImportDatabase(dbreq); err != nil {
 		log.Println("Importing dump failed:", err.Error())
+		return
 	}
 
 	log.Println("Import finished.")

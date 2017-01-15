@@ -200,6 +200,17 @@ func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
 func (db *mysql) ImportDatabase(dbreq DBRequest) error {
+	_, err := db.conn.Exec(fmt.Sprintf("use %s", dbreq.DatabaseName))
+	if err != nil {
+		log.Println("Error in command 'use database':", err)
+		return err
+	}
+
+	_, err = db.conn.Exec(fmt.Sprintf("source %s", dbreq.DumpLocation))
+	if err != nil {
+		log.Println("Error in source'ing file:", err)
+		return err
+	}
 
 	return nil
 }
