@@ -51,7 +51,9 @@ func (db *database) Alive() error {
 	return nil
 }
 
-func (db *database) listDatabase() ([]string, error) {
+// ListDatabase returns a list of strings - the names of the databases in the server
+// All system tables are omitted from the returned list. If there's an error, it is returned.
+func (db *database) ListDatabase() ([]string, error) {
 
 	var err error
 
@@ -93,7 +95,9 @@ func (db *database) listDatabase() ([]string, error) {
 	return list, nil
 }
 
-func (db *database) createDatabase(dbRequest DBRequest) error {
+// CreateDatabase creates a Database along with a user, to which all privileges
+// are granted on the created database. Fails if database or user already exists.
+func (db *database) CreateDatabase(dbRequest DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {
@@ -150,7 +154,9 @@ func (db *database) createDatabase(dbRequest DBRequest) error {
 	return nil
 }
 
-func (db *database) dropDatabase(dbRequest DBRequest) error {
+// DropDatabase drops a database and a user. Always succeeds, even if droppable database or
+// user does not exist
+func (db *database) DropDatabase(dbRequest DBRequest) error {
 	err := db.Alive()
 	if err != nil {
 		log.Println("Died:", err)

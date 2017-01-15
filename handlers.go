@@ -33,7 +33,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.createDatabase(dbreq)
+	err = db.CreateDatabase(dbreq)
 	if err != nil {
 		msg.Status = http.StatusInternalServerError
 		msg.Message = err.Error()
@@ -53,7 +53,7 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	)
 
 	msg.Status = http.StatusOK
-	msg.Message, err = db.listDatabase()
+	msg.Message, err = db.ListDatabase()
 	if err != nil {
 		sendResponse(w, errorResponse())
 
@@ -91,7 +91,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.dropDatabase(dbreq)
+	err = db.DropDatabase(dbreq)
 	if err != nil {
 		msg.Status = http.StatusInternalServerError
 		msg.Message = err.Error()
@@ -136,7 +136,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.createDatabase(dbreq)
+	err = db.CreateDatabase(dbreq)
 	if err != nil {
 		msg.Status = http.StatusInternalServerError
 		msg.Message = err.Error()
