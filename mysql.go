@@ -197,6 +197,13 @@ func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 	return nil
 }
 
+// ImportDatabase imports the dumpfile to the database or returns an error
+// if it failed for some reason.
+func (db *mysql) ImportDatabase(dbreq DBRequest) error {
+
+	return nil
+}
+
 func (db *mysql) dbExists(databasename string) (bool, error) {
 	var count int
 

@@ -8,5 +8,6 @@ type Database interface {
 	Alive() error
 	CreateDatabase(dbRequest DBRequest) error
 	DropDatabase(dbRequest DBRequest) error
+	ImportDatabase(dbRequest DBRequest) error
 	ListDatabase() ([]string, error)
 }
