@@ -10,6 +10,8 @@ import (
 
 	"os"
 
+	"strings"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -57,7 +59,12 @@ func main() {
 		log.Fatalf("Database executable '%s' doesn't exist.", conf.Exec)
 	}
 
-	db = new(mysql)
+	switch strings.ToLower(conf.Vendor) {
+	case "mysql":
+		db = new(mysql)
+	default:
+		log.Fatal("Database vendor not recognized.")
+	}
 
 	err = db.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
 	if err != nil {
