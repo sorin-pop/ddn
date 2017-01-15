@@ -77,7 +77,8 @@ func (db *database) listDatabase() ([]string, error) {
 		}
 
 		if database == "information_schema" || database == "mysql" ||
-			database == "performance_schema" || database == "nbinfo" {
+			database == "performance_schema" || database == "nbinfo" ||
+			database == "sys" {
 			continue
 		}
 
