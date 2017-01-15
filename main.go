@@ -16,7 +16,7 @@ import (
 var (
 	properties string
 	conf       Config
-	db         database
+	db         Database
 	port       string
 	usr        *user.User
 )
@@ -56,6 +56,8 @@ func main() {
 	if _, err = os.Stat(conf.Exec); os.IsNotExist(err) {
 		log.Fatalf("Database executable '%s' doesn't exist.", conf.Exec)
 	}
+
+	db = new(mysql)
 
 	err = db.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
 	if err != nil {
