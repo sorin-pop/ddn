@@ -1,12 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
+	"os/user"
 
 	"net/http"
-
-	"os/user"
 
 	"os"
 
@@ -16,32 +16,33 @@ import (
 )
 
 var (
-	properties string
-	conf       Config
-	db         Database
-	port       string
-	usr        *user.User
+	conf Config
+	db   Database
+	port string
+	usr  *user.User
 )
 
 func main() {
 	var err error
+
+	filename := flag.String("p", "ddnc.properties", "Specify the configuration file's name")
+	flag.Parse()
 
 	usr, err = user.Current()
 	if err != nil {
 		log.Fatal("Couldn't get default user.")
 	}
 
-	properties, err := checkProps()
-	if err != nil {
+	if _, err = os.Stat(*filename); os.IsNotExist(err) {
 		log.Println("Couldn't find properties file, generating one")
-		file, err := generateProps()
+		file, err := generateProps(*filename)
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Fatalf("Generated '%s' with dummy values next to executable. Please update it with real values and restart the connector", file)
 	}
 
-	if _, err := toml.DecodeFile(properties, &conf); err != nil {
+	if _, err := toml.DecodeFile(*filename, &conf); err != nil {
 		log.Fatal(err)
 	}
 

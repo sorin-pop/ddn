@@ -5,16 +5,8 @@ import (
 	"os"
 )
 
-func checkProps() (string, error) {
-	if _, err := os.Stat("ddnc.properties"); os.IsNotExist(err) {
-		return "", err
-	}
-
-	return "ddnc.properties", nil
-}
-
-func generateProps() (string, error) {
-	file, err := os.Create("ddnc.properties")
+func generateProps(filename string) (string, error) {
+	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,5 +28,5 @@ masterAddress="127.0.0.1"`
 
 	file.Sync()
 
-	return "ddnc.properties", nil
+	return filename, nil
 }
