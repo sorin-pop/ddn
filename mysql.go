@@ -218,7 +218,7 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 
 	err = cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	return nil

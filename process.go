@@ -18,6 +18,8 @@ func startImport(dbreq DBRequest) {
 
 	log.Println("Download finished, starting import")
 
+	// TODO: Connector dies if import fails, e.g. if dumpfile is of wrong version.
+
 	if err = db.ImportDatabase(dbreq); err != nil {
 		log.Println("Importing dump failed:", err.Error())
 		return
