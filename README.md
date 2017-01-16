@@ -1,6 +1,6 @@
 # Distributed Database Network Connector
 
-Distributed Database Network Connector, or ddnc for short, is a minimal JSON REST API server to run on a virtual or physical machine which has one or more database servers installed. The purpose of the DDN Connector is to act as a unified interface between the outside world and the database server to handle request to create a database / schema along with a connecting user and tablespace (whichever makes sense for the configured database), as well as to list databases / schemas, drop them, and finally, to create a database from a previously provided dump.
+Distributed Database Network Connector, or ddnc for short, is a minimal JSON REST API server to run on a virtual or physical machine which has one or more database servers installed. The purpose of the DDN Connector is to act as a unified interface between the outside world and the database server to handle request to create a database / schema along with a connecting user, as well as to list databases / schemas, drop them, and finally, to create a database from a previously provided dump.
 
 ## Supported Database Vendors
 1. MySQL
@@ -39,28 +39,26 @@ Simply navigate to `http://ip-address:port/list-databases`
 ### Create database
 **API endpoint:** POST `/create-database`
 #### Explanation
-Used to create a database with a unique database name and tablespace name (if required), as well as a user (with name and password), all provided in the POST request.
+Used to create a database with a unique database name and a user (with name and password), all provided in the POST request.
 
 Returns an error if:
 1. DB Name is not unique (already exists), or invalid
-2. Tablespace Name is not unique (already exists), or invalid
-3. Username is not unique (already exists), or invalid
+2. Username is not unique (already exists), or invalid
 
-Creating a database is a logical step; it encompasses the creation of a database and a connecting user, plus a tablespace, if needed. Privileges are also granted to the created user.
+Creating a database is a logical step; it encompasses the creation of a database and a connecting user. Privileges are also granted to the created user.
 
-Returns immediately with a success message if creating the database, tablespace and user have all completed successfully.
+Returns immediately with a success message if creating the database and user have all completed successfully.
 
 #### Post request details
 |Key|Value|
 |---|---|
 |database_name|Valid name for a database. Must be non-empty|
-|tablespace_name|Valid name for a tablespace. Can be empty (in case db used does not use tablespaces)|
 |username|Valid name for user. Must be non-empty|
 |password|Valid string for password. Must be non-empty|
 
 #### Example Curl request
 ```
-curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "username":"exampleUser", "password":"liferay"}' localhost:7000/create-database
+curl -X POST -d '{"database_name":"exampleDatabase", "username":"exampleUser", "password":"liferay"}' localhost:7000/create-database
 ```
 
 #### Example responses
@@ -79,7 +77,7 @@ curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "user
 ### Import database
 **API endpoint:** POST `/import-database`
 #### Explanation
-Starts an import process to import a dumpfile. The dumpfile should be reachable via a non-authenticated HTTP call. The file will be fetched by the Connector, imported, then discarded. A new database (with tablespace and user) will be created, privileges will be granted to the created user. (This is done by calling the `createDatabase` API)
+Starts an import process to import a dumpfile. The dumpfile should be reachable via a non-authenticated HTTP call. The file will be fetched by the Connector, imported, then discarded. A new database and user will be created, privileges will be granted to the created user. (This is done by calling the `createDatabase` API)
 
 Returns immediately with a Failure if the JSON is malformed, there are missing fields (see below), creating the database and user fails, or the file does not exist. Returns with true immediately if all of the above complete without an issue and starts an import process in the background.
 
@@ -87,14 +85,13 @@ Returns immediately with a Failure if the JSON is malformed, there are missing f
 |Key|Value|
 |---|---|
 |database_name|Valid name for a database. Must be non-empty|
-|tablespace_name|Valid name for a tablespace. Can be empty (in case db used does not use tablespaces)|
 |dumpfile_location|Valid location of dumpfile. Must be non-empty.|
 |username|Valid name for user. Must be non-empty|
 |password|Valid string for password. Must be non-empty|
 
 #### Example Curl request
 ```
-curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "username":"exampleUser", "password":"liferay", "dumpfile_location":"http://r2d2.liferay.int/share/route/to/valid/dumpfile.sql"}' localhost:7000/import-database
+curl -X POST -d '{"database_name":"exampleDatabase", "username":"exampleUser", "password":"liferay", "dumpfile_location":"http://r2d2.liferay.int/share/route/to/valid/dumpfile.sql"}' localhost:7000/import-database
 ```
 
 #### Example responses
@@ -111,18 +108,17 @@ The failures from `/create-database`, plus:
 ### Drop database
 **API endpoint:** POST `/drop-database`
 #### Explanation
-Used to drop the database. Dropping the database also drops the tablespace, its contents and datafiles (if any) and the user specified in the request. It responds with a success even if the database and user do not actually exist.
+Used to drop the database. Dropping the database also drops the user specified in the request. It responds with a success even if the database and user do not actually exist.
 
 #### Post request details
 |Key|Value|
 |---|---|
 |database_name|Valid name for a database. Must be non-empty|
-|tablespace_name|Valid name for a tablespace. Can be empty (in case db used does not use tablespaces)|
 |username|Valid name for user. Must be non-empty|
 
 #### Example Curl request
 ```
-curl -X POST -d '{"database_name":"exampleDatabase", "tablespace_name":"", "username":"exampleUser"}' localhost:7000/drop-database
+curl -X POST -d '{"database_name":"exampleDatabase", "username":"exampleUser"}' localhost:7000/drop-database
 ```
 #### Example response
 ```
