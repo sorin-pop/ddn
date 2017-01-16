@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -200,16 +202,23 @@ func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
 func (db *mysql) ImportDatabase(dbreq DBRequest) error {
-	_, err := db.conn.Exec(fmt.Sprintf("use %s", dbreq.DatabaseName))
+	userArg, pwArg, dbnameArg := fmt.Sprintf("-u%s", conf.User), fmt.Sprintf("-p%s", conf.Password), dbreq.DatabaseName
+
+	cmd := exec.Command(conf.Exec, userArg, pwArg, dbnameArg)
+
+	var file *os.File
+
+	file, err := os.Open(dbreq.DumpLocation)
 	if err != nil {
-		log.Println("Error in command 'use database':", err)
 		return err
 	}
+	defer file.Close()
 
-	_, err = db.conn.Exec(fmt.Sprintf("source %s", dbreq.DumpLocation))
+	cmd.Stdin = file
+
+	err = cmd.Run()
 	if err != nil {
-		log.Println("Error in source'ing file:", err)
-		return err
+		log.Fatal(err)
 	}
 
 	return nil
