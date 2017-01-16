@@ -206,8 +206,6 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 
 	cmd := exec.Command(conf.Exec, userArg, pwArg, dbnameArg)
 
-	var file *os.File
-
 	file, err := os.Open(dbreq.DumpLocation)
 	if err != nil {
 		return err

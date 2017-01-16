@@ -25,5 +25,5 @@ func startImport(dbreq DBRequest) {
 		return
 	}
 
-	log.Println("Import finished.")
+	log.Println("Import finished successfully.")
 }
