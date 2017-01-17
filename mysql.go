@@ -216,9 +216,12 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 
 	cmd.Stdin = file
 
+	var errBuf bytes.Buffer
+	cmd.Stderr = &errBuf
+
 	err = cmd.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf(errBuf.String())
 	}
 
 	return nil

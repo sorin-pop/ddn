@@ -146,7 +146,7 @@ func (db *postgres) DropDatabase(dbRequest DBRequest) error {
 }
 
 func (db *postgres) ImportDatabase(dbreq DBRequest) error {
-	userArg := fmt.Sprintf("-U %s", conf.User)
+	userArg := fmt.Sprintf("-U%s", conf.User)
 
 	cmd := exec.Command(conf.Exec, userArg, dbreq.DatabaseName)
 
@@ -158,9 +158,12 @@ func (db *postgres) ImportDatabase(dbreq DBRequest) error {
 
 	cmd.Stdin = file
 
+	var errBuf bytes.Buffer
+	cmd.Stderr = &errBuf
+
 	err = cmd.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf(errBuf.String())
 	}
 
 	return nil
