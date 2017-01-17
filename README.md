@@ -4,9 +4,11 @@ Distributed Database Network Connector, or ddnc for short, is a minimal JSON RES
 
 ## Supported Database Vendors
 1. MySQL
+2. PostgreSQL
 
 ### Tested versions:
 1. MySQL "5.5.53"
+2. PostgreSQL "9.4.9"
 
 ## Configuration
 On first run, the connector will generate a `ddnc.properties` file with dummy values inside that provides some needed configuration for the connector. The default configuration can be found below:
@@ -20,8 +22,9 @@ username="root"
 password="root"
 masterAddress="127.0.0.1"
 ```
-Currently, only `vendor`, `username`, `password` and `connectorPort` are used for configuration. `vendor` and `version` are also returned when the api `/whoami` is called.
+Currently all variables are used except `masterAddress`.
 
+The filename can be changed by specifying the `-p filename` flag. Also specifying the -v flag with either `mysql` or `postgres` will generate the default properties specific to the database server.
 
 ## API
 ### List databases
