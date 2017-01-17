@@ -19,6 +19,8 @@ func generateProps(filename string) (string, error) {
 	switch runtime.GOOS {
 	case "windows":
 		conf.Exec = "C:\\path\\to\\mysql.exe"
+	case "darwin":
+		conf.Exec = "/usr/local/mysql/bin/mysql"
 	default:
 		conf.Exec = "/usr/bin/mysql"
 	}
