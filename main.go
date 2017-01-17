@@ -67,7 +67,7 @@ func main() {
 		log.Fatal("Database vendor not recognized.")
 	}
 
-	err = db.Connect(conf.Vendor, conf.User, conf.Password, conf.DBPort)
+	err = db.Connect(conf.User, conf.Password, conf.DBPort)
 	if err != nil {
 		log.Fatal("Could not establish database connection:\n\t\t", err.Error())
 	}

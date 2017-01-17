@@ -15,11 +15,11 @@ type mysql struct {
 }
 
 // Connect creates and initialises a Database struct
-func (db *mysql) Connect(server, user, password, dbPort string) error {
+func (db *mysql) Connect(user, password, dbPort string) error {
 	var err error
 
 	datasource := fmt.Sprintf("%s:%s@tcp(127.0.0.1:%s)/", user, password, dbPort)
-	db.conn, err = sql.Open(server, datasource)
+	db.conn, err = sql.Open("mysql", datasource)
 	if err != nil {
 		log.Fatal(err)
 	}
