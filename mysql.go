@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
+
+	"bytes"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -219,6 +222,21 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	}
 
 	return nil
+}
+
+func (db *mysql) Version() (string, error) {
+	var buf bytes.Buffer
+
+	cmd := exec.Command(conf.Exec, "--version")
+	cmd.Stdout = &buf
+
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	re := regexp.MustCompile("[0-9]+.[0-9]+.[0-9]+")
+
+	return re.FindString(buf.String()), nil
 }
 
 func (db *mysql) dbExists(databasename string) (bool, error) {

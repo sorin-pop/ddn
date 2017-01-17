@@ -27,4 +27,7 @@ type Database interface {
 	// ListDatabase returns a list of strings - the names of the databases in the server
 	// All system tables are omitted from the returned list. If there's an error, it is returned.
 	ListDatabase() ([]string, error)
+
+	// Version returns the database server's version.
+	Version() (string, error)
 }

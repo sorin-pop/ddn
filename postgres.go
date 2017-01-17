@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
@@ -8,6 +9,8 @@ import (
 	"os/exec"
 
 	"strings"
+
+	"regexp"
 
 	_ "github.com/lib/pq"
 )
@@ -200,6 +203,22 @@ func (db *postgres) ListDatabase() ([]string, error) {
 	}
 
 	return list, nil
+}
+
+func (db *postgres) Version() (string, error) {
+	var buf bytes.Buffer
+
+	cmd := exec.Command(conf.Exec, "--version")
+	cmd.Stdout = &buf
+
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	re := regexp.MustCompile("[0-9.]+")
+
+	return re.FindString(buf.String()), nil
 }
 
 func (db *postgres) userExists(user string) (bool, error) {
