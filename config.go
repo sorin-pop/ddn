@@ -56,7 +56,7 @@ func NewConfig(vendor string) Config {
 		case "windows":
 			conf.Exec = "C:\\path\\to\\psql.exe"
 		case "darwin":
-			conf.Exec = "/Library/PostgreSQL/9.4/bin/createdb"
+			conf.Exec = "/Library/PostgreSQL/9.4/bin/psql"
 		default:
 			conf.Exec = "/usr/bin/psql"
 		}
