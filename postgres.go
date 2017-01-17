@@ -62,7 +62,7 @@ func (db *postgres) ListDatabase() ([]string, error) {
 		return nil, err
 	}
 
-	rows, err := db.conn.Query("select usename from pg_catalog.pg_user")
+	rows, err := db.conn.Query("SELECT datname FROM pg_database WHERE datistemplate = false;")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,14 +70,19 @@ func (db *postgres) ListDatabase() ([]string, error) {
 
 	list := make([]string, 0, 10)
 
-	var user string
+	var database string
 	for rows.Next() {
-		err = rows.Scan(&user)
+		err = rows.Scan(&database)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		list = append(list, user)
+		switch database {
+		case "postgres":
+			continue
+		}
+
+		list = append(list, database)
 	}
 
 	err = rows.Err()
@@ -92,6 +97,22 @@ func (db *postgres) userExists(user string) (bool, error) {
 	var count int
 
 	query := fmt.Sprintf("SELECT count(1) FROM pg_roles WHERE rolname='%s'", user)
+
+	err := db.conn.QueryRow(query).Scan(&count)
+	if err != nil {
+		return true, err
+	}
+	if count == 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (db *postgres) dbExists(database string) (bool, error) {
+	var count int
+
+	query := fmt.Sprintf("SELECT count(*) FROM pg_database WHERE datistemplate = false AND datname = '%s'", database)
 
 	err := db.conn.QueryRow(query).Scan(&count)
 	if err != nil {
