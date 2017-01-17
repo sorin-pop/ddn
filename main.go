@@ -26,7 +26,12 @@ func main() {
 	var err error
 
 	filename := flag.String("p", "ddnc.properties", "Specify the configuration file's name")
+	vendor := flag.String("v", "mysql", "Specify the vendor's name.")
 	flag.Parse()
+
+	if err = VendorSupported(*vendor); err != nil {
+		log.Fatal(err)
+	}
 
 	usr, err = user.Current()
 	if err != nil {
@@ -35,7 +40,7 @@ func main() {
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
 		log.Println("Couldn't find properties file, generating one")
-		file, err := generateProps(*filename)
+		file, err := generateProps(*vendor, *filename)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -63,6 +68,8 @@ func main() {
 	switch strings.ToLower(conf.Vendor) {
 	case "mysql":
 		db = new(mysql)
+	case "postgres":
+		db = new(postgres)
 	default:
 		log.Fatal("Database vendor not recognized.")
 	}

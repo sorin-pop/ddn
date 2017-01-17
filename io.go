@@ -3,27 +3,17 @@ package main
 import (
 	"log"
 	"os"
-	"runtime"
 	"text/template"
 )
 
-func generateProps(filename string) (string, error) {
+func generateProps(vendor, filename string) (string, error) {
 	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	conf := Config{"mysql", "5.5.53", "/usr/bin/mysql", "3306", "7000", "root", "root", "127.0.0.1"}
-
-	switch runtime.GOOS {
-	case "windows":
-		conf.Exec = "C:\\path\\to\\mysql.exe"
-	case "darwin":
-		conf.Exec = "/usr/local/mysql/bin/mysql"
-	default:
-		conf.Exec = "/usr/bin/mysql"
-	}
+	conf := NewConfig(vendor)
 
 	prop := `vendor="{{.Vendor}}"
 version="{{.Version}}"
