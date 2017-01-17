@@ -60,6 +60,8 @@ func main() {
 		db = new(mysql)
 	case "postgres":
 		db = new(postgres)
+	case "oracle":
+		db = new(oracle)
 	default:
 		log.Fatal("Database vendor not recognized.")
 	}

@@ -60,6 +60,24 @@ func NewConfig(vendor string) Config {
 		default:
 			conf.Exec = "/usr/bin/psql"
 		}
+	case "oracle":
+		conf = Config{
+			Vendor:        "oracle",
+			Version:       "11g",
+			DBPort:        "1521",
+			ConnectorPort: "7000",
+			User:          "system",
+			Password:      "password",
+			MasterAddress: "127.0.0.1",
+		}
+		switch runtime.GOOS {
+		case "windows":
+			conf.Exec = "C:\\path\\to\\sqlplus.exe"
+		case "darwin":
+			conf.Exec = "/path/to/sqlplus"
+		default:
+			conf.Exec = "/path/to/sqlplus"
+		}
 	}
 
 	return conf
@@ -68,7 +86,7 @@ func NewConfig(vendor string) Config {
 // VendorSupported returns an error if the specified vendor is not supported.
 func VendorSupported(vendor string) error {
 	switch vendor {
-	case "mysql", "postgres":
+	case "mysql", "postgres", "oracle":
 		return nil
 	}
 	return fmt.Errorf("Vendor %s not supported.", vendor)
