@@ -14,7 +14,7 @@ type mysql struct {
 	conn *sql.DB
 }
 
-// Connect creates and initialises a Database struct
+// Connect creates and initialises a Database struct and connects to the database
 func (db *mysql) Connect(user, password, dbPort string) error {
 	var err error
 
@@ -33,10 +33,12 @@ func (db *mysql) Connect(user, password, dbPort string) error {
 	return nil
 }
 
+// Close closes the connection to the database
 func (db *mysql) Close() {
 	db.conn.Close()
 }
 
+// Alive checks whether the connection is alive. Returns error if not.
 func (db *mysql) Alive() error {
 	defer func() {
 		if p := recover(); p != nil {
