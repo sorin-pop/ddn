@@ -57,7 +57,6 @@ func (db *mysql) Alive() error {
 // ListDatabase returns a list of strings - the names of the databases in the server
 // All system tables are omitted from the returned list. If there's an error, it is returned.
 func (db *mysql) ListDatabase() ([]string, error) {
-
 	var err error
 
 	err = db.Alive()
