@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
 
 	"strings"
 
@@ -139,7 +141,27 @@ func (db *postgres) DropDatabase(dbRequest DBRequest) error {
 
 	return nil
 }
-func (db *postgres) ImportDatabase(dbRequest DBRequest) error { return nil }
+
+func (db *postgres) ImportDatabase(dbreq DBRequest) error {
+	userArg := fmt.Sprintf("-U %s", conf.User)
+
+	cmd := exec.Command(conf.Exec, userArg, dbreq.DatabaseName)
+
+	file, err := os.Open(dbreq.DumpLocation)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	cmd.Stdin = file
+
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (db *postgres) ListDatabase() ([]string, error) {
 	var err error
