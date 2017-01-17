@@ -64,19 +64,6 @@ func main() {
 		log.Fatal("Database vendor not recognized.")
 	}
 
-	ver, err := db.Version()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if ver != conf.Version {
-		log.Println("Version mismatch, please update configuration file:")
-		log.Println("> Configuration:\t", conf.Version)
-		log.Println("> Read from DB:\t", ver)
-
-		conf.Version = ver
-	}
-
 	log.Println("Starting with properties:")
 	log.Println("Vendor:\t\t", conf.Vendor)
 	log.Println("Version:\t\t", conf.Version)
@@ -93,6 +80,19 @@ func main() {
 	}
 	defer db.Close()
 	log.Println("Database connection established")
+
+	ver, err := db.Version()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if ver != conf.Version {
+		log.Println("Version mismatch, please update configuration file:")
+		log.Println("> Configuration:\t", conf.Version)
+		log.Println("> Read from DB:\t", ver)
+
+		conf.Version = ver
+	}
 
 	log.Println("Starting to listen on port", conf.ConnectorPort)
 
