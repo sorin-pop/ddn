@@ -61,7 +61,6 @@ func (db *mysql) ListDatabase() ([]string, error) {
 
 	err = db.Alive()
 	if err != nil {
-		log.Println("Died:", err)
 		return nil, err
 	}
 
