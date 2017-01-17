@@ -79,9 +79,8 @@ func (db *mysql) ListDatabase() ([]string, error) {
 			log.Fatal(err)
 		}
 
-		if database == "information_schema" || database == "mysql" ||
-			database == "performance_schema" || database == "nbinfo" ||
-			database == "sys" {
+		switch database {
+		case "information_schema", "performance_schema", "mysql", "nbinfo", "sys":
 			continue
 		}
 
