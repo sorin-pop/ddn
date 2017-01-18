@@ -208,14 +208,7 @@ func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
 func (db *mysql) ImportDatabase(dbreq DBRequest) error {
-	userArg, pwArg, dbnameArg := fmt.Sprintf("-u%s", conf.User), fmt.Sprintf("-p%s", conf.Password), dbreq.DatabaseName
-	var cmd *exec.Cmd
-
-	if pwArg == "-p" {
-		cmd = exec.Command(conf.Exec, userArg, dbnameArg)
-	} else {
-		cmd = exec.Command(conf.Exec, userArg, pwArg, dbnameArg)
-	}
+	var errBuf bytes.Buffer
 
 	file, err := os.Open(dbreq.DumpLocation)
 	if err != nil {
@@ -223,9 +216,16 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	}
 	defer file.Close()
 
-	cmd.Stdin = file
+	args := make([]string, 0, 3)
 
-	var errBuf bytes.Buffer
+	if conf.Password != "" {
+		args = append(args, fmt.Sprintf("-p%s", conf.Password))
+	}
+	args = append(args, fmt.Sprintf("-u%s", conf.User), dbreq.DatabaseName)
+
+	cmd := exec.Command(conf.Exec, args...)
+
+	cmd.Stdin = file
 	cmd.Stderr = &errBuf
 
 	err = cmd.Run()
