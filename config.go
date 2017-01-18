@@ -66,7 +66,7 @@ func NewConfig(vendor string) Config {
 			Version:       "11g",
 			DBPort:        "1521",
 			ConnectorPort: "7000",
-			User:          "system",
+			User:          "sys",
 			Password:      "password",
 			MasterAddress: "127.0.0.1",
 		}
