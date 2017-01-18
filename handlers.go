@@ -27,7 +27,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if valid := validDBReq(dbreq.DatabaseName, dbreq.Username, dbreq.Password); valid != true {
+	if ok := present(dbreq.DatabaseName, dbreq.Username, dbreq.Password); !ok {
 		msg = invalidResponse()
 		sendResponse(w, msg)
 		return
@@ -85,7 +85,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if valid := validDBReq(dbreq.DatabaseName, dbreq.Username); valid != true {
+	if ok := present(dbreq.DatabaseName, dbreq.Username); !ok {
 		msg := invalidResponse()
 		sendResponse(w, msg)
 		return
@@ -122,7 +122,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if valid := validDBReq(dbreq.DumpLocation, dbreq.DatabaseName, dbreq.Username, dbreq.Password); valid != true {
+	if ok := present(dbreq.DumpLocation, dbreq.DatabaseName, dbreq.Username, dbreq.Password); !ok {
 		msg := invalidResponse()
 		sendResponse(w, msg)
 		return
@@ -189,14 +189,4 @@ func sendResponse(w http.ResponseWriter, msg JSONMessage) {
 	writeHeader(w, status)
 
 	w.Write(b)
-}
-
-func validDBReq(reqFields ...string) bool {
-	for _, field := range reqFields {
-		if field == "" {
-			return false
-		}
-	}
-
-	return true
 }
