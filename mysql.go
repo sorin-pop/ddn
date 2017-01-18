@@ -209,8 +209,13 @@ func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 // if it failed for some reason.
 func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	userArg, pwArg, dbnameArg := fmt.Sprintf("-u%s", conf.User), fmt.Sprintf("-p%s", conf.Password), dbreq.DatabaseName
-
-	cmd := exec.Command(conf.Exec, userArg, pwArg, dbnameArg)
+	var cmd *exec.Cmd
+	
+	if pwArg == "-p" {
+		cmd = exec.Command(conf.Exec, userArg, dbnameArg)
+	} else {
+		cmd = exec.Command(conf.Exec, userArg, pwArg, dbnameArg)
+	}
 
 	file, err := os.Open(dbreq.DumpLocation)
 	if err != nil {
