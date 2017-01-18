@@ -19,10 +19,16 @@ func generateProps(vendor, filename string) (string, error) {
 version="{{.Version}}"
 executable="{{.Exec}}"
 dbport="{{.DBPort}}"
+dbAddress="{{.DBAddress}}"
 connectorPort="{{.ConnectorPort}}"
 username="{{.User}}"
 password="{{.Password}}"
-masterAddress="{{.MasterAddress}}"`
+masterAddress="{{.MasterAddress}}"
+`
+
+	if conf.SID != "" {
+		prop += "oracle-sid=\"{{.SID}}\"\n"
+	}
 
 	tmpl, err := template.New("props").Parse(prop)
 	if err != nil {
