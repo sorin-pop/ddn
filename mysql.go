@@ -21,8 +21,8 @@ type mysql struct {
 func (db *mysql) Connect(c Config) error {
 	var err error
 
-	if ok := present(c.User, c.Password, c.DBAddress, c.DBPort); !ok {
-		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {password: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.Password, c.DBAddress, c.DBPort)
+	if ok := present(c.User, c.DBAddress, c.DBPort); !ok {
+		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.Password, c.DBAddress, c.DBPort)
 	}
 
 	datasource := fmt.Sprintf("%s:%s@tcp(%s:%s)/", c.User, c.Password, c.DBAddress, c.DBPort)
