@@ -67,16 +67,9 @@ func main() {
 	}
 
 	log.Println("Starting with properties:")
-	log.Println("Vendor:\t\t", conf.Vendor)
-	log.Println("Version:\t\t", conf.Version)
-	log.Println("Executable:\t\t", conf.Exec)
-	log.Println("Database port:\t", conf.DBPort)
-	log.Println("Connector port:\t", conf.ConnectorPort)
-	log.Println("Username:\t\t", conf.User)
-	log.Println("Password:\t\t ******")
-	log.Println("Master address:\t", conf.MasterAddress)
+	conf.Print()
 
-	err = db.Connect(conf.User, conf.Password, conf.DBPort)
+	err = db.Connect(conf)
 	if err != nil {
 		log.Fatal("Could not establish database connection:\n\t\t", err.Error())
 	}

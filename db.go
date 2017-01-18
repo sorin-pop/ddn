@@ -4,7 +4,7 @@ package main
 // should implement all its methods.
 type Database interface {
 	// Connect creates and initialises a Database struct and connects to the database
-	Connect(user, password, DBPort string) error
+	Connect(c Config) error
 
 	// Close closes the connection to the database
 	Close()

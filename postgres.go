@@ -19,10 +19,14 @@ type postgres struct {
 	conn *sql.DB
 }
 
-func (db *postgres) Connect(user, password, DBPort string) error {
+func (db *postgres) Connect(c Config) error {
 	var err error
 
-	datasource := fmt.Sprintf("postgres://%s:%s@127.0.0.1:%s", user, password, DBPort)
+	if ok := present(c.User, c.Password, c.DBAddress, c.DBPort); !ok {
+		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {password: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.Password, c.DBAddress, c.DBPort)
+	}
+
+	datasource := fmt.Sprintf("postgres://%s:%s@%s:%s", c.User, c.Password, c.DBAddress, c.DBPort)
 	db.conn, err = sql.Open("postgres", datasource)
 	if err != nil {
 		log.Fatal(err)

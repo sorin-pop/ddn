@@ -18,10 +18,14 @@ type mysql struct {
 }
 
 // Connect creates and initialises a Database struct and connects to the database
-func (db *mysql) Connect(user, password, dbPort string) error {
+func (db *mysql) Connect(c Config) error {
 	var err error
 
-	datasource := fmt.Sprintf("%s:%s@tcp(127.0.0.1:%s)/", user, password, dbPort)
+	if ok := present(c.User, c.Password, c.DBAddress, c.DBPort); !ok {
+		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {password: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.Password, c.DBAddress, c.DBPort)
+	}
+
+	datasource := fmt.Sprintf("%s:%s@tcp(%s:%s)/", c.User, c.Password, c.DBAddress, c.DBPort)
 	db.conn, err = sql.Open("mysql", datasource)
 	if err != nil {
 		log.Fatal(err)
