@@ -1,0 +1,13 @@
+NOTE: Install instructions @ http://apextips.blogspot.hu/2015/09/making-connections-to-oracle-database.html 
+and https://help.ubuntu.com/community/Oracle%20Instant%20Client
+
+
+prefixdir=/usr/lib/oracle/12.1/client64
+libdir=${prefixdir}/lib
+includedir=${prefixdir}/include
+
+Name: OCI
+Description: Oracle database driver
+Version: 12.1
+Libs: -L${libdir} -lclntsh
+Cflags: -I${includedir}
