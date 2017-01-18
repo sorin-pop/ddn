@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"runtime"
 )
 
@@ -17,6 +18,19 @@ type Config struct {
 	User          string `toml:"username"`
 	Password      string `toml:"password"`
 	MasterAddress string `toml:"masterAddress"`
+}
+
+// Print prints the Config object to the log.
+func (c Config) Print() {
+	log.Printf("Vendor:\t\t%s\n", conf.Vendor)
+	log.Printf("Version:\t\t%s\n", conf.Version)
+	log.Printf("Executable:\t\t%s\n", conf.Exec)
+	log.Printf("Database port:\t%s\n", conf.DBPort)
+	log.Printf("Databas addr:\t%s\n", conf.DBAddress)
+	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
+	log.Printf("Username:\t\t%s\n", conf.User)
+	log.Printf("Password:\t\t****\n")
+	log.Printf("Master address\t%s\n", conf.MasterAddress)
 }
 
 // NewConfig returns a configuration file based on the vendor
