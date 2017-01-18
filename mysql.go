@@ -22,7 +22,7 @@ func (db *mysql) Connect(c Config) error {
 	var err error
 
 	if ok := present(c.User, c.DBAddress, c.DBPort); !ok {
-		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.Password, c.DBAddress, c.DBPort)
+		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.DBAddress, c.DBPort)
 	}
 
 	datasource := fmt.Sprintf("%s:%s@tcp(%s:%s)/", c.User, c.Password, c.DBAddress, c.DBPort)
@@ -210,7 +210,7 @@ func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	userArg, pwArg, dbnameArg := fmt.Sprintf("-u%s", conf.User), fmt.Sprintf("-p%s", conf.Password), dbreq.DatabaseName
 	var cmd *exec.Cmd
-	
+
 	if pwArg == "-p" {
 		cmd = exec.Command(conf.Exec, userArg, dbnameArg)
 	} else {
