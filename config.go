@@ -11,6 +11,8 @@ type Config struct {
 	Version       string `toml:"version"`
 	Exec          string `toml:"executable"`
 	DBPort        string `toml:"dbport"`
+	DBAddress     string `toml:"dbaddress"`
+	SID           string `toml:"oracle-sid"`
 	ConnectorPort string `toml:"connectorPort"`
 	User          string `toml:"username"`
 	Password      string `toml:"password"`
@@ -27,6 +29,7 @@ func NewConfig(vendor string) Config {
 			Vendor:        "mysql",
 			Version:       "5.5.53",
 			DBPort:        "3306",
+			DBAddress:     "localhost",
 			ConnectorPort: "7000",
 			User:          "root",
 			Password:      "root",
@@ -46,6 +49,7 @@ func NewConfig(vendor string) Config {
 			Vendor:        "postgres",
 			Version:       "9.4.9",
 			DBPort:        "5432",
+			DBAddress:     "localhost",
 			ConnectorPort: "7000",
 			User:          "postgres",
 			Password:      "password",
@@ -65,6 +69,8 @@ func NewConfig(vendor string) Config {
 			Vendor:        "oracle",
 			Version:       "11g",
 			DBPort:        "1521",
+			DBAddress:     "localhost",
+			SID:           "xe",
 			ConnectorPort: "7000",
 			User:          "sys",
 			Password:      "password",
