@@ -37,16 +37,29 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 
 	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
 	
-	_, _, exitCode := RunCommand(conf.Exec, args...)
+	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
 	
 	if exitCode == 1920 {
 		return fmt.Errorf("User/schema " + dbRequest.Username + " already exists!")
+	}
+	
+	if exitCode != 0 {
+		return fmt.Errorf(stdout + " " + stderr)
 	}
 	
 	return nil
 }
 
 func (db *oracle) DropDatabase(dbRequest DBRequest) error {
+
+	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@drop_schema.sql", dbRequest.Username}
+
+	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	
+	if exitCode != 0 {
+		return fmt.Errorf(stdout + " " + stderr)
+	}
+	
 	return nil
 }
 
