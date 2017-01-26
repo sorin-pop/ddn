@@ -4,10 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	//"os/exec"
-	//"bytes"
-	//_ "github.com/mattn/go-oci8"
-
+	"strings"
+	
 )
 
 type oracle struct {
@@ -72,5 +70,14 @@ func (db *oracle) ListDatabase() ([]string, error) {
 }
 
 func (db *oracle) Version() (string, error) {
-	return "", nil
+	
+	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@get_db_version.sql"}
+
+	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	
+	if exitCode != 0 {
+		return "", fmt.Errorf(stdout + " " + stderr)
+	}
+	
+	return strings.TrimSpace(stdout), nil
 }
