@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	//"os/exec"
+	//"bytes"
+	//_ "github.com/mattn/go-oci8"
 
-	_ "github.com/mattn/go-oci8"
 )
 
 type oracle struct {
@@ -13,24 +15,6 @@ type oracle struct {
 }
 
 func (db *oracle) Connect(c Config) error {
-	var err error
-
-	if ok := present(c.User, c.Password, c.DBAddress, c.DBPort, c.SID); !ok {
-		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {password: %s}, {dbAddress: %s}, {dbPort: %s}, {oracle-sid: %s}", c.User, c.Password, c.DBAddress, c.DBPort, c.SID)
-	}
-
-	datasource := fmt.Sprintf("%s/%s@%s:%s/%s", c.User, c.Password, c.DBAddress, c.DBPort, c.SID)
-	db.conn, err = sql.Open("oci8", datasource)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = db.conn.Ping()
-	if err != nil {
-		db.conn.Close()
-		return err
-	}
-
 	return nil
 }
 
@@ -43,6 +27,22 @@ func (db *oracle) Alive() error {
 }
 
 func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
+
+	err := db.Alive()
+	if err != nil {
+		log.Println("Died:", err)
+		return fmt.Errorf("Unable to complete request as the underlying database is down")
+	}
+
+
+	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
+	
+	_, _, exitCode := RunCommand(conf.Exec, args...)
+	
+	if exitCode == 1920 {
+		return fmt.Errorf("User/schema " + dbRequest.Username + " already exists!")
+	}
+	
 	return nil
 }
 
