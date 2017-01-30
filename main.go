@@ -4,11 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os/user"
-
 	"net/http"
-
 	"os"
+	"os/user"
 
 	"github.com/BurntSushi/toml"
 )
