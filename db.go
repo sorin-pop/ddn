@@ -48,7 +48,7 @@ func VendorSupported(vendor string) error {
 		}
 	}
 
-	return fmt.Errorf("Vendor %s not supported.", vendor)
+	return fmt.Errorf("Vendor %q not supported.", vendor)
 }
 
 // GetDB returns the vendor-specific implementation of the Database interface
@@ -66,7 +66,7 @@ func GetDB(vendor string) (Database, error) {
 	case "oracle":
 		db = new(oracle)
 	default:
-		return nil, fmt.Errorf("Database %s not recognized", vendor)
+		return nil, fmt.Errorf("Database %q not recognized", vendor)
 	}
 
 	return db, nil
