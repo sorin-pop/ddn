@@ -1,1 +1,2 @@
-ddnc.properties
+*.properties
+*.conf
