@@ -41,6 +41,7 @@ type Database interface {
 
 // VendorSupported returns an error if the specified vendor is not supported.
 func VendorSupported(vendor string) error {
+	vendor = strings.ToLower(vendor)
 	for _, v := range vendors {
 		if v == vendor {
 			return nil
