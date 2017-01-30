@@ -6,6 +6,8 @@ import (
 	"runtime"
 )
 
+var vendors = []string{"mysql", "oracle", "postgres"}
+
 // Config to hold the database server information
 type Config struct {
 	Vendor            string `toml:"vendor"`
@@ -107,9 +109,11 @@ func NewConfig(vendor string) Config {
 
 // VendorSupported returns an error if the specified vendor is not supported.
 func VendorSupported(vendor string) error {
-	switch vendor {
-	case "mysql", "postgres", "oracle":
-		return nil
+	for _, v := range vendors {
+		if v == vendor {
+			return nil
+		}
 	}
+
 	return fmt.Errorf("Vendor %s not supported.", vendor)
 }
