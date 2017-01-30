@@ -26,7 +26,7 @@ func TestGetDB(t *testing.T) {
 	for _, v := range passingCases {
 		_, err := GetDB(v)
 		if err != nil {
-			t.Errorf("Error; Should have passed, but failed for %q with message %q", v, err.Error)
+			t.Errorf("Error; Should have passed, but failed for %q with message %q", v, err.Error())
 		}
 	}
 
