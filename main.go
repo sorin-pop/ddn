@@ -10,8 +10,6 @@ import (
 
 	"os"
 
-	"strings"
-
 	"github.com/BurntSushi/toml"
 )
 
@@ -55,15 +53,9 @@ func main() {
 		log.Fatalf("Database executable '%s' doesn't exist.", conf.Exec)
 	}
 
-	switch strings.ToLower(conf.Vendor) {
-	case "mysql":
-		db = new(mysql)
-	case "postgres":
-		db = new(postgres)
-	case "oracle":
-		db = new(oracle)
-	default:
-		log.Fatal("Database vendor not recognized.")
+	db, err = GetDB(conf.Vendor)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	log.Println("Starting with properties:")

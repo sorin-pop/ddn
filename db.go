@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Database interface to be used when running queries. All DB implementations
 // should implement all its methods.
 type Database interface {
@@ -30,4 +35,25 @@ type Database interface {
 
 	// Version returns the database server's version.
 	Version() (string, error)
+}
+
+// GetDB returns the vendor-specific implementation of the Database interface
+func GetDB(vendor string) (Database, error) {
+	if err := VendorSupported(vendor); err != nil {
+		return nil, err
+	}
+
+	var db Database
+	switch strings.ToLower(vendor) {
+	case "mysql":
+		db = new(mysql)
+	case "postgres":
+		db = new(postgres)
+	case "oracle":
+		db = new(oracle)
+	default:
+		return nil, fmt.Errorf("Database %s not recognized", vendor)
+	}
+
+	return db, nil
 }
