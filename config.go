@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 )
-
-var vendors = []string{"mysql", "oracle", "postgres"}
 
 // Config to hold the database server information
 type Config struct {
@@ -105,15 +102,4 @@ func NewConfig(vendor string) Config {
 	}
 
 	return conf
-}
-
-// VendorSupported returns an error if the specified vendor is not supported.
-func VendorSupported(vendor string) error {
-	for _, v := range vendors {
-		if v == vendor {
-			return nil
-		}
-	}
-
-	return fmt.Errorf("Vendor %s not supported.", vendor)
 }

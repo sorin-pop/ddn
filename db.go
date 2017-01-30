@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+var vendors = []string{"mysql", "oracle", "postgres"}
+
 // Database interface to be used when running queries. All DB implementations
 // should implement all its methods.
 type Database interface {
@@ -35,6 +37,17 @@ type Database interface {
 
 	// Version returns the database server's version.
 	Version() (string, error)
+}
+
+// VendorSupported returns an error if the specified vendor is not supported.
+func VendorSupported(vendor string) error {
+	for _, v := range vendors {
+		if v == vendor {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Vendor %s not supported.", vendor)
 }
 
 // GetDB returns the vendor-specific implementation of the Database interface
