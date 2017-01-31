@@ -29,6 +29,12 @@ func (c Config) Print() {
 	log.Printf("Executable:\t\t%s\n", conf.Exec)
 	log.Printf("Database port:\t%s\n", conf.DBPort)
 	log.Printf("Database addr:\t%s\n", conf.DBAddress)
+
+	if conf.Vendor == "oracle" {
+		log.Printf("SID:\t\t%s", conf.SID)
+		log.Printf("Tablespace:\t\t%s", conf.DefaultTablespace)
+	}
+
 	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
 	log.Printf("Username:\t\t%s\n", conf.User)
 	log.Printf("Password:\t\t****\n")
