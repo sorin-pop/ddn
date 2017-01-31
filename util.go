@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -61,7 +62,8 @@ func RunCommand(name string, args ...string) CommandResult {
 		exitCode = ws.ExitStatus()
 	}
 
-	log.Printf("command result, stdout: %v, stderr: %v, exitCode: %v", stdout, stderr, exitCode)
+	stdout = strings.TrimSuffix(stdout, "\n")
+	stderr = strings.TrimSuffix(stderr, "\n")
 
 	return CommandResult{stdout, stderr, exitCode}
 }

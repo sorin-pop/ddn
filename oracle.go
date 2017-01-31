@@ -40,7 +40,7 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 	}
 
 	if res.exitCode != 0 {
-		return fmt.Errorf(res.stdout, res.stderr)
+		return fmt.Errorf("Unable to create database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 	}
 
 	return nil
@@ -53,7 +53,7 @@ func (db *oracle) DropDatabase(dbRequest DBRequest) error {
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		return fmt.Errorf(res.stdout, res.stderr)
+		return fmt.Errorf("Unable to drop database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 	}
 
 	return nil
@@ -74,7 +74,7 @@ func (db *oracle) Version() (string, error) {
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		return "", fmt.Errorf(res.stdout, res.stderr)
+		return "", fmt.Errorf("Unable to get Oracle version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 	}
 
 	return strings.TrimSpace(res.stdout), nil
