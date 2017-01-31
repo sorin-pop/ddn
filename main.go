@@ -20,14 +20,9 @@ var (
 
 func main() {
 	var err error
+	filename := flag.String("p", "ddnc.conf", "Specify the configuration file's name")
 
-	filename := flag.String("p", "ddnc.properties", "Specify the configuration file's name")
-	vendor := flag.String("v", "mysql", "Specify the vendor's name.")
 	flag.Parse()
-
-	if err = VendorSupported(*vendor); err != nil {
-		log.Fatal(err)
-	}
 
 	usr, err = user.Current()
 	if err != nil {
@@ -35,12 +30,12 @@ func main() {
 	}
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
-		log.Println("Couldn't find properties file, generating one")
-		file, err := generateProps(*vendor, *filename)
+		log.Println("Couldn't find properties file, generating one.")
+
+		err := generateProps(*filename)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Fatalf("Generated '%s' with dummy values next to executable. Please update it with real values and restart the connector", file)
 	}
 
 	if _, err := toml.DecodeFile(*filename, &conf); err != nil {

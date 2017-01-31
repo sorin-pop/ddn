@@ -6,14 +6,14 @@ import (
 	"text/template"
 )
 
-func generateProps(vendor, filename string) (string, error) {
+func generateProps(filename string) error {
+	filename, conf := generateInteractive(filename)
+
 	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
-
-	conf := NewConfig(vendor)
 
 	prop := `vendor="{{.Vendor}}"
 version="{{.Version}}"
@@ -46,5 +46,5 @@ masterAddress="{{.MasterAddress}}"
 
 	file.Sync()
 
-	return filename, nil
+	return nil
 }

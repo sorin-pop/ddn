@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"runtime"
+
+	"github.com/djavorszky/prompter"
 )
 
 // Config to hold the database server information
@@ -102,4 +104,43 @@ func NewConfig(vendor string) Config {
 	}
 
 	return conf
+}
+
+func generateInteractive(filename string) (string, Config) {
+	var (
+		ok    = false
+		vType = 0
+	)
+
+	for !ok {
+		vType, ok = prompter.AskSelectionDef("What is the database vendor?", 0, vendors)
+	}
+
+	vendor := vendors[vType]
+	def := NewConfig(vendor)
+
+	var config Config
+
+	config.Vendor = vendor
+	config.Version = prompter.Ask("What is the database version?")
+	config.DBPort = prompter.AskDef("What is the database port?", def.DBPort)
+	config.DBAddress = prompter.AskDef("What is the database address?", def.DBAddress)
+
+	if vendor == "oracle" {
+		config.SID = prompter.AskDef("What is the SID?", def.SID)
+		config.Exec = prompter.AskDef("Where is the sqlplus executable?", def.Exec)
+	} else if vendor == "mysql" {
+		config.Exec = prompter.AskDef("Where is the mysql executable?", def.Exec)
+	} else if vendor == "postgres" {
+		config.Exec = prompter.AskDef("Where is the psql executable?", def.Exec)
+	}
+
+	config.User = prompter.AskDef("Who is the database user?", def.User)
+	config.Password = prompter.AskDef("What is the database password?", def.Password)
+	config.ConnectorPort = prompter.AskDef("What should the connector's port be?", def.ConnectorPort)
+	config.MasterAddress = prompter.AskDef("What is the address of the Master server?", def.MasterAddress)
+
+	fname := prompter.AskDef("What should we name the configuration file?", filename)
+
+	return fname, config
 }
