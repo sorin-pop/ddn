@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"strings"
 
@@ -235,7 +236,7 @@ func (db *postgres) RequiredFields(dbreq DBRequest, reqType int) []string {
 	case createDB:
 		req = append(req, dbreq.Password)
 	case importDB:
-		req = append(req, dbreq.Password, dbreq.DumpLocation)
+		req = append(req, strconv.Itoa(dbreq.ID), dbreq.Password, dbreq.DumpLocation)
 	}
 
 	return req

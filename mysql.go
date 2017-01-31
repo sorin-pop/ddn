@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 
 	"bytes"
 
@@ -258,7 +259,7 @@ func (db *mysql) RequiredFields(dbreq DBRequest, reqType int) []string {
 	case createDB:
 		req = append(req, dbreq.Password)
 	case importDB:
-		req = append(req, dbreq.Password, dbreq.DumpLocation)
+		req = append(req, strconv.Itoa(dbreq.ID), dbreq.Password, dbreq.DumpLocation)
 	}
 
 	return req
