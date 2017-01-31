@@ -28,7 +28,7 @@ func (c Config) Print() {
 	log.Printf("Version:\t\t%s\n", conf.Version)
 	log.Printf("Executable:\t\t%s\n", conf.Exec)
 	log.Printf("Database port:\t%s\n", conf.DBPort)
-	log.Printf("Databas addr:\t%s\n", conf.DBAddress)
+	log.Printf("Database addr:\t%s\n", conf.DBAddress)
 	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
 	log.Printf("Username:\t\t%s\n", conf.User)
 	log.Printf("Password:\t\t****\n")
@@ -128,6 +128,7 @@ func generateInteractive(filename string) (string, Config) {
 
 	if vendor == "oracle" {
 		config.SID = prompter.AskDef("What is the SID?", def.SID)
+		config.DefaultTablespace = prompter.AskDef("What is the default tablespace?", def.DefaultTablespace)
 		config.Exec = prompter.AskDef("Where is the sqlplus executable?", def.Exec)
 	} else if vendor == "mysql" {
 		config.Exec = prompter.AskDef("Where is the mysql executable?", def.Exec)
