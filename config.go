@@ -8,17 +8,17 @@ import (
 
 // Config to hold the database server information
 type Config struct {
-	Vendor        string `toml:"vendor"`
-	Version       string `toml:"version"`
-	Exec          string `toml:"executable"`
-	DBPort        string `toml:"dbport"`
-	DBAddress     string `toml:"dbaddress"`
-	SID           string `toml:"oracle-sid"`
-	ConnectorPort string `toml:"connectorPort"`
-	User          string `toml:"username"`
-	Password      string `toml:"password"`
-	DefaultTablespace      string `toml:"default-tablespace"`
-	MasterAddress string `toml:"masterAddress"`
+	Vendor            string `toml:"vendor"`
+	Version           string `toml:"version"`
+	Exec              string `toml:"executable"`
+	DBPort            string `toml:"dbport"`
+	DBAddress         string `toml:"dbaddress"`
+	SID               string `toml:"oracle-sid"`
+	ConnectorPort     string `toml:"connectorPort"`
+	User              string `toml:"username"`
+	Password          string `toml:"password"`
+	DefaultTablespace string `toml:"default-tablespace"`
+	MasterAddress     string `toml:"masterAddress"`
 }
 
 // Print prints the Config object to the log.
@@ -81,16 +81,16 @@ func NewConfig(vendor string) Config {
 		}
 	case "oracle":
 		conf = Config{
-			Vendor:        "oracle",
-			Version:       "11g",
-			DBPort:        "1521",
-			DBAddress:     "localhost",
-			SID:           "orcl",
-			ConnectorPort: "7000",
-			User:          "system",
-			Password:      "password",
-			DefaultTablespace:	"USERS",
-			MasterAddress: "127.0.0.1",
+			Vendor:            "oracle",
+			Version:           "11g",
+			DBPort:            "1521",
+			DBAddress:         "localhost",
+			SID:               "orcl",
+			ConnectorPort:     "7000",
+			User:              "system",
+			Password:          "password",
+			DefaultTablespace: "USERS",
+			MasterAddress:     "127.0.0.1",
 		}
 		switch runtime.GOOS {
 		case "windows":

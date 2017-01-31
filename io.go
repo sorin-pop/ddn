@@ -29,7 +29,7 @@ masterAddress="{{.MasterAddress}}"
 	if conf.SID != "" {
 		prop += "oracle-sid=\"{{.SID}}\"\n"
 	}
-	
+
 	if conf.DefaultTablespace != "" {
 		prop += "default-tablespace=\"{{.DefaultTablespace}}\"\n"
 	}
