@@ -31,16 +31,16 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 		return fmt.Errorf("Unable to complete request as the underlying database is down")
 	}
 
-	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
 
-	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	res := RunCommand(conf.Exec, args...)
 
-	if exitCode == 1920 {
-		return fmt.Errorf("User/schema " + dbRequest.Username + " already exists!")
+	if res.exitCode == 1920 {
+		return fmt.Errorf("User/schema %s already exists!", dbRequest.Username)
 	}
 
-	if exitCode != 0 {
-		return fmt.Errorf(stdout + " " + stderr)
+	if res.exitCode != 0 {
+		return fmt.Errorf(res.stdout, res.stderr)
 	}
 
 	return nil
@@ -48,12 +48,12 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 
 func (db *oracle) DropDatabase(dbRequest DBRequest) error {
 
-	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@drop_schema.sql", dbRequest.Username}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@drop_schema.sql", dbRequest.Username}
 
-	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	res := RunCommand(conf.Exec, args...)
 
-	if exitCode != 0 {
-		return fmt.Errorf(stdout + " " + stderr)
+	if res.exitCode != 0 {
+		return fmt.Errorf(res.stdout, res.stderr)
 	}
 
 	return nil
@@ -69,13 +69,13 @@ func (db *oracle) ListDatabase() ([]string, error) {
 
 func (db *oracle) Version() (string, error) {
 
-	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@get_db_version.sql"}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@get_db_version.sql"}
 
-	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	res := RunCommand(conf.Exec, args...)
 
-	if exitCode != 0 {
-		return "", fmt.Errorf(stdout + " " + stderr)
+	if res.exitCode != 0 {
+		return "", fmt.Errorf(res.stdout, res.stderr)
 	}
 
-	return strings.TrimSpace(stdout), nil
+	return strings.TrimSpace(res.stdout), nil
 }

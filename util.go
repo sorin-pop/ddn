@@ -21,16 +21,21 @@ func present(reqFields ...string) bool {
 
 // RunCommand executes a command with specified arguments and returns its exitcode, stdout
 // and stderr as well.
-func RunCommand(name string, args ...string) (stdout string, stderr string, exitCode int) {
-	log.Println("running command: ", name, args)
-	var outbuf, errbuf bytes.Buffer
+func RunCommand(name string, args ...string) CommandResult {
+	var (
+		outbuf, errbuf bytes.Buffer
+		exitCode       int
+	)
+
+	log.Println("Running command: ", name, args)
+
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
 
 	err := cmd.Run()
-	stdout = outbuf.String()
-	stderr = errbuf.String()
+	stdout := outbuf.String()
+	stderr := errbuf.String()
 
 	if err != nil {
 		// try to get the exit code
@@ -43,7 +48,9 @@ func RunCommand(name string, args ...string) (stdout string, stderr string, exit
 			// empty string very likely, so we use the default fail code, and format err
 			// to string and set to stderr
 			log.Printf("Could not get exit code for failed program: %v, %v", name, args)
+
 			exitCode = defaultFailedCode
+
 			if stderr == "" {
 				stderr = err.Error()
 			}
@@ -53,6 +60,15 @@ func RunCommand(name string, args ...string) (stdout string, stderr string, exit
 		ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
 		exitCode = ws.ExitStatus()
 	}
+
 	log.Printf("command result, stdout: %v, stderr: %v, exitCode: %v", stdout, stderr, exitCode)
-	return
+
+	return CommandResult{stdout, stderr, exitCode}
+}
+
+// CommandResult is a struct that contains the stdout, stderr and exitcode
+// of a command that was executed.
+type CommandResult struct {
+	stdout, stderr string
+	exitCode       int
 }
