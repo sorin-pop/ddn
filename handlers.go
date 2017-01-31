@@ -3,10 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+
+	"github.com/djavorszky/notif"
 )
 
 // index should display whenever someone visits the main page.
+
 func index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Welcome to the index!")
 }
@@ -63,9 +67,19 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, msg)
 }
 
-// getDatabase will get a specific database with a specific name
-func getDatabase(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to getDatabase")
+// echo echoes whatever it receives (as JSON) to the log.
+func echo(w http.ResponseWriter, r *http.Request) {
+	var msg notif.Msg
+
+	err := json.NewDecoder(r.Body).Decode(&msg)
+	if err != nil {
+		errMsg := errorJSONResponse(err)
+		sendResponse(w, errMsg)
+
+		return
+	}
+
+	log.Printf("%+v", msg)
 }
 
 // dropDatabase will drop the named database with its tablespace and user

@@ -32,12 +32,6 @@ var routes = Routes{
 		listDatabases,
 	},
 	route{
-		"getDatabase",
-		"GET",
-		"/get-database",
-		getDatabase,
-	},
-	route{
 		"dropDatabase",
 		"POST",
 		"/drop-database",
@@ -60,5 +54,11 @@ var routes = Routes{
 		"GET",
 		"/heartbeat",
 		heartbeat,
+	},
+	route{
+		"echo",
+		"POST",
+		"/echo",
+		echo,
 	},
 }
