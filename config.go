@@ -17,6 +17,7 @@ type Config struct {
 	ConnectorPort string `toml:"connectorPort"`
 	User          string `toml:"username"`
 	Password      string `toml:"password"`
+	DefaultTablespace      string `toml:"default-tablespace"`
 	MasterAddress string `toml:"masterAddress"`
 }
 
@@ -88,6 +89,7 @@ func NewConfig(vendor string) Config {
 			ConnectorPort: "7000",
 			User:          "system",
 			Password:      "password",
+			DefaultTablespace:	"USERS",
 			MasterAddress: "127.0.0.1",
 		}
 		switch runtime.GOOS {

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-
-	_ "github.com/mattn/go-oci8"
+	"strings"
+	
 )
 
 type oracle struct {
@@ -13,24 +13,6 @@ type oracle struct {
 }
 
 func (db *oracle) Connect(c Config) error {
-	var err error
-
-	if ok := present(c.User, c.Password, c.DBAddress, c.DBPort, c.SID); !ok {
-		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {password: %s}, {dbAddress: %s}, {dbPort: %s}, {oracle-sid: %s}", c.User, c.Password, c.DBAddress, c.DBPort, c.SID)
-	}
-
-	datasource := fmt.Sprintf("%s/%s@%s:%s/%s", c.User, c.Password, c.DBAddress, c.DBPort, c.SID)
-	db.conn, err = sql.Open("oci8", datasource)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = db.conn.Ping()
-	if err != nil {
-		db.conn.Close()
-		return err
-	}
-
 	return nil
 }
 
@@ -43,10 +25,39 @@ func (db *oracle) Alive() error {
 }
 
 func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
+
+	err := db.Alive()
+	if err != nil {
+		log.Println("Died:", err)
+		return fmt.Errorf("Unable to complete request as the underlying database is down")
+	}
+
+
+	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
+	
+	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	
+	if exitCode == 1920 {
+		return fmt.Errorf("User/schema " + dbRequest.Username + " already exists!")
+	}
+	
+	if exitCode != 0 {
+		return fmt.Errorf(stdout + " " + stderr)
+	}
+	
 	return nil
 }
 
 func (db *oracle) DropDatabase(dbRequest DBRequest) error {
+
+	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@drop_schema.sql", dbRequest.Username}
+
+	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	
+	if exitCode != 0 {
+		return fmt.Errorf(stdout + " " + stderr)
+	}
+	
 	return nil
 }
 
@@ -59,5 +70,14 @@ func (db *oracle) ListDatabase() ([]string, error) {
 }
 
 func (db *oracle) Version() (string, error) {
-	return "", nil
+	
+	args := []string{"-L", "-S", conf.User + "/" + conf.Password, "@get_db_version.sql"}
+
+	stdout, stderr, exitCode := RunCommand(conf.Exec, args...)
+	
+	if exitCode != 0 {
+		return "", fmt.Errorf(stdout + " " + stderr)
+	}
+	
+	return strings.TrimSpace(stdout), nil
 }
