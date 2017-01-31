@@ -19,6 +19,8 @@ func present(reqFields ...string) bool {
 	return true
 }
 
+// RunCommand executes a command with specified arguments and returns its exitcode, stdout
+// and stderr as well.
 func RunCommand(name string, args ...string) (stdout string, stderr string, exitCode int) {
 	log.Println("running command: ", name, args)
 	var outbuf, errbuf bytes.Buffer
