@@ -27,7 +27,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := present(dbreq.DatabaseName, dbreq.Username, dbreq.Password); !ok {
+	if ok := present(db.RequiredFields(dbreq, createDB)...); !ok {
 		msg = invalidResponse()
 		sendResponse(w, msg)
 		return
@@ -85,7 +85,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := present(dbreq.DatabaseName, dbreq.Username); !ok {
+	if ok := present(db.RequiredFields(dbreq, dropDB)...); !ok {
 		msg := invalidResponse()
 		sendResponse(w, msg)
 		return
@@ -122,7 +122,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := present(dbreq.DumpLocation, dbreq.DatabaseName, dbreq.Username, dbreq.Password); !ok {
+	if ok := present(db.RequiredFields(dbreq, importDB)...); !ok {
 		msg := invalidResponse()
 		sendResponse(w, msg)
 		return

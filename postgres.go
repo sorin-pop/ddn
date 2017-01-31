@@ -228,6 +228,19 @@ func (db *postgres) Version() (string, error) {
 	return re.FindString(buf.String()), nil
 }
 
+func (db *postgres) RequiredFields(dbreq DBRequest, reqType int) []string {
+	req := []string{dbreq.DatabaseName, dbreq.Username}
+
+	switch reqType {
+	case createDB:
+		req = append(req, dbreq.Password)
+	case importDB:
+		req = append(req, dbreq.Password, dbreq.DumpLocation)
+	}
+
+	return req
+}
+
 func (db *postgres) userExists(user string) (bool, error) {
 	var count int
 

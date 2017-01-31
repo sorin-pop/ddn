@@ -79,3 +79,16 @@ func (db *oracle) Version() (string, error) {
 
 	return strings.TrimSpace(res.stdout), nil
 }
+
+func (db *oracle) RequiredFields(dbreq DBRequest, reqType int) []string {
+	req := []string{dbreq.Username}
+
+	switch reqType {
+	case createDB:
+		req = append(req, dbreq.Password)
+	case importDB:
+		req = append(req, dbreq.Password, dbreq.DumpLocation)
+	}
+
+	return req
+}

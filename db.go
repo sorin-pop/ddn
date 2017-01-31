@@ -7,6 +7,12 @@ import (
 
 var vendors = []string{"mysql", "oracle", "postgres"}
 
+const (
+	createDB int = iota
+	dropDB
+	importDB
+)
+
 // Database interface to be used when running queries. All DB implementations
 // should implement all its methods.
 type Database interface {
@@ -37,6 +43,10 @@ type Database interface {
 
 	// Version returns the database server's version.
 	Version() (string, error)
+
+	// RequiredFields returns the fields that are required to be present in an API call, specific
+	// to the database vendor
+	RequiredFields(dbRequest DBRequest, reqType int) []string
 }
 
 // VendorSupported returns an error if the specified vendor is not supported.

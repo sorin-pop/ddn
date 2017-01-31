@@ -251,6 +251,19 @@ func (db *mysql) Version() (string, error) {
 	return re.FindString(buf.String()), nil
 }
 
+func (db *mysql) RequiredFields(dbreq DBRequest, reqType int) []string {
+	req := []string{dbreq.DatabaseName, dbreq.Username}
+
+	switch reqType {
+	case createDB:
+		req = append(req, dbreq.Password)
+	case importDB:
+		req = append(req, dbreq.Password, dbreq.DumpLocation)
+	}
+
+	return req
+}
+
 func (db *mysql) dbExists(databasename string) (bool, error) {
 	var count int
 
