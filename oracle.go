@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -28,8 +27,7 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {
-		log.Println("Died:", err)
-		return fmt.Errorf("Unable to complete request as the underlying database is down")
+		return fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
 	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
@@ -37,11 +35,11 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode == 1920 {
-		return fmt.Errorf("User/schema %s already exists!", dbRequest.Username)
+		return fmt.Errorf("user/schema %s already exists", dbRequest.Username)
 	}
 
 	if res.exitCode != 0 {
-		return fmt.Errorf("Unable to create database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		return fmt.Errorf("unable to create database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 	}
 
 	return nil
