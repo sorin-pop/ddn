@@ -28,33 +28,41 @@ func startImport(dbreq DBRequest) {
 	if isArchive(path) {
 		ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Extracting archive"}
 
-		var files []string
+		var (
+			files []string
+			err   error
+		)
 		switch filepath.Ext(path) {
-		case "zip":
-			files, err := extractZip(path)
-
-			if err != nil {
-				log.Printf("could not extract zip: %s", err.Error())
-
-				ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Extracting file failed: " + err.Error()}
-				return
-			}
-			for _, f := range files {
-				defer os.Remove(f)
-			}
-
-			if len(files) > 1 {
-				log.Println("import process stopped; more than one file found in archive")
-
-				ch <- notif.Y{StatusCode: http.StatusBadRequest, Msg: "Archive contains more than one file, import stopped."}
-				return
-			}
+		case ".zip":
+			files, err = unzip(path)
+		case ".gz":
+			files, err = ungzip(path)
 		default:
 			log.Println("import process stopped; encountered unsupported archive")
 
-			ch <- notif.Y{StatusCode: http.StatusBadRequest, Msg: "Unsupported archive."}
+			ch <- notif.Y{StatusCode: http.StatusBadRequest, Msg: "Unsupported archive"}
 			return
 		}
+
+		log.Println(files[0])
+
+		if err != nil {
+			log.Printf("could not extract zip: %s", err.Error())
+
+			ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Extracting file failed: " + err.Error()}
+			return
+		}
+		for _, f := range files {
+			defer os.Remove(f)
+		}
+
+		if len(files) > 1 {
+			log.Println("import process stopped; more than one file found in archive")
+
+			ch <- notif.Y{StatusCode: http.StatusBadRequest, Msg: "Archive contains more than one file, import stopped"}
+			return
+		}
+
 		path = files[0]
 	}
 
@@ -70,5 +78,5 @@ func startImport(dbreq DBRequest) {
 		ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Importing dump failed: " + err.Error()}
 		return
 	}
-	ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Import finished successfully."}
+	ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Import finished successfully"}
 }

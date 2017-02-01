@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
@@ -52,7 +53,7 @@ masterAddress="{{.MasterAddress}}"
 	return nil
 }
 
-func extractZip(filepath string) ([]string, error) {
+func unzip(filepath string) ([]string, error) {
 	r, err := zip.OpenReader(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("creating zip reader failed: %s", err.Error())
@@ -61,7 +62,7 @@ func extractZip(filepath string) ([]string, error) {
 
 	var files []string
 	for _, f := range r.File {
-		name, err := extractFile(f)
+		name, err := unzipFile(f)
 		if err != nil {
 			return nil, fmt.Errorf("extracting zip file failed: %s", err.Error())
 		}
@@ -72,7 +73,7 @@ func extractZip(filepath string) ([]string, error) {
 	return files, nil
 }
 
-func extractFile(f *zip.File) (string, error) {
+func unzipFile(f *zip.File) (string, error) {
 	src, err := f.Open()
 	if err != nil {
 		return "", fmt.Errorf("opening zipfile failed: %s", err.Error())
@@ -93,9 +94,35 @@ func extractFile(f *zip.File) (string, error) {
 	return f.Name, nil
 }
 
+func ungzip(path string) ([]string, error) {
+	reader, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("opening gzipfile failed: %s", err.Error())
+	}
+	defer reader.Close()
+
+	archive, err := gzip.NewReader(reader)
+	if err != nil {
+		return nil, fmt.Errorf("creating gzip reader failed: %s", err.Error())
+	}
+	defer archive.Close()
+
+	dst, err := os.Create(archive.Header.Name)
+	if err != nil {
+		return nil, fmt.Errorf("could not create output file: %s", err.Error())
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, archive)
+
+	e := []string{dst.Name()}
+
+	return e, nil
+}
+
 func isArchive(path string) bool {
 	switch filepath.Ext(path) {
-	case "zip", "tar", "tar.gz":
+	case ".zip", ".tar", ".gz":
 		return true
 	}
 
