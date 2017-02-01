@@ -7,15 +7,19 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
 
+const version = "0.6.8"
+
 var (
-	conf Config
-	db   Database
-	port string
-	usr  *user.User
+	conf    Config
+	db      Database
+	port    string
+	usr     *user.User
+	startup time.Time
 )
 
 func main() {
@@ -77,6 +81,8 @@ func main() {
 	log.Println("Starting to listen on port", conf.ConnectorPort)
 
 	port = fmt.Sprintf(":%s", conf.ConnectorPort)
+
+	startup = time.Now()
 
 	log.Fatal(http.ListenAndServe(port, Router()))
 }

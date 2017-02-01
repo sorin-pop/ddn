@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/djavorszky/notif"
 )
@@ -165,13 +166,17 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 }
 
 func whoami(w http.ResponseWriter, r *http.Request) {
-
 	info := make(map[string]string)
 
-	info["vendor"] = conf.Vendor
-	info["version"] = conf.Version
+	info["database-vendor"] = conf.Vendor
+	info["database-version"] = conf.Version
+	info["connector-version"] = version
 
-	// TODO add other information if needed
+	duration := time.Since(startup)
+
+	// Round to milliseconds.
+	info["connector-uptime"] = fmt.Sprintf("%s", duration-(duration%time.Millisecond))
+
 	var msg MapMessage
 
 	msg.Status = http.StatusOK
