@@ -26,7 +26,7 @@ func main() {
 
 	usr, err = user.Current()
 	if err != nil {
-		log.Fatal("Couldn't get default user.")
+		log.Fatal("couldn't get default user:", err.Error())
 	}
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
@@ -34,21 +34,21 @@ func main() {
 
 		err := generateProps(*filename)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("properties generation failed:", err.Error())
 		}
 	}
 
 	if _, err := toml.DecodeFile(*filename, &conf); err != nil {
-		log.Fatal(err)
+		log.Fatal("couldn't read configuration file: ", err.Error())
 	}
 
 	if _, err = os.Stat(conf.Exec); os.IsNotExist(err) {
-		log.Fatalf("Database executable '%s' doesn't exist.", conf.Exec)
+		log.Fatal("database executable doesn't exist:", conf.Exec)
 	}
 
 	db, err = GetDB(conf.Vendor)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("couldn't get database instance:", err)
 	}
 
 	log.Println("Starting with properties:")
@@ -56,7 +56,7 @@ func main() {
 
 	err = db.Connect(conf)
 	if err != nil {
-		log.Fatal("Could not establish database connection:\n\t\t", err.Error())
+		log.Fatal("couldn't establish database connection:", err.Error())
 	}
 	defer db.Close()
 	log.Println("Database connection established")
@@ -79,5 +79,4 @@ func main() {
 	port = fmt.Sprintf(":%s", conf.ConnectorPort)
 
 	log.Fatal(http.ListenAndServe(port, Router()))
-
 }

@@ -16,29 +16,27 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func createDatabase(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-
 	var (
 		dbreq DBRequest
 		msg   Message
 	)
 
-	err := decoder.Decode(&dbreq)
+	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
-		msg = errorJSONResponse(err)
-		sendResponse(w, msg)
+		log.Printf("couldn't decode json request: %s", err.Error())
 
+		sendResponse(w, errorJSONResponse(err))
 		return
 	}
 
 	if ok := present(db.RequiredFields(dbreq, createDB)...); !ok {
-		msg = invalidResponse()
-		sendResponse(w, msg)
+		sendResponse(w, invalidResponse())
 		return
 	}
 
 	err = db.CreateDatabase(dbreq)
 	if err != nil {
+		log.Printf("creating database failed: %s", err.Error())
 		msg.Status = http.StatusInternalServerError
 		msg.Message = err.Error()
 	} else {
@@ -59,8 +57,9 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	msg.Status = http.StatusOK
 	msg.Message, err = db.ListDatabase()
 	if err != nil {
-		sendResponse(w, errorResponse())
+		log.Printf("listing databases failed: %s", err.Error())
 
+		sendResponse(w, errorResponse())
 		return
 	}
 
@@ -73,9 +72,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
-		errMsg := errorJSONResponse(err)
-		sendResponse(w, errMsg)
+		log.Printf("couldn't decode json request: %s", err.Error())
 
+		sendResponse(w, errorJSONResponse(err))
 		return
 	}
 
@@ -89,24 +88,23 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		msg   Message
 	)
 
-	decoder := json.NewDecoder(r.Body)
-
-	err := decoder.Decode(&dbreq)
+	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
-		msg = errorJSONResponse(err)
-		sendResponse(w, msg)
+		log.Printf("couldn't drop database: %s", err.Error())
 
+		sendResponse(w, errorJSONResponse(err))
 		return
 	}
 
 	if ok := present(db.RequiredFields(dbreq, dropDB)...); !ok {
-		msg := invalidResponse()
-		sendResponse(w, msg)
+		sendResponse(w, invalidResponse())
 		return
 	}
 
 	err = db.DropDatabase(dbreq)
 	if err != nil {
+		log.Printf("dropping database failed: %s", err.Error())
+
 		msg.Status = http.StatusInternalServerError
 		msg.Message = err.Error()
 	} else {
@@ -126,19 +124,16 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		msg   Message
 	)
 
-	decoder := json.NewDecoder(r.Body)
-
-	err := decoder.Decode(&dbreq)
+	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
-		msg = errorJSONResponse(err)
-		sendResponse(w, msg)
+		log.Printf("couldn't decode json request: %s", err.Error())
 
+		sendResponse(w, errorJSONResponse(err))
 		return
 	}
 
 	if ok := present(db.RequiredFields(dbreq, importDB)...); !ok {
-		msg := invalidResponse()
-		sendResponse(w, msg)
+		sendResponse(w, invalidResponse())
 		return
 	}
 
@@ -152,6 +147,8 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 
 	err = db.CreateDatabase(dbreq)
 	if err != nil {
+		log.Printf("creating database failed: %s", err.Error())
+
 		msg.Status = http.StatusInternalServerError
 		msg.Message = err.Error()
 
@@ -191,6 +188,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 
 	err := db.Alive()
 	if err != nil {
+		log.Printf("database dead: %s", err.Error())
 		msg = errorResponse()
 	}
 

@@ -15,7 +15,6 @@ func writeHeader(w http.ResponseWriter, status int) {
 }
 
 func downloadFile(location string) (string, error) {
-
 	i, j := strings.LastIndex(location, "/"), len(location)
 	filename := location[i+1 : j]
 
@@ -23,19 +22,19 @@ func downloadFile(location string) (string, error) {
 
 	out, err := os.Create(filepath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not create file: %s", err.Error())
 	}
 	defer out.Close()
 
 	resp, err := http.Get(location)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("couldn't get url '%s': %s", location, err.Error())
 	}
 	defer resp.Body.Close()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("downloading file failed: %s", err.Error())
 	}
 
 	return filepath, nil
@@ -44,7 +43,10 @@ func downloadFile(location string) (string, error) {
 func fileExists(url string) bool {
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Println(err)
+		log.Printf("could not get url '%s': %s", url, err)
+
+		resp.Body.Close()
+		return false
 	}
 	defer resp.Body.Close()
 

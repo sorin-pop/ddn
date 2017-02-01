@@ -23,19 +23,19 @@ func (db *mysql) Connect(c Config) error {
 	var err error
 
 	if ok := present(c.User, c.DBAddress, c.DBPort); !ok {
-		return fmt.Errorf("Missing parameters. Need-Got: {user: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.DBAddress, c.DBPort)
+		return fmt.Errorf("missing parameters. Need-Got: {user: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.DBAddress, c.DBPort)
 	}
 
 	datasource := fmt.Sprintf("%s:%s@tcp(%s:%s)/", c.User, c.Password, c.DBAddress, c.DBPort)
 	db.conn, err = sql.Open("mysql", datasource)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("creating connection pool failed: %s", err.Error())
 	}
 
 	err = db.conn.Ping()
 	if err != nil {
 		db.conn.Close()
-		return err
+		return fmt.Errorf("database ping failed: %s", err.Error())
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func (db *mysql) Alive() error {
 
 	_, err := db.conn.Exec("select * from mysql.user WHERE 1 = 0")
 	if err != nil {
-		return err
+		return fmt.Errorf("executing stayalive query failed: %s", err.Error())
 	}
 
 	return nil
@@ -69,12 +69,12 @@ func (db *mysql) ListDatabase() ([]string, error) {
 
 	err = db.Alive()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
 	rows, err := db.conn.Query("show databases")
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("listing databases failed: %s", err.Error())
 	}
 	defer rows.Close()
 
@@ -84,7 +84,7 @@ func (db *mysql) ListDatabase() ([]string, error) {
 	for rows.Next() {
 		err = rows.Scan(&database)
 		if err != nil {
-			log.Fatal(err)
+			return nil, fmt.Errorf("reading row failed: %s", err.Error())
 		}
 
 		switch database {
@@ -97,7 +97,7 @@ func (db *mysql) ListDatabase() ([]string, error) {
 
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("error encountered when reading rows: %s", err.Error())
 	}
 
 	return list, nil
@@ -109,54 +109,54 @@ func (db *mysql) CreateDatabase(dbRequest DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {
-		log.Println("Died:", err)
-		return fmt.Errorf("Unable to complete request as the underlying database is down")
+		return fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
 	exists, err := db.dbExists(dbRequest.DatabaseName)
 	if err != nil {
-		return err
+		return fmt.Errorf("checking if database exists failed: %s", err.Error())
 	}
 	if exists {
-		return fmt.Errorf("Database '%s' already exists", dbRequest.DatabaseName)
+		return fmt.Errorf("database '%s' already exists", dbRequest.DatabaseName)
 	}
 
 	exists, err = db.userExists(dbRequest.Username)
 	if err != nil {
-		return err
+		return fmt.Errorf("checking if user exists failed: %s", err.Error())
 	}
 	if exists {
-		return fmt.Errorf("User '%s' already exists", dbRequest.Username)
+		return fmt.Errorf("user '%s' already exists", dbRequest.Username)
 	}
 
 	// Begin transaction so that we can roll it back at any point something goes wrong.
 	tx, err := db.conn.Begin()
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("starting transaction failed: %s", err.Error())
 	}
 
 	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %s CHARSET utf8;", dbRequest.DatabaseName))
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("executing create database query failed: %s", err.Error())
 	}
 
 	_, err = db.conn.Exec(fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", dbRequest.Username, dbRequest.Password))
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("executing create user '%s' failed: %s", dbRequest.Username, err.Error())
 	}
 
 	_, err = db.conn.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';", dbRequest.DatabaseName, dbRequest.Username, "%"))
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("executing grant privileges to user '%s' on database '%s' failed: %s", dbRequest.Username, dbRequest.DatabaseName, err.Error())
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return err
+		tx.Rollback()
+		return fmt.Errorf("committing transaction failed: %s", err.Error())
 	}
 
 	return nil
@@ -167,40 +167,39 @@ func (db *mysql) CreateDatabase(dbRequest DBRequest) error {
 func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 	err := db.Alive()
 	if err != nil {
-		log.Println("Died:", err)
-		return fmt.Errorf("Unable to complete request as the underlying database is down")
+		return fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
 	tx, err := db.conn.Begin()
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("starting transaction failed: %s", err.Error())
 	}
 
 	_, err = db.conn.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbRequest.DatabaseName))
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("dropping database '%s' failed: %s", dbRequest.DatabaseName, err.Error())
 	}
 
 	exists, err := db.userExists(dbRequest.Username)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("checking if user exists failed: %s", err.Error())
 	}
 
 	if exists {
 		_, err = db.conn.Exec(fmt.Sprintf("DROP USER %s", dbRequest.Username))
 		if err != nil {
 			tx.Rollback()
-			return err
+			return fmt.Errorf("dropping user '%s' failed: %s", dbRequest.Username, err.Error())
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fmt.Errorf("commiting transaction failed: %s", err.Error())
 	}
 
 	return nil
@@ -213,7 +212,7 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 
 	file, err := os.Open(dbreq.DumpLocation)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open dumpfile '%s': %s", dbreq.DumpLocation, err.Error())
 	}
 	defer file.Close()
 
@@ -231,7 +230,7 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 
 	err = cmd.Run()
 	if err != nil {
-		return fmt.Errorf(errBuf.String())
+		return fmt.Errorf("could not execute import command: %s", errBuf.String())
 	}
 
 	return nil
@@ -245,7 +244,7 @@ func (db *mysql) Version() (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not execute command: %s", err.Error())
 	}
 	re := regexp.MustCompile("[0-9]+.[0-9]+.[0-9]+")
 
@@ -270,7 +269,7 @@ func (db *mysql) dbExists(databasename string) (bool, error) {
 
 	err := db.conn.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", databasename).Scan(&count)
 	if err != nil {
-		return true, err
+		return true, fmt.Errorf("executing query failed: %s", err.Error())
 	}
 	if count != 0 {
 		return true, nil
@@ -284,7 +283,7 @@ func (db *mysql) userExists(username string) (bool, error) {
 
 	err := db.conn.QueryRow("SELECT count(*) FROM mysql.user WHERE user = ?", username).Scan(&count)
 	if err != nil {
-		return true, err
+		return true, fmt.Errorf("executing query failed: %s", err.Error())
 	}
 	if count != 0 {
 		return true, nil

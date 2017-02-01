@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"text/template"
 )
@@ -11,7 +11,7 @@ func generateProps(filename string) error {
 
 	file, err := os.Create(filename)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("couldn't create file: %s", err.Error())
 	}
 	defer file.Close()
 
@@ -36,12 +36,12 @@ masterAddress="{{.MasterAddress}}"
 
 	tmpl, err := template.New("props").Parse(prop)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("couldn't parse template: %s", err.Error())
 	}
 
 	err = tmpl.Execute(file, conf)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("couldn't execute template: %s", err.Error())
 	}
 
 	file.Sync()
