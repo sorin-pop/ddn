@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -107,17 +108,36 @@ func ungzip(path string) ([]string, error) {
 	}
 	defer archive.Close()
 
-	dst, err := os.Create(archive.Header.Name)
+	ext := filepath.Ext(path)
+	name := archive.Header.Name
+	if name == "" {
+		dstName := filepath.Base(path)
+
+		name = dstName[:len(dstName)-len(ext)]
+	}
+
+	dst, err := os.Create(name)
 	if err != nil {
 		return nil, fmt.Errorf("could not create output file: %s", err.Error())
 	}
 	defer dst.Close()
 
 	_, err = io.Copy(dst, archive)
+	if err != nil {
+		return nil, fmt.Errorf("uncompressing gzip failed: %s", err.Error())
+	}
 
-	e := []string{dst.Name()}
+	if filepath.Ext(dst.Name()) == ".tar" {
+		return untar(fmt.Sprintf("%s/%s", filepath.Dir(dst.Name()), dst.Name()))
+	}
 
-	return e, nil
+	return []string{dst.Name()}, nil
+}
+
+func untar(path string) ([]string, error) {
+	log.Println("Yup, it's a tar.")
+
+	return []string{path}, nil
 }
 
 func isArchive(path string) bool {

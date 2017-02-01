@@ -32,28 +32,29 @@ func startImport(dbreq DBRequest) {
 			files []string
 			err   error
 		)
+
 		switch filepath.Ext(path) {
 		case ".zip":
 			files, err = unzip(path)
 		case ".gz":
 			files, err = ungzip(path)
+		case ".tar":
+			files, err = untar(path)
 		default:
 			log.Println("import process stopped; encountered unsupported archive")
 
 			ch <- notif.Y{StatusCode: http.StatusBadRequest, Msg: "Unsupported archive"}
 			return
 		}
-
-		log.Println(files[0])
+		for _, f := range files {
+			defer os.Remove(f)
+		}
 
 		if err != nil {
-			log.Printf("could not extract zip: %s", err.Error())
+			log.Printf("could not extract archive: %s", err.Error())
 
 			ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Extracting file failed: " + err.Error()}
 			return
-		}
-		for _, f := range files {
-			defer os.Remove(f)
 		}
 
 		if len(files) > 1 {
