@@ -216,12 +216,7 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	}
 	defer file.Close()
 
-	args := make([]string, 0, 3)
-
-	if conf.Password != "" {
-		args = append(args, fmt.Sprintf("-p%s", conf.Password))
-	}
-	args = append(args, fmt.Sprintf("-u%s", conf.User), dbreq.DatabaseName)
+	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
 
 	cmd := exec.Command(conf.Exec, args...)
 

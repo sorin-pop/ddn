@@ -200,7 +200,7 @@ func (db *postgres) DropDatabase(dbRequest DBRequest) error {
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
 func (db *postgres) ImportDatabase(dbreq DBRequest) error {
-	userArg := fmt.Sprintf("-U%s", conf.User)
+	userArg := fmt.Sprintf("-U%s", dbreq.Username)
 
 	cmd := exec.Command(conf.Exec, userArg, dbreq.DatabaseName)
 
