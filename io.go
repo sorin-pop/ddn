@@ -54,8 +54,10 @@ masterAddress="{{.MasterAddress}}"
 	return nil
 }
 
-func unzip(filepath string) ([]string, error) {
-	r, err := zip.OpenReader(filepath)
+func unzip(path string) ([]string, error) {
+	defer os.Remove(path)
+
+	r, err := zip.OpenReader(path)
 	if err != nil {
 		return nil, fmt.Errorf("creating zip reader failed: %s", err.Error())
 	}
@@ -96,6 +98,8 @@ func unzipFile(f *zip.File) (string, error) {
 }
 
 func ungzip(path string) ([]string, error) {
+	defer os.Remove(path)
+
 	reader, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("opening gzipfile failed: %s", err.Error())
@@ -135,12 +139,16 @@ func ungzip(path string) ([]string, error) {
 }
 
 func untar(path string) ([]string, error) {
+	defer os.Remove(path)
+
 	file, err := os.Open(path)
 
 	if err != nil {
 		return nil, fmt.Errorf("opening tarball failed: %s", err.Error())
 	}
 	defer file.Close()
+
+	var files []string
 
 	tarBallReader := tar.NewReader(file)
 
@@ -173,13 +181,13 @@ func untar(path string) ([]string, error) {
 				return nil, fmt.Errorf("uncompressing tarball failed: %s", err.Error())
 			}
 
-			return []string{writer.Name()}, nil
+			files = append(files, writer.Name())
 		default:
 			fmt.Printf("Unable to untar type : %c in file %s", header.Typeflag, filename)
 		}
 	}
 
-	return []string{path}, nil
+	return files, nil
 }
 
 func isArchive(path string) bool {
