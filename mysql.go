@@ -218,6 +218,9 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	}
 	defer file.Close()
 
+	// Check for "Create Database" statements in the dump
+
+	// Start the import
 	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
 
 	cmd := exec.Command(conf.Exec, args...)
@@ -291,4 +294,47 @@ func (db *mysql) userExists(username string) (bool, error) {
 
 func strip(test string) string {
 	return strings.TrimSuffix(test, "\n")
+}
+
+func validateDump(file *os.File) error {
+	defer file.Seek(0, 0)
+
+	var (
+		lineNumbers []int
+		/*
+			create = []string{
+				"create database", "CREATE DATABASE",
+			}
+			use = []string{
+				"use ", "USE ",
+			}
+			drop = []string{
+				"drop database", "DROP DATABASE",
+			}
+		*/
+	)
+
+	return nil
+}
+
+func textOccurs(file *os.File, t ...string) ([]int, error) {
+	defer file.Seek(0, 0)
+
+	var found []int
+
+	for _, str := range t {
+		lines, err := sutils.FindCaseSensitive(file, str)
+		if err != nil {
+			return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
+		}
+		if len(lines) > 1 {
+			return nil, fmt.Errorf("more than one %q statements found in dump", str)
+		}
+
+		if len(lines) != 0 {
+			found = append(found, lines...)
+		}
+	}
+
+	return found, nil
 }
