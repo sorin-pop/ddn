@@ -30,7 +30,7 @@ func iContains(haystack, needle string) bool {
 	}
 
 	re := regexp.MustCompile("(?i)" + needle)
-	m := re.FindString(needle)
+	m := re.FindString(haystack)
 
 	if m == "" {
 		return false
