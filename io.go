@@ -1,11 +1,11 @@
 package main
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -135,7 +135,49 @@ func ungzip(path string) ([]string, error) {
 }
 
 func untar(path string) ([]string, error) {
-	log.Println("Yup, it's a tar.")
+	file, err := os.Open(path)
+
+	if err != nil {
+		return nil, fmt.Errorf("opening tarball failed: %s", err.Error())
+	}
+	defer file.Close()
+
+	tarBallReader := tar.NewReader(file)
+
+	for {
+		header, err := tarBallReader.Next()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return nil, fmt.Errorf("encountered error while reading tarball: %s", err.Error())
+		}
+
+		filename := header.Name
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err != nil {
+				return nil, fmt.Errorf("tarball contains folder, stopping")
+			}
+		case tar.TypeReg:
+			writer, err := os.Create(filename)
+			if err != nil {
+				return nil, fmt.Errorf("could not create output file: %s", err.Error())
+			}
+			defer writer.Close()
+
+			_, err = io.Copy(writer, tarBallReader)
+			if err != nil {
+				return nil, fmt.Errorf("uncompressing tarball failed: %s", err.Error())
+			}
+
+			return []string{writer.Name()}, nil
+		default:
+			fmt.Printf("Unable to untar type : %c in file %s", header.Typeflag, filename)
+		}
+	}
 
 	return []string{path}, nil
 }
