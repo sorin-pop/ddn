@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"os/exec"
+	"regexp"
 	"strings"
 	"syscall"
 )
@@ -15,6 +16,24 @@ func present(reqFields ...string) bool {
 		if field == "" {
 			return false
 		}
+	}
+
+	return true
+}
+
+// iContains returns true if the haystack contains the needle.
+// It searches in a case-Insensitive way
+func iContains(haystack, needle string) bool {
+	// short out
+	if haystack == "" || needle == "" {
+		return false
+	}
+
+	re := regexp.MustCompile("(?i)" + needle)
+	m := re.FindString(needle)
+
+	if m == "" {
+		return false
 	}
 
 	return true
