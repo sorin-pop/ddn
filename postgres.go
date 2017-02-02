@@ -13,6 +13,7 @@ import (
 
 	"regexp"
 
+	"github.com/djavorszky/sutils"
 	_ "github.com/lib/pq"
 )
 
@@ -23,7 +24,7 @@ type postgres struct {
 func (db *postgres) Connect(c Config) error {
 	var err error
 
-	if ok := present(c.User, c.Password, c.DBAddress, c.DBPort); !ok {
+	if ok := sutils.Present(c.User, c.Password, c.DBAddress, c.DBPort); !ok {
 		return fmt.Errorf("missing parameters. Need-Got: {user: %s}, {password: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.Password, c.DBAddress, c.DBPort)
 	}
 

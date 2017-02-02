@@ -4,40 +4,11 @@ import (
 	"bytes"
 	"log"
 	"os/exec"
-	"regexp"
 	"strings"
 	"syscall"
 )
 
 const defaultFailedCode = 1
-
-func present(reqFields ...string) bool {
-	for _, field := range reqFields {
-		if field == "" {
-			return false
-		}
-	}
-
-	return true
-}
-
-// iContains returns true if the haystack contains the needle.
-// It searches in a case-Insensitive way
-func iContains(haystack, needle string) bool {
-	// short out
-	if haystack == "" || needle == "" {
-		return false
-	}
-
-	re := regexp.MustCompile("(?i)" + needle)
-	m := re.FindString(haystack)
-
-	if m == "" {
-		return false
-	}
-
-	return true
-}
 
 // RunCommand executes a command with specified arguments and returns its exitcode, stdout
 // and stderr as well.

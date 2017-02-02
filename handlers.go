@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/notif"
+	"github.com/djavorszky/sutils"
 )
 
 // index should display whenever someone visits the main page.
@@ -30,7 +31,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := present(db.RequiredFields(dbreq, createDB)...); !ok {
+	if ok := sutils.Present(db.RequiredFields(dbreq, createDB)...); !ok {
 		sendResponse(w, invalidResponse())
 		return
 	}
@@ -97,7 +98,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := present(db.RequiredFields(dbreq, dropDB)...); !ok {
+	if ok := sutils.Present(db.RequiredFields(dbreq, dropDB)...); !ok {
 		sendResponse(w, invalidResponse())
 		return
 	}
@@ -133,7 +134,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := present(db.RequiredFields(dbreq, importDB)...); !ok {
+	if ok := sutils.Present(db.RequiredFields(dbreq, importDB)...); !ok {
 		sendResponse(w, invalidResponse())
 		return
 	}

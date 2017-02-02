@@ -12,6 +12,7 @@ import (
 
 	"bytes"
 
+	"github.com/djavorszky/sutils"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -23,7 +24,7 @@ type mysql struct {
 func (db *mysql) Connect(c Config) error {
 	var err error
 
-	if ok := present(c.User, c.DBAddress, c.DBPort); !ok {
+	if ok := sutils.Present(c.User, c.DBAddress, c.DBPort); !ok {
 		return fmt.Errorf("missing parameters. Need-Got: {user: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.DBAddress, c.DBPort)
 	}
 
