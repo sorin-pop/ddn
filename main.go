@@ -12,7 +12,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-const version = "0.6.8"
+const version = "0.7.0"
 
 var (
 	conf    Config
