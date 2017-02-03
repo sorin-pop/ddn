@@ -30,7 +30,7 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 		return fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -47,7 +47,7 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 
 func (db *oracle) DropDatabase(dbRequest DBRequest) error {
 
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@drop_schema.sql", dbRequest.Username}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/drop_schema.sql", dbRequest.Username}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -68,7 +68,7 @@ func (db *oracle) ListDatabase() ([]string, error) {
 
 func (db *oracle) Version() (string, error) {
 
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@get_db_version.sql"}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/get_db_version.sql"}
 
 	res := RunCommand(conf.Exec, args...)
 
