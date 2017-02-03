@@ -29,12 +29,12 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		sendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, createDB)...); !ok {
-		sendResponse(w, inet.InvalidResponse())
+		inet.SendResponse(w, inet.InvalidResponse())
 		return
 	}
 
@@ -48,7 +48,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		msg.Message = "Successfully created the database and user!"
 	}
 
-	sendResponse(w, msg)
+	inet.SendResponse(w, msg)
 }
 
 // listDatabase lists the supervised databases in a JSON format
@@ -63,11 +63,11 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("listing databases failed: %s", err.Error())
 
-		sendResponse(w, inet.ErrorResponse())
+		inet.SendResponse(w, inet.ErrorResponse())
 		return
 	}
 
-	sendResponse(w, msg)
+	inet.SendResponse(w, msg)
 }
 
 // echo echoes whatever it receives (as JSON) to the log.
@@ -78,7 +78,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		sendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
@@ -96,12 +96,12 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't drop database: %s", err.Error())
 
-		sendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, dropDB)...); !ok {
-		sendResponse(w, inet.InvalidResponse())
+		inet.SendResponse(w, inet.InvalidResponse())
 		return
 	}
 
@@ -116,7 +116,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		msg.Message = "Successfully dropped the database and user!"
 	}
 
-	sendResponse(w, msg)
+	inet.SendResponse(w, msg)
 
 }
 
@@ -132,12 +132,12 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		sendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, importDB)...); !ok {
-		sendResponse(w, inet.InvalidResponse())
+		inet.SendResponse(w, inet.InvalidResponse())
 		return
 	}
 
@@ -145,7 +145,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		msg.Status = http.StatusNotFound
 		msg.Message = "Specified file doesn't exist or is not reachable."
 
-		sendResponse(w, msg)
+		inet.SendResponse(w, msg)
 		return
 	}
 
@@ -156,14 +156,14 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		msg.Status = http.StatusInternalServerError
 		msg.Message = err.Error()
 
-		sendResponse(w, msg)
+		inet.SendResponse(w, msg)
 		return
 	}
 
 	msg.Status = http.StatusOK
 	msg.Message = "Understood request, starting import process."
 
-	sendResponse(w, msg)
+	inet.SendResponse(w, msg)
 
 	go startImport(dbreq)
 }
@@ -185,7 +185,7 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 	msg.Status = http.StatusOK
 	msg.Message = info
 
-	sendResponse(w, msg)
+	inet.SendResponse(w, msg)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -200,13 +200,5 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 		msg = inet.ErrorResponse()
 	}
 
-	sendResponse(w, msg)
-}
-
-func sendResponse(w http.ResponseWriter, msg inet.JSONMessage) {
-	b, status := msg.Compose()
-
-	inet.WriteHeader(w, status)
-
-	w.Write(b)
+	inet.SendResponse(w, msg)
 }
