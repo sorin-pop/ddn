@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/djavorszky/ddn/model"
 )
 
 type oracle struct {
@@ -23,7 +25,7 @@ func (db *oracle) Alive() error {
 	return nil
 }
 
-func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
+func (db *oracle) CreateDatabase(dbRequest model.DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {
@@ -45,7 +47,7 @@ func (db *oracle) CreateDatabase(dbRequest DBRequest) error {
 	return nil
 }
 
-func (db *oracle) DropDatabase(dbRequest DBRequest) error {
+func (db *oracle) DropDatabase(dbRequest model.DBRequest) error {
 
 	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/drop_schema.sql", dbRequest.Username}
 
@@ -58,7 +60,7 @@ func (db *oracle) DropDatabase(dbRequest DBRequest) error {
 	return nil
 }
 
-func (db *oracle) ImportDatabase(dbRequest DBRequest) error {
+func (db *oracle) ImportDatabase(dbRequest model.DBRequest) error {
 	return nil
 }
 
@@ -79,7 +81,7 @@ func (db *oracle) Version() (string, error) {
 	return strings.TrimSpace(res.stdout), nil
 }
 
-func (db *oracle) RequiredFields(dbreq DBRequest, reqType int) []string {
+func (db *oracle) RequiredFields(dbreq model.DBRequest, reqType int) []string {
 	req := []string{dbreq.Username}
 
 	switch reqType {

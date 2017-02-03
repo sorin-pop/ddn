@@ -7,10 +7,11 @@ import (
 
 	"net/http"
 
+	"github.com/djavorszky/ddn/model"
 	"github.com/djavorszky/notif"
 )
 
-func startImport(dbreq DBRequest) {
+func startImport(dbreq model.DBRequest) {
 	ch := notif.New(dbreq.ID, conf.MasterAddress)
 	defer close(ch)
 

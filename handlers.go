@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/djavorszky/ddn/model"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 )
@@ -19,7 +20,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 func createDatabase(w http.ResponseWriter, r *http.Request) {
 	var (
-		dbreq DBRequest
+		dbreq model.DBRequest
 		msg   Message
 	)
 
@@ -86,7 +87,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 // dropDatabase will drop the named database with its tablespace and user
 func dropDatabase(w http.ResponseWriter, r *http.Request) {
 	var (
-		dbreq DBRequest
+		dbreq model.DBRequest
 		msg   Message
 	)
 
@@ -122,7 +123,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 // creating the database, tablespace and user
 func importDatabase(w http.ResponseWriter, r *http.Request) {
 	var (
-		dbreq DBRequest
+		dbreq model.DBRequest
 		msg   Message
 	)
 

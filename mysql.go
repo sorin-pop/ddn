@@ -12,6 +12,7 @@ import (
 
 	"bytes"
 
+	"github.com/djavorszky/ddn/model"
 	"github.com/djavorszky/sutils"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -107,7 +108,7 @@ func (db *mysql) ListDatabase() ([]string, error) {
 
 // CreateDatabase creates a Database along with a user, to which all privileges
 // are granted on the created database. Fails if database or user already exists.
-func (db *mysql) CreateDatabase(dbRequest DBRequest) error {
+func (db *mysql) CreateDatabase(dbRequest model.DBRequest) error {
 
 	err := db.Alive()
 	if err != nil {
@@ -166,7 +167,7 @@ func (db *mysql) CreateDatabase(dbRequest DBRequest) error {
 
 // DropDatabase drops a database and a user. Always succeeds, even if droppable database or
 // user does not exist
-func (db *mysql) DropDatabase(dbRequest DBRequest) error {
+func (db *mysql) DropDatabase(dbRequest model.DBRequest) error {
 	err := db.Alive()
 	if err != nil {
 		return fmt.Errorf("alive check failed: %s", err.Error())
@@ -209,7 +210,7 @@ func (db *mysql) DropDatabase(dbRequest DBRequest) error {
 
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
-func (db *mysql) ImportDatabase(dbreq DBRequest) error {
+func (db *mysql) ImportDatabase(dbreq model.DBRequest) error {
 	var errBuf bytes.Buffer
 
 	file, err := os.Open(dbreq.DumpLocation)
@@ -258,7 +259,7 @@ func (db *mysql) Version() (string, error) {
 	return re.FindString(buf.String()), nil
 }
 
-func (db *mysql) RequiredFields(dbreq DBRequest, reqType int) []string {
+func (db *mysql) RequiredFields(dbreq model.DBRequest, reqType int) []string {
 	req := []string{dbreq.DatabaseName, dbreq.Username}
 
 	switch reqType {

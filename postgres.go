@@ -13,6 +13,7 @@ import (
 
 	"regexp"
 
+	"github.com/djavorszky/ddn/model"
 	"github.com/djavorszky/sutils"
 	_ "github.com/lib/pq"
 )
@@ -105,7 +106,7 @@ func (db *postgres) ListDatabase() ([]string, error) {
 
 // CreateDatabase creates a Database along with a user, to which all privileges
 // are granted on the created database. Fails if database or user already exists.
-func (db *postgres) CreateDatabase(dbRequest DBRequest) error {
+func (db *postgres) CreateDatabase(dbRequest model.DBRequest) error {
 	err := db.Alive()
 	if err != nil {
 		return fmt.Errorf("alive check failed: %s", err.Error())
@@ -163,7 +164,7 @@ func (db *postgres) CreateDatabase(dbRequest DBRequest) error {
 
 // DropDatabase drops a database and a user. Always succeeds, even if droppable database or
 // user does not exist
-func (db *postgres) DropDatabase(dbRequest DBRequest) error {
+func (db *postgres) DropDatabase(dbRequest model.DBRequest) error {
 	var err error
 
 	err = db.Alive()
@@ -200,7 +201,7 @@ func (db *postgres) DropDatabase(dbRequest DBRequest) error {
 
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
-func (db *postgres) ImportDatabase(dbreq DBRequest) error {
+func (db *postgres) ImportDatabase(dbreq model.DBRequest) error {
 	userArg := fmt.Sprintf("-U%s", dbreq.Username)
 
 	cmd := exec.Command(conf.Exec, userArg, dbreq.DatabaseName)
@@ -242,7 +243,7 @@ func (db *postgres) Version() (string, error) {
 	return re.FindString(buf.String()), nil
 }
 
-func (db *postgres) RequiredFields(dbreq DBRequest, reqType int) []string {
+func (db *postgres) RequiredFields(dbreq model.DBRequest, reqType int) []string {
 	req := []string{dbreq.DatabaseName, dbreq.Username}
 
 	switch reqType {
