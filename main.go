@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/djavorszky/ddn/inet"
+	"github.com/djavorszky/ddn/model"
+	"github.com/djavorszky/notif"
 )
 
 const version = "0.7.0"
@@ -77,6 +80,28 @@ func main() {
 
 		conf.Version = ver
 	}
+
+	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
+
+	if !inet.AddrExists(endpoint) {
+		log.Fatalf("Master server seems to be down.")
+	}
+
+	ddnc := model.RegisterRequest{
+		ID:        0,
+		ShortName: conf.ShortName,
+		LongName:  fmt.Sprintf("%s %s", conf.ShortName, conf.Version),
+		Version:   version,
+	}
+
+	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
+
+	err = notif.SndLoc(ddnc, register)
+	if err != nil {
+		log.Fatalf("Could not register with server.")
+	}
+
+	log.Println("Registered with master server")
 
 	log.Println("Starting to listen on port", conf.ConnectorPort)
 

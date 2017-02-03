@@ -16,6 +16,7 @@ type Config struct {
 	DBAddress         string `toml:"dbaddress"`
 	SID               string `toml:"oracle-sid"`
 	ConnectorPort     string `toml:"connectorPort"`
+	ShortName         string `toml:"shortname"`
 	User              string `toml:"username"`
 	Password          string `toml:"password"`
 	DefaultTablespace string `toml:"default-tablespace"`
@@ -36,6 +37,7 @@ func (c Config) Print() {
 	}
 
 	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
+	log.Printf("Short name:\t\t%s\n", conf.ShortName)
 	log.Printf("Username:\t\t%s\n", conf.User)
 	log.Printf("Password:\t\t****\n")
 	log.Printf("Master address\t%s\n", conf.MasterAddress)
@@ -55,7 +57,7 @@ func NewConfig(vendor string) Config {
 			ConnectorPort: "7000",
 			User:          "root",
 			Password:      "root",
-			MasterAddress: "127.0.0.1",
+			MasterAddress: "http://addr-of-server",
 		}
 
 		switch runtime.GOOS {
@@ -75,7 +77,7 @@ func NewConfig(vendor string) Config {
 			ConnectorPort: "7000",
 			User:          "postgres",
 			Password:      "password",
-			MasterAddress: "127.0.0.1",
+			MasterAddress: "http://addr-of-server",
 		}
 
 		switch runtime.GOOS {
@@ -97,7 +99,7 @@ func NewConfig(vendor string) Config {
 			User:              "system",
 			Password:          "password",
 			DefaultTablespace: "USERS",
-			MasterAddress:     "127.0.0.1",
+			MasterAddress:     "http://addr-of-server",
 		}
 		switch runtime.GOOS {
 		case "windows":
@@ -145,6 +147,7 @@ func generateInteractive(filename string) (string, Config) {
 	config.User = prompter.AskDef("Who is the database user?", def.User)
 	config.Password = prompter.AskDef("What is the database password?", def.Password)
 	config.ConnectorPort = prompter.AskDef("What should the connector's port be?", def.ConnectorPort)
+	config.ShortName = prompter.Ask("By what name should this connector be called?")
 	config.MasterAddress = prompter.AskDef("What is the address of the Master server?", def.MasterAddress)
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)
