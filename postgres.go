@@ -207,6 +207,7 @@ func (db *postgres) ImportDatabase(dbreq DBRequest) error {
 
 	file, err := os.Open(dbreq.DumpLocation)
 	if err != nil {
+		db.DropDatabase(dbreq)
 		return fmt.Errorf("could not open dumpfile '%s': %s", dbreq.DumpLocation, err.Error())
 	}
 	defer file.Close()
@@ -218,6 +219,7 @@ func (db *postgres) ImportDatabase(dbreq DBRequest) error {
 
 	err = cmd.Run()
 	if err != nil {
+		db.DropDatabase(dbreq)
 		return fmt.Errorf("could not execute import command: %s", errBuf.String())
 	}
 

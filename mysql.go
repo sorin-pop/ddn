@@ -214,6 +214,7 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 
 	file, err := os.Open(dbreq.DumpLocation)
 	if err != nil {
+		db.DropDatabase(dbreq)
 		return fmt.Errorf("could not open dumpfile '%s': %s", dbreq.DumpLocation, err.Error())
 	}
 	defer file.Close()
@@ -221,6 +222,7 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	// Check for "Create Database" statements in the dump
 	file, err = validateDump(file)
 	if err != nil {
+		db.DropDatabase(dbreq)
 		return fmt.Errorf("validation failed: %s", err.Error())
 	}
 
@@ -234,6 +236,7 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 
 	err = cmd.Run()
 	if err != nil {
+		db.DropDatabase(dbreq)
 		return fmt.Errorf("could not execute import command: %s", strip(errBuf.String()))
 	}
 
@@ -316,9 +319,6 @@ func validateDump(file *os.File) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println(lines)
-	log.Println(len(lines))
 
 	if len(lines) > 0 {
 		file, err = removeLinesFromFile(file, lines)
