@@ -219,7 +219,10 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	defer file.Close()
 
 	// Check for "Create Database" statements in the dump
-
+	err = validateDump(file)
+	if err != nil {
+		return fmt.Errorf("validation failed: %s", err.Error())
+	}
 	// Start the import
 	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
 
@@ -300,39 +303,48 @@ func validateDump(file *os.File) error {
 	defer file.Seek(0, 0)
 
 	var (
+		err         error
 		lineNumbers []int
-		/*
-			create = []string{
-				"create database", "CREATE DATABASE",
-			}
-			use = []string{
-				"use ", "USE ",
-			}
-			drop = []string{
-				"drop database", "DROP DATABASE",
-			}
-		*/
+
+		create = []string{
+			"create database", "CREATE DATABASE",
+		}
+		use = []string{
+			"use ", "USE ",
+		}
+		drop = []string{
+			"drop database", "DROP DATABASE",
+		}
 	)
+
+	lineNumbers, err = textsOccur(file, create, use, drop)
+	if err != nil {
+		return err
+	}
+
+	log.Println(lineNumbers)
 
 	return nil
 }
 
-func textOccurs(file *os.File, t ...string) ([]int, error) {
-	defer file.Seek(0, 0)
-
+func textsOccur(file *os.File, t ...[]string) ([]int, error) {
 	var found []int
 
-	for _, str := range t {
-		lines, err := sutils.FindCaseSensitive(file, str)
-		if err != nil {
-			return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
-		}
-		if len(lines) > 1 {
-			return nil, fmt.Errorf("more than one %q statements found in dump", str)
-		}
+	for _, strslice := range t {
+		for _, str := range strslice {
+			lines, err := sutils.FindCaseSensitive(file, str)
+			if err != nil {
+				return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
+			}
+			if len(lines) > 1 {
+				return nil, fmt.Errorf("more than one %q statements found in dump", str)
+			}
 
-		if len(lines) != 0 {
-			found = append(found, lines...)
+			if len(lines) == 1 {
+				found = append(found, lines[0])
+			}
+
+			file.Seek(0, 0)
 		}
 	}
 
