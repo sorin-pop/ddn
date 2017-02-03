@@ -306,15 +306,9 @@ func validateDump(file *os.File) error {
 		err         error
 		lineNumbers []int
 
-		create = []string{
-			"create database", "CREATE DATABASE",
-		}
-		use = []string{
-			"use ", "USE ",
-		}
-		drop = []string{
-			"drop database", "DROP DATABASE",
-		}
+		create = []string{"create database", "CREATE DATABASE"}
+		use    = []string{"use ", "USE "}
+		drop   = []string{"drop database", "DROP DATABASE"}
 	)
 
 	lineNumbers, err = textsOccur(file, create, use, drop)
