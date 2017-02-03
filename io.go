@@ -29,6 +29,7 @@ connectorPort="{{.ConnectorPort}}"
 username="{{.User}}"
 password="{{.Password}}"
 masterAddress="{{.MasterAddress}}"
+shortname="{{.ShortName}}"
 `
 
 	if conf.SID != "" {

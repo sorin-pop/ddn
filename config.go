@@ -57,7 +57,7 @@ func NewConfig(vendor string) Config {
 			ConnectorPort: "7000",
 			User:          "root",
 			Password:      "root",
-			MasterAddress: "http://addr-of-server",
+			MasterAddress: "http://localhost:7010",
 		}
 
 		switch runtime.GOOS {
@@ -77,7 +77,7 @@ func NewConfig(vendor string) Config {
 			ConnectorPort: "7000",
 			User:          "postgres",
 			Password:      "password",
-			MasterAddress: "http://addr-of-server",
+			MasterAddress: "http://localhost:7010",
 		}
 
 		switch runtime.GOOS {
@@ -99,7 +99,7 @@ func NewConfig(vendor string) Config {
 			User:              "system",
 			Password:          "password",
 			DefaultTablespace: "USERS",
-			MasterAddress:     "http://addr-of-server",
+			MasterAddress:     "http://localhost:7010",
 		}
 		switch runtime.GOOS {
 		case "windows":

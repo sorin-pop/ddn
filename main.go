@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+
 	"github.com/djavorszky/ddn/inet"
 	"github.com/djavorszky/ddn/model"
 	"github.com/djavorszky/notif"
