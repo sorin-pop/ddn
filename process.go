@@ -7,6 +7,7 @@ import (
 
 	"net/http"
 
+	"github.com/djavorszky/ddn/inet"
 	"github.com/djavorszky/ddn/model"
 	"github.com/djavorszky/notif"
 )
@@ -17,7 +18,7 @@ func startImport(dbreq model.DBRequest) {
 
 	ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Starting download"}
 
-	path, err := downloadFile(dbreq.DumpLocation)
+	path, err := inet.DownloadFile(usr.HomeDir, dbreq.DumpLocation)
 	if err != nil {
 		log.Printf("could not download file: %s", err.Error())
 

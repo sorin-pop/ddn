@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/djavorszky/ddn/inet"
 	"github.com/djavorszky/ddn/model"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
@@ -140,7 +141,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if exists := fileExists(dbreq.DumpLocation); exists == false {
+	if exists := inet.FileExists(dbreq.DumpLocation); exists == false {
 		msg.Status = http.StatusNotFound
 		msg.Message = "Specified file doesn't exist or is not reachable."
 
@@ -205,7 +206,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 func sendResponse(w http.ResponseWriter, msg JSONMessage) {
 	b, status := msg.Compose()
 
-	writeHeader(w, status)
+	inet.WriteHeader(w, status)
 
 	w.Write(b)
 }
