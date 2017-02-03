@@ -22,19 +22,19 @@ func index(w http.ResponseWriter, r *http.Request) {
 func createDatabase(w http.ResponseWriter, r *http.Request) {
 	var (
 		dbreq model.DBRequest
-		msg   Message
+		msg   inet.Message
 	)
 
 	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		sendResponse(w, errorJSONResponse(err))
+		sendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, createDB)...); !ok {
-		sendResponse(w, invalidResponse())
+		sendResponse(w, inet.InvalidResponse())
 		return
 	}
 
@@ -54,7 +54,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 // listDatabase lists the supervised databases in a JSON format
 func listDatabases(w http.ResponseWriter, r *http.Request) {
 	var (
-		msg ListMessage
+		msg inet.ListMessage
 		err error
 	)
 
@@ -63,7 +63,7 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("listing databases failed: %s", err.Error())
 
-		sendResponse(w, errorResponse())
+		sendResponse(w, inet.ErrorResponse())
 		return
 	}
 
@@ -78,7 +78,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		sendResponse(w, errorJSONResponse(err))
+		sendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
@@ -89,19 +89,19 @@ func echo(w http.ResponseWriter, r *http.Request) {
 func dropDatabase(w http.ResponseWriter, r *http.Request) {
 	var (
 		dbreq model.DBRequest
-		msg   Message
+		msg   inet.Message
 	)
 
 	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
 		log.Printf("couldn't drop database: %s", err.Error())
 
-		sendResponse(w, errorJSONResponse(err))
+		sendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, dropDB)...); !ok {
-		sendResponse(w, invalidResponse())
+		sendResponse(w, inet.InvalidResponse())
 		return
 	}
 
@@ -125,19 +125,19 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 func importDatabase(w http.ResponseWriter, r *http.Request) {
 	var (
 		dbreq model.DBRequest
-		msg   Message
+		msg   inet.Message
 	)
 
 	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		sendResponse(w, errorJSONResponse(err))
+		sendResponse(w, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, importDB)...); !ok {
-		sendResponse(w, invalidResponse())
+		sendResponse(w, inet.InvalidResponse())
 		return
 	}
 
@@ -180,7 +180,7 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 	// Round to milliseconds.
 	info["connector-uptime"] = fmt.Sprintf("%s", duration-(duration%time.Millisecond))
 
-	var msg MapMessage
+	var msg inet.MapMessage
 
 	msg.Status = http.StatusOK
 	msg.Message = info
@@ -189,7 +189,7 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
-	var msg Message
+	var msg inet.Message
 
 	msg.Status = http.StatusOK
 	msg.Message = "Still alive"
@@ -197,13 +197,13 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 	err := db.Alive()
 	if err != nil {
 		log.Printf("database dead: %s", err.Error())
-		msg = errorResponse()
+		msg = inet.ErrorResponse()
 	}
 
 	sendResponse(w, msg)
 }
 
-func sendResponse(w http.ResponseWriter, msg JSONMessage) {
+func sendResponse(w http.ResponseWriter, msg inet.JSONMessage) {
 	b, status := msg.Compose()
 
 	inet.WriteHeader(w, status)
