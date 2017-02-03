@@ -219,10 +219,11 @@ func (db *mysql) ImportDatabase(dbreq DBRequest) error {
 	defer file.Close()
 
 	// Check for "Create Database" statements in the dump
-	err = validateDump(file)
+	file, err = validateDump(file)
 	if err != nil {
 		return fmt.Errorf("validation failed: %s", err.Error())
 	}
+
 	// Start the import
 	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
 
@@ -299,22 +300,32 @@ func strip(test string) string {
 	return strings.TrimSuffix(test, "\n")
 }
 
-func validateDump(file *os.File) error {
+func validateDump(file *os.File) (*os.File, error) {
 	defer file.Seek(0, 0)
 
 	var (
-		err         error
-		lineNumbers []int
+		err   error
+		lines map[int]bool
 
 		create = []string{"create database", "CREATE DATABASE"}
 		use    = []string{"use ", "USE "}
 		drop   = []string{"drop database", "DROP DATABASE"}
 	)
 
-	lineNumbers, err = textsOccur(file, create, use, drop)
+	lines, err = textsOccur(file, create, use, drop)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	log.Println(lines)
+	log.Println(len(lines))
+
+	if len(lines) > 0 {
+		file, err = removeLinesFromFile(file, lines)
+		if err != nil {
+			return nil, fmt.Errorf("removing extra lines from dump failed: %s", err.Error())
+		}
+	}
+
+	return file, nil
 }

@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -69,8 +73,8 @@ type CommandResult struct {
 	exitCode       int
 }
 
-func textsOccur(file *os.File, t ...[]string) ([]int, error) {
-	var found []int
+func textsOccur(file *os.File, t ...[]string) (map[int]bool, error) {
+	found := make(map[int]bool)
 
 	for _, strslice := range t {
 		for _, str := range strslice {
@@ -83,7 +87,7 @@ func textsOccur(file *os.File, t ...[]string) ([]int, error) {
 			}
 
 			if len(lines) == 1 {
-				found = append(found, lines[0])
+				found[lines[0]] = true
 			}
 
 			file.Seek(0, 0)
@@ -91,4 +95,46 @@ func textsOccur(file *os.File, t ...[]string) ([]int, error) {
 	}
 
 	return found, nil
+}
+
+func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "ddnc")
+	if err != nil {
+		return nil, fmt.Errorf("could not create tempfile: %s", err.Error())
+	}
+
+	writer := bufio.NewWriter(tmpFile)
+
+	curLine := 1
+	reader := bufio.NewReader(file)
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return nil, err
+		}
+
+		if _, ok := lines[curLine]; ok {
+			continue
+		}
+
+		writer.WriteString(line)
+		curLine++
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		return nil, fmt.Errorf("could not flush writer: %s", err.Error())
+	}
+
+	tmpFilePath, _ := filepath.Abs(tmpFile.Name())
+	newFilePath, _ := filepath.Abs(file.Name())
+
+	os.Rename(tmpFilePath, newFilePath)
+
+	return os.Open(newFilePath)
 }
