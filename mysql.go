@@ -316,31 +316,5 @@ func validateDump(file *os.File) error {
 		return err
 	}
 
-	log.Println(lineNumbers)
-
 	return nil
-}
-
-func textsOccur(file *os.File, t ...[]string) ([]int, error) {
-	var found []int
-
-	for _, strslice := range t {
-		for _, str := range strslice {
-			lines, err := sutils.FindCaseSensitive(file, str)
-			if err != nil {
-				return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
-			}
-			if len(lines) > 1 {
-				return nil, fmt.Errorf("more than one %q statements found in dump", str)
-			}
-
-			if len(lines) == 1 {
-				found = append(found, lines[0])
-			}
-
-			file.Seek(0, 0)
-		}
-	}
-
-	return found, nil
 }
