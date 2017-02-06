@@ -151,7 +151,7 @@ func registerConnector() error {
 	}
 
 	ddnc := model.RegisterRequest{
-		ID:        0,
+		ID:        connector.ID,
 		ShortName: conf.ShortName,
 		LongName:  fmt.Sprintf("%s %s", conf.ShortName, conf.Version),
 		Version:   version,
@@ -164,16 +164,32 @@ func registerConnector() error {
 		return fmt.Errorf("Could not register with the master server: %s", err.Error())
 	}
 
-	var connector model.Connector
+	var c model.Connector
 
-	err = json.NewDecoder(bytes.NewBufferString(resp)).Decode(&connector)
+	err = json.NewDecoder(bytes.NewBufferString(resp)).Decode(&c)
 	if err != nil {
 		log.Fatalf("Could not decode server response: %s", err.Error())
 	}
 
-	id = connector.ID
+	connector = c
 
-	log.Printf("Master server registration complete. Got assigned ID '%d'", id)
+	log.Printf("Master server registration complete. Got assigned ID '%d'", connector.ID)
 
 	return nil
+}
+
+func unregisterConnector() {
+	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
+
+	if !inet.AddrExists(endpoint) {
+		log.Fatalf("Master server does not exist at given endpoint, no need to unregister")
+	}
+
+	unregister := fmt.Sprintf("%s/%s", conf.MasterAddress, "unregister")
+	_, err := notif.SndLoc(connector, unregister)
+	if err != nil {
+		log.Fatalf("Could not register with the master server: %s", err.Error())
+	}
+
+	log.Fatalf("Successfully unregistered the connector.")
 }

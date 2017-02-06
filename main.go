@@ -6,10 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"os/user"
+	"syscall"
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/djavorszky/ddn/model"
 )
 
 const version = "0.7.0"
@@ -20,10 +23,19 @@ var (
 	port    string
 	usr     *user.User
 	startup time.Time
-	id      int
+
+	connector model.Connector
 )
 
 func main() {
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		unregisterConnector()
+		os.Exit(1)
+	}()
+
 	var err error
 	filename := flag.String("p", "ddnc.conf", "Specify the configuration file's name")
 
