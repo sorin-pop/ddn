@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -10,10 +9,7 @@ import (
 	"os/user"
 	"time"
 
-	"bytes"
-
 	"github.com/BurntSushi/toml"
-	"github.com/djavorszky/ddn/model"
 )
 
 const version = "0.7.0"
@@ -83,22 +79,11 @@ func main() {
 		conf.Version = ver
 	}
 
-	resp, err := registerConnector()
+	err = registerConnector()
 	if err != nil {
 		log.Printf("could not register connector: %s", err.Error())
 		log.Println(">> Connector should be restarted once the master server is brought online.")
 	}
-
-	var ddnc model.Connector
-
-	err = json.NewDecoder(bytes.NewBufferString(resp)).Decode(&ddnc)
-	if err != nil {
-		log.Fatalf("Could not decode server response: %s", err.Error())
-	}
-
-	id = ddnc.ID
-
-	log.Printf("Master server registration complete. Got assigned ID '%d'", id)
 
 	log.Println("Starting to listen on port", conf.ConnectorPort)
 
