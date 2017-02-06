@@ -13,6 +13,9 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/djavorszky/ddn/inet"
+	"github.com/djavorszky/ddn/model"
+	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 )
 
@@ -137,4 +140,28 @@ func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
 	os.Rename(tmpFilePath, newFilePath)
 
 	return os.Open(newFilePath)
+}
+
+func registerConnector() error {
+	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
+
+	if !inet.AddrExists(endpoint) {
+		return fmt.Errorf("Master server does not exist at given endpoint")
+	}
+
+	ddnc := model.RegisterRequest{
+		ID:        0,
+		ShortName: conf.ShortName,
+		LongName:  fmt.Sprintf("%s %s", conf.ShortName, conf.Version),
+		Version:   version,
+	}
+
+	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
+
+	err := notif.SndLoc(ddnc, register)
+	if err != nil {
+		return fmt.Errorf("Could not register with the master server: %s", err.Error())
+	}
+
+	return nil
 }

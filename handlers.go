@@ -141,7 +141,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if exists := inet.AddrExists(dbreq.DumpLocation); exists == false {
+	if exists := inet.AddrExists(dbreq.DumpLocation); !exists {
 		msg.Status = http.StatusNotFound
 		msg.Message = "Specified file doesn't exist or is not reachable."
 
