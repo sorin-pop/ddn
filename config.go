@@ -52,6 +52,7 @@ func NewConfig(vendor string) Config {
 		conf = Config{
 			Vendor:        "mysql",
 			Version:       "5.5.53",
+			ShortName:     "mysql-55",
 			DBPort:        "3306",
 			DBAddress:     "localhost",
 			ConnectorPort: "7000",
@@ -72,6 +73,7 @@ func NewConfig(vendor string) Config {
 		conf = Config{
 			Vendor:        "postgres",
 			Version:       "9.4.9",
+			ShortName:     "postgre-94",
 			DBPort:        "5432",
 			DBAddress:     "localhost",
 			ConnectorPort: "7000",
@@ -92,6 +94,7 @@ func NewConfig(vendor string) Config {
 		conf = Config{
 			Vendor:            "oracle",
 			Version:           "11g",
+			ShortName:         "oracle-11g",
 			DBPort:            "1521",
 			DBAddress:         "localhost",
 			SID:               "orcl",
@@ -147,7 +150,7 @@ func generateInteractive(filename string) (string, Config) {
 	config.User = prompter.AskDef("Who is the database user?", def.User)
 	config.Password = prompter.AskDef("What is the database password?", def.Password)
 	config.ConnectorPort = prompter.AskDef("What should the connector's port be?", def.ConnectorPort)
-	config.ShortName = prompter.Ask("By what name should this connector be called?")
+	config.ShortName = prompter.AskDef("By what name should this connector be called?", def.ShortName)
 	config.MasterAddress = prompter.AskDef("What is the address of the Master server?", def.MasterAddress)
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)
