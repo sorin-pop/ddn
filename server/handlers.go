@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -19,9 +18,6 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 
 func register(w http.ResponseWriter, r *http.Request) {
 	var req model.RegisterRequest
-
-	log.Println("Registry request!")
-
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
@@ -41,7 +37,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	registry[ddnc.Address] = ddnc
 
-	fmt.Printf("Registered: %+v", ddnc)
+	log.Printf("Registered: %+v", ddnc)
 
 	resp, _ := inet.JSONify(model.RegisterResponse{ID: ddnc.ID, Address: ddnc.Address})
 

@@ -7,7 +7,7 @@ import (
 	"github.com/djavorszky/prompter"
 )
 
-// Config to hold the database server information
+// Config to hold the database server and connector information
 type Config struct {
 	Vendor            string `toml:"vendor"`
 	Version           string `toml:"version"`
