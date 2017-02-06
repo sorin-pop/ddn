@@ -11,12 +11,12 @@ import (
 	"text/template"
 )
 
-func generateProps(filename string) error {
+func generateProps(filename string) (*string, error) {
 	filename, conf := generateInteractive(filename)
 
 	file, err := os.Create(filename)
 	if err != nil {
-		return fmt.Errorf("couldn't create file: %s", err.Error())
+		return nil, fmt.Errorf("couldn't create file: %s", err.Error())
 	}
 	defer file.Close()
 
@@ -42,17 +42,19 @@ shortname="{{.ShortName}}"
 
 	tmpl, err := template.New("props").Parse(prop)
 	if err != nil {
-		return fmt.Errorf("couldn't parse template: %s", err.Error())
+		return nil, fmt.Errorf("couldn't parse template: %s", err.Error())
 	}
 
 	err = tmpl.Execute(file, conf)
 	if err != nil {
-		return fmt.Errorf("couldn't execute template: %s", err.Error())
+		return nil, fmt.Errorf("couldn't execute template: %s", err.Error())
 	}
 
 	file.Sync()
 
-	return nil
+	name := file.Name()
+
+	return &name, nil
 }
 
 func unzip(path string) ([]string, error) {

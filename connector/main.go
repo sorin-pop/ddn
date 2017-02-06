@@ -57,7 +57,7 @@ func main() {
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
 		log.Println("Couldn't find properties file, generating one.")
 
-		err := generateProps(*filename)
+		filename, err = generateProps(*filename)
 		if err != nil {
 			log.Fatal("properties generation failed:", err.Error())
 		}
