@@ -1,3 +1,3 @@
-# ddn
+# common
 
-Repository `ddn` contains libraries that are shared between the different ddn projects, such as the [server](https://github.com/djavorszky/ddns) and the [connector](https://github.com/djavorszky/ddnc)
+Directory `common` contains libraries that are shared between the different ddn projects, such as the server and the connector
