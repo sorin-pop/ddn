@@ -142,11 +142,11 @@ func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
 	return os.Open(newFilePath)
 }
 
-func registerConnector() error {
+func registerConnector() (string, error) {
 	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
 
 	if !inet.AddrExists(endpoint) {
-		return fmt.Errorf("Master server does not exist at given endpoint")
+		return "", fmt.Errorf("Master server does not exist at given endpoint")
 	}
 
 	ddnc := model.RegisterRequest{
@@ -158,10 +158,10 @@ func registerConnector() error {
 
 	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
 
-	err := notif.SndLoc(ddnc, register)
+	resp, err := notif.SndLoc(ddnc, register)
 	if err != nil {
-		return fmt.Errorf("Could not register with the master server: %s", err.Error())
+		return "", fmt.Errorf("Could not register with the master server: %s", err.Error())
 	}
 
-	return nil
+	return resp, nil
 }
