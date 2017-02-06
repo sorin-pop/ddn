@@ -153,7 +153,7 @@ func registerConnector() error {
 	ddnc := model.RegisterRequest{
 		ID:        connector.ID,
 		ShortName: conf.ShortName,
-		LongName:  fmt.Sprintf("%s %s", conf.ShortName, conf.Version),
+		LongName:  fmt.Sprintf("%s %s", conf.Vendor, conf.Version),
 		Version:   version,
 	}
 
@@ -179,6 +179,8 @@ func registerConnector() error {
 }
 
 func unregisterConnector() {
+	connector.Up = false
+
 	unregister := fmt.Sprintf("%s/%s", conf.MasterAddress, "unregister")
 	_, err := notif.SndLoc(connector, unregister)
 	if err != nil {
