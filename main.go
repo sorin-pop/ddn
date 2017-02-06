@@ -84,25 +84,27 @@ func main() {
 
 	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
 
-	if !inet.AddrExists(endpoint) {
-		log.Fatalf("Master server seems to be down.")
+	if inet.AddrExists(endpoint) {
+		ddnc := model.RegisterRequest{
+			ID:        0,
+			ShortName: conf.ShortName,
+			LongName:  fmt.Sprintf("%s %s", conf.ShortName, conf.Version),
+			Version:   version,
+		}
+
+		register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
+
+		err = notif.SndLoc(ddnc, register)
+		if err != nil {
+			log.Fatalf("Could not register with server.")
+		}
+
+		log.Println("Registered with master server")
+
+	} else {
+		log.Println("Master server seems to be down.")
+		log.Println("Connector should be restarted once the master server is brought online.")
 	}
-
-	ddnc := model.RegisterRequest{
-		ID:        0,
-		ShortName: conf.ShortName,
-		LongName:  fmt.Sprintf("%s %s", conf.ShortName, conf.Version),
-		Version:   version,
-	}
-
-	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
-
-	err = notif.SndLoc(ddnc, register)
-	if err != nil {
-		log.Fatalf("Could not register with server.")
-	}
-
-	log.Println("Registered with master server")
 
 	log.Println("Starting to listen on port", conf.ConnectorPort)
 
