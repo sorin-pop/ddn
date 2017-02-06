@@ -179,12 +179,6 @@ func registerConnector() error {
 }
 
 func unregisterConnector() {
-	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
-
-	if !inet.AddrExists(endpoint) {
-		log.Fatalf("Master server does not exist at given endpoint, no need to unregister")
-	}
-
 	unregister := fmt.Sprintf("%s/%s", conf.MasterAddress, "unregister")
 	_, err := notif.SndLoc(connector, unregister)
 	if err != nil {

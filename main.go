@@ -28,6 +28,13 @@ var (
 )
 
 func main() {
+	defer func() {
+		if p := recover(); p != nil {
+			log.Println("Panic... Unregistering")
+			unregisterConnector()
+		}
+	}()
+
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
