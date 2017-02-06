@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/model"
 )
 
 type oracle struct {

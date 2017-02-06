@@ -3,7 +3,7 @@ package main
 import (
 	"sync"
 
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/model"
 )
 
 var registry map[string]model.Connector

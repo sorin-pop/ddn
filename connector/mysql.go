@@ -12,7 +12,7 @@ import (
 
 	"bytes"
 
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/sutils"
 
 	_ "github.com/go-sql-driver/mysql"

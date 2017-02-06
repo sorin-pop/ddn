@@ -13,7 +13,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/model"
 )
 
 const version = "0.7.0"

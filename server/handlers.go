@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/djavorszky/ddnc/common/inet"
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/model"
 )
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {

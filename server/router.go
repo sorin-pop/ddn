@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/djavorszky/ddnc/common/srv"
+	"github.com/djavorszky/ddn/common/srv"
 	"github.com/gorilla/mux"
 )
 

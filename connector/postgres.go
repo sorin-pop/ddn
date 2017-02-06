@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/sutils"
 	_ "github.com/lib/pq"
 )

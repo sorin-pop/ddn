@@ -8,8 +8,8 @@ import (
 
 	"github.com/djavorszky/notif"
 
-	"github.com/djavorszky/ddnc/common/inet"
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/model"
 )
 
 func startImport(dbreq model.DBRequest) {

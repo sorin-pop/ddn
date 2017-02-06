@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/djavorszky/ddnc/common/model"
+	"github.com/djavorszky/ddn/common/model"
 )
 
 var vendors = []string{"mysql", "oracle", "postgres"}
