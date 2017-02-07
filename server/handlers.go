@@ -8,6 +8,7 @@ import (
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/notif"
 )
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {
@@ -65,4 +66,19 @@ func alive(w http.ResponseWriter, r *http.Request) {
 	inet.WriteHeader(w, http.StatusOK)
 
 	w.Write(buf.Bytes())
+}
+
+// echo echoes whatever it receives (as JSON) to the log.
+func echo(w http.ResponseWriter, r *http.Request) {
+	var msg notif.Msg
+
+	err := json.NewDecoder(r.Body).Decode(&msg)
+	if err != nil {
+		log.Printf("couldn't decode json request: %s", err.Error())
+
+		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		return
+	}
+
+	log.Printf("%+v", msg)
 }

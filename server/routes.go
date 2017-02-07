@@ -43,4 +43,10 @@ var routes = Routes{
 		"/alive",
 		alive,
 	},
+	route{
+		"echo",
+		"POST",
+		"/echo",
+		echo,
+	},
 }

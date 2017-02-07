@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +14,9 @@ import (
 )
 
 func startImport(dbreq model.DBRequest) {
-	ch := notif.New(dbreq.ID, conf.MasterAddress)
+	upd8Path := fmt.Sprintf("%s/%s", conf.MasterAddress, "echo")
+
+	ch := notif.New(dbreq.ID, upd8Path)
 	defer close(ch)
 
 	ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Starting download"}
@@ -72,8 +75,6 @@ func startImport(dbreq model.DBRequest) {
 	dbreq.DumpLocation = path
 
 	ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Starting import"}
-
-	// TODO: Connector dies if import fails, e.g. if dumpfile is of wrong version.
 
 	if err = db.ImportDatabase(dbreq); err != nil {
 		log.Printf("could not import database: %s", err.Error())
