@@ -25,7 +25,7 @@ func DownloadFile(dest, url string) (string, error) {
 
 	filepath := fmt.Sprintf("%s/%s", dest, filename)
 
-	out, err := os.Create(dest)
+	out, err := os.Create(filepath)
 	if err != nil {
 		return "", fmt.Errorf("could not create file: %s", err.Error())
 	}
