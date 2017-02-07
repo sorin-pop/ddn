@@ -19,11 +19,12 @@ import (
 const version = "0.7.0"
 
 var (
-	conf    Config
-	db      Database
-	port    string
-	usr     *user.User
-	startup time.Time
+	conf     Config
+	db       Database
+	port     string
+	usr      *user.User
+	hostname string
+	startup  time.Time
 
 	connector model.Connector
 )
@@ -52,6 +53,11 @@ func main() {
 	usr, err = user.Current()
 	if err != nil {
 		log.Fatal("couldn't get default user:", err.Error())
+	}
+
+	hostname, err = os.Hostname()
+	if err != nil {
+		log.Fatal("couldn't get hostname:", err.Error())
 	}
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {

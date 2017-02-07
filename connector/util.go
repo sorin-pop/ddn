@@ -154,9 +154,10 @@ func registerConnector() error {
 	longname := fmt.Sprintf("%s %s", conf.Vendor, conf.Version)
 
 	ddnc := model.RegisterRequest{
-		ShortName: conf.ShortName,
-		LongName:  longname,
-		Version:   version,
+		ConnectorName: conf.ConnectorName,
+		ShortName:     conf.ShortName,
+		LongName:      longname,
+		Version:       version,
 	}
 
 	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
@@ -167,10 +168,11 @@ func registerConnector() error {
 	}
 
 	connector = model.Connector{
-		ShortName: conf.ShortName,
-		LongName:  longname,
-		Version:   version,
-		Up:        true,
+		ShortName:  conf.ShortName,
+		LongName:   longname,
+		Identifier: conf.ConnectorName,
+		Version:    version,
+		Up:         true,
 	}
 	err = json.NewDecoder(bytes.NewBufferString(resp)).Decode(&connector)
 	if err != nil {

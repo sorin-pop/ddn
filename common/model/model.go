@@ -19,9 +19,10 @@ type ClientRequest struct {
 // ID can be null if it's the initial registration, but must correspond to the connector's
 // ID when unregistering
 type RegisterRequest struct {
-	ShortName string `json:"short_name"`
-	LongName  string `json:"long_name"`
-	Version   string `json:"version"`
+	ConnectorName string `json:"connector_name"`
+	ShortName     string `json:"short_name"`
+	LongName      string `json:"long_name"`
+	Version       string `json:"version"`
 }
 
 // RegisterResponse is used as the response to the RegisterRequest
@@ -33,11 +34,12 @@ type RegisterResponse struct {
 
 // Connector is used to represent a DDN Connector.
 type Connector struct {
-	ID        int
-	ShortName string
-	LongName  string
-	Version   string
-	Address   string
-	Token     string
-	Up        bool
+	ID         int
+	ShortName  string
+	LongName   string
+	Identifier string
+	Version    string
+	Address    string
+	Token      string
+	Up         bool
 }

@@ -32,7 +32,7 @@ func (db *oracle) CreateDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DefaultTablespace}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_schema.sql", dbRequest.Username, dbRequest.Password, conf.Tablespace}
 
 	res := RunCommand(conf.Exec, args...)
 

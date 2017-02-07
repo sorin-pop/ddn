@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 
@@ -9,18 +10,21 @@ import (
 
 // Config to hold the database server and connector information
 type Config struct {
-	Vendor            string `toml:"vendor"`
-	Version           string `toml:"version"`
-	Exec              string `toml:"executable"`
-	DBPort            string `toml:"dbport"`
-	DBAddress         string `toml:"dbaddress"`
-	SID               string `toml:"oracle-sid"`
-	ConnectorPort     string `toml:"connectorPort"`
-	ShortName         string `toml:"shortname"`
-	User              string `toml:"username"`
-	Password          string `toml:"password"`
-	DefaultTablespace string `toml:"default-tablespace"`
-	MasterAddress     string `toml:"masterAddress"`
+	Vendor     string `toml:"vendor"`
+	Version    string `toml:"version"`
+	Exec       string `toml:"executable"`
+	DBPort     string `toml:"dbport"`
+	DBAddress  string `toml:"dbaddress"`
+	User       string `toml:"username"`
+	Password   string `toml:"password"`
+	SID        string `toml:"oracle-sid"`
+	Tablespace string `toml:"oracle-tablespace"`
+
+	ConnectorPort string `toml:"connectorPort"`
+	ShortName     string `toml:"shortname"`
+	ConnectorName string `toml:"connectorName"`
+
+	MasterAddress string `toml:"masterAddress"`
 }
 
 // Print prints the Config object to the log.
@@ -33,14 +37,15 @@ func (c Config) Print() {
 
 	if conf.Vendor == "oracle" {
 		log.Printf("SID:\t\t%s", conf.SID)
-		log.Printf("Tablespace:\t\t%s", conf.DefaultTablespace)
+		log.Printf("Tablespace:\t\t%s", conf.Tablespace)
 	}
 
 	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
 	log.Printf("Short name:\t\t%s\n", conf.ShortName)
 	log.Printf("Username:\t\t%s\n", conf.User)
 	log.Printf("Password:\t\t****\n")
-	log.Printf("Master address\t%s\n", conf.MasterAddress)
+	log.Printf("Master address:\t%s\n", conf.MasterAddress)
+	log.Printf("Connector name:\t%s\n", conf.ConnectorName)
 }
 
 // NewConfig returns a configuration file based on the vendor
@@ -92,17 +97,17 @@ func NewConfig(vendor string) Config {
 		}
 	case "oracle":
 		conf = Config{
-			Vendor:            "oracle",
-			Version:           "11g",
-			ShortName:         "oracle-11g",
-			DBPort:            "1521",
-			DBAddress:         "localhost",
-			SID:               "orcl",
-			ConnectorPort:     "7000",
-			User:              "system",
-			Password:          "password",
-			DefaultTablespace: "USERS",
-			MasterAddress:     "http://localhost:7010",
+			Vendor:        "oracle",
+			Version:       "11g",
+			ShortName:     "oracle-11g",
+			DBPort:        "1521",
+			DBAddress:     "localhost",
+			ConnectorPort: "7000",
+			User:          "system",
+			Password:      "password",
+			SID:           "orcl",
+			Tablespace:    "USERS",
+			MasterAddress: "http://localhost:7010",
 		}
 		switch runtime.GOOS {
 		case "windows":
@@ -113,6 +118,8 @@ func NewConfig(vendor string) Config {
 			conf.Exec = "/path/to/sqlplus"
 		}
 	}
+
+	conf.ConnectorName = fmt.Sprintf("%s-%s", hostname, conf.ShortName)
 
 	return conf
 }
@@ -139,7 +146,7 @@ func generateInteractive(filename string) (string, Config) {
 
 	if vendor == "oracle" {
 		config.SID = prompter.AskDef("What is the SID?", def.SID)
-		config.DefaultTablespace = prompter.AskDef("What is the default tablespace?", def.DefaultTablespace)
+		config.Tablespace = prompter.AskDef("What is the default tablespace?", def.Tablespace)
 		config.Exec = prompter.AskDef("Where is the sqlplus executable?", def.Exec)
 	} else if vendor == "mysql" {
 		config.Exec = prompter.AskDef("Where is the mysql executable?", def.Exec)
@@ -150,7 +157,8 @@ func generateInteractive(filename string) (string, Config) {
 	config.User = prompter.AskDef("Who is the database user?", def.User)
 	config.Password = prompter.AskDef("What is the database password?", def.Password)
 	config.ConnectorPort = prompter.AskDef("What should the connector's port be?", def.ConnectorPort)
-	config.ShortName = prompter.AskDef("By what name should this connector be called?", def.ShortName)
+	config.ShortName = prompter.AskDef("What should the connector's short name be?", def.ShortName)
+	config.ConnectorName = prompter.AskDef("What should the connector's identifier name be?", def.ConnectorName)
 	config.MasterAddress = prompter.AskDef("What is the address of the Master server?", def.MasterAddress)
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)
