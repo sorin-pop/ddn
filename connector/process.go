@@ -72,15 +72,29 @@ func startImport(dbreq model.DBRequest) {
 		path = files[0]
 	}
 
+	if mdb := db.(*mysql); mdb != nil {
+		ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Validating MySQL dump"}
+		path, err = mdb.validateDump(path)
+
+		if err != nil {
+			log.Printf("database validation failed: %s", err.Error())
+
+			ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Validating dump failed: " + err.Error()}
+			return
+		}
+	}
+
 	dbreq.DumpLocation = path
 
 	ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Starting import"}
 
-	if err = db.ImportDatabase(dbreq); err != nil {
+	err = db.ImportDatabase(dbreq)
+	if err != nil {
 		log.Printf("could not import database: %s", err.Error())
 
 		ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Importing dump failed: " + err.Error()}
 		return
 	}
+
 	ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Import finished successfully"}
 }

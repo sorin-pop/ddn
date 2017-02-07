@@ -83,7 +83,7 @@ func textsOccur(file *os.File, t ...[]string) (map[int]bool, error) {
 
 	for _, strslice := range t {
 		for _, str := range strslice {
-			lines, err := sutils.FindCaseSensitive(file, str)
+			lines, err := sutils.FindWith(strings.HasPrefix, file, str)
 			if err != nil {
 				return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
 			}

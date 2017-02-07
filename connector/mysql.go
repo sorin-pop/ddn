@@ -221,13 +221,6 @@ func (db *mysql) ImportDatabase(dbreq model.DBRequest) error {
 	}
 	defer file.Close()
 
-	// Check for "Create Database" statements in the dump
-	file, err = validateDump(file)
-	if err != nil {
-		db.DropDatabase(dbreq)
-		return fmt.Errorf("validation failed: %s", err.Error())
-	}
-
 	// Start the import
 	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
 
@@ -305,11 +298,8 @@ func strip(test string) string {
 	return strings.TrimSuffix(test, "\n")
 }
 
-func validateDump(file *os.File) (*os.File, error) {
-	defer file.Seek(0, 0)
-
+func (db *mysql) validateDump(path string) (string, error) {
 	var (
-		err   error
 		lines map[int]bool
 
 		create = []string{"create database", "CREATE DATABASE"}
@@ -317,17 +307,23 @@ func validateDump(file *os.File) (*os.File, error) {
 		drop   = []string{"drop database", "DROP DATABASE"}
 	)
 
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("could not open dumpfile '%s': %s", path, err.Error())
+	}
+	defer file.Close()
+
 	lines, err = textsOccur(file, create, use, drop)
 	if err != nil {
-		return nil, err
+		return path, err
 	}
 
 	if len(lines) > 0 {
 		file, err = removeLinesFromFile(file, lines)
 		if err != nil {
-			return nil, fmt.Errorf("removing extra lines from dump failed: %s", err.Error())
+			return path, fmt.Errorf("removing extra lines from dump failed: %s", err.Error())
 		}
 	}
 
-	return file, nil
+	return path, nil
 }
