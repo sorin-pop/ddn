@@ -23,6 +23,7 @@ func startImport(dbreq model.DBRequest) {
 
 	path, err := inet.DownloadFile(usr.HomeDir, dbreq.DumpLocation)
 	if err != nil {
+		db.DropDatabase(dbreq)
 		log.Printf("could not download file: %s", err.Error())
 
 		ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Downlading file failed: " + err.Error()}
@@ -46,6 +47,7 @@ func startImport(dbreq model.DBRequest) {
 		case ".tar":
 			files, err = untar(path)
 		default:
+			db.DropDatabase(dbreq)
 			log.Println("import process stopped; encountered unsupported archive")
 
 			ch <- notif.Y{StatusCode: http.StatusBadRequest, Msg: "Unsupported archive"}
@@ -56,6 +58,7 @@ func startImport(dbreq model.DBRequest) {
 		}
 
 		if err != nil {
+			db.DropDatabase(dbreq)
 			log.Printf("could not extract archive: %s", err.Error())
 
 			ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Extracting file failed: " + err.Error()}
@@ -63,6 +66,7 @@ func startImport(dbreq model.DBRequest) {
 		}
 
 		if len(files) > 1 {
+			db.DropDatabase(dbreq)
 			log.Println("import process stopped; more than one file found in archive")
 
 			ch <- notif.Y{StatusCode: http.StatusBadRequest, Msg: "Archive contains more than one file, import stopped"}
@@ -77,6 +81,7 @@ func startImport(dbreq model.DBRequest) {
 		path, err = mdb.validateDump(path)
 
 		if err != nil {
+			db.DropDatabase(dbreq)
 			log.Printf("database validation failed: %s", err.Error())
 
 			ch <- notif.Y{StatusCode: http.StatusInternalServerError, Msg: "Validating dump failed: " + err.Error()}
