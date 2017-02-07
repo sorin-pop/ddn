@@ -8,7 +8,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"text/template"
+
+	"github.com/BurntSushi/toml"
 )
 
 func generateProps(filename string) (*string, error) {
@@ -20,41 +21,9 @@ func generateProps(filename string) (*string, error) {
 	}
 	defer file.Close()
 
-	prop := `vendor="{{.Vendor}}"
-version="{{.Version}}"
-executable="{{.Exec}}"
-dbport="{{.DBPort}}"
-dbAddress="{{.DBAddress}}"
-connectorPort="{{.ConnectorPort}}"
-username="{{.User}}"
-password="{{.Password}}"
-masterAddress="{{.MasterAddress}}"
-shortname="{{.ShortName}}"
-`
+	toml.NewEncoder(file).Encode(conf)
 
-	if conf.SID != "" {
-		prop += "oracle-sid=\"{{.SID}}\"\n"
-	}
-
-	if conf.DefaultTablespace != "" {
-		prop += "default-tablespace=\"{{.DefaultTablespace}}\"\n"
-	}
-
-	tmpl, err := template.New("props").Parse(prop)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't parse template: %s", err.Error())
-	}
-
-	err = tmpl.Execute(file, conf)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't execute template: %s", err.Error())
-	}
-
-	file.Sync()
-
-	name := file.Name()
-
-	return &name, nil
+	return &filename, nil
 }
 
 func unzip(path string) ([]string, error) {
