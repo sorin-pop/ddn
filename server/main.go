@@ -47,13 +47,24 @@ func main() {
 		log.Fatal("couldn't read configuration file: ", err.Error())
 	}
 
-	initRegistry()
-
 	log.Println("Starting with properties:")
 
 	conf.Print()
 
+	db := new(mysql)
+
+	err = db.connect(conf)
+	if err != nil {
+		log.Fatal("database connection failed:", err.Error())
+	}
+	defer db.close()
+
+	log.Println("Database connection established")
+
+	initRegistry()
+	log.Println("Registry initialized")
+
 	port := fmt.Sprintf(":%s", conf.ServerPort)
 
-	log.Fatal(http.ListenAndServe(port, Router()))
+	log.Fatal("died:", http.ListenAndServe(port, Router()))
 }
