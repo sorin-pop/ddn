@@ -12,6 +12,17 @@ import (
 )
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {
+	list := make(map[string]string, 10)
+	for _, con := range registry {
+		list[con.ShortName] = con.LongName
+	}
+
+	msg := inet.MapMessage{Status: http.StatusOK, Message: list}
+
+	b, st := msg.Compose()
+
+	inet.WriteHeader(w, st)
+	w.Write(b)
 }
 
 func createDatabase(w http.ResponseWriter, r *http.Request) {
@@ -28,17 +39,18 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ddnc := model.Connector{
-		ID:        getID(),
-		ShortName: req.ShortName,
-		LongName:  req.LongName,
-		Version:   req.Version,
-		Address:   r.RemoteAddr,
-		Up:        true,
+		ID:         getID(),
+		ShortName:  req.ShortName,
+		LongName:   req.LongName,
+		Identifier: req.ConnectorName,
+		Version:    req.Version,
+		Address:    r.RemoteAddr,
+		Up:         true,
 	}
 
-	registry[ddnc.Address] = ddnc
+	registry[req.ConnectorName] = ddnc
 
-	log.Printf("Registered: %+v", ddnc)
+	log.Printf("Registered: %s", req.ConnectorName)
 
 	resp, _ := inet.JSONify(model.RegisterResponse{ID: ddnc.ID, Address: ddnc.Address})
 
@@ -47,15 +59,17 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func unregister(w http.ResponseWriter, r *http.Request) {
-
 	var con model.Connector
 
 	err := json.NewDecoder(r.Body).Decode(&con)
 	if err != nil {
 		log.Printf("Could not jsonify message: %s", err.Error())
+		return
 	}
 
-	log.Printf("Unregistered: %+v", con)
+	delete(registry, con.Identifier)
+
+	log.Printf("Unregistered: %s", con.Identifier)
 }
 
 func alive(w http.ResponseWriter, r *http.Request) {
