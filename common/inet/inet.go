@@ -4,7 +4,6 @@ package inet
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -49,7 +48,8 @@ func DownloadFile(dest, url string) (string, error) {
 func AddrExists(url string) bool {
 	defer func() {
 		if p := recover(); p != nil {
-			log.Printf("Remote end %q refused the connection", url)
+			// panic happens, no need to log anything. It's usually a refusal.
+			// log.Printf("Remote end %q refused the connection", url)
 		}
 	}()
 

@@ -19,12 +19,13 @@ import (
 const version = "0.7.0"
 
 var (
-	conf     Config
-	db       Database
-	port     string
-	usr      *user.User
-	hostname string
-	startup  time.Time
+	conf       Config
+	db         Database
+	port       string
+	usr        *user.User
+	hostname   string
+	startup    time.Time
+	registered bool
 
 	connector model.Connector
 )
@@ -110,6 +111,8 @@ func main() {
 		log.Printf("could not register connector: %s", err.Error())
 		log.Println(">> Connector should be restarted once the master server is brought online.")
 	}
+
+	go keepAlive()
 
 	log.Println("Starting to listen on port", conf.ConnectorPort)
 
