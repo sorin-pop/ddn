@@ -3,12 +3,14 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/notif"
+	"github.com/djavorszky/sutils"
 )
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +28,42 @@ func listConnectors(w http.ResponseWriter, r *http.Request) {
 }
 
 func createDatabase(w http.ResponseWriter, r *http.Request) {
+	var req model.ClientRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Printf("couldn't decode json request: %s", err.Error())
+
+		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		return
+	}
+
+	con, ok := registry[req.ConnectorIdentifier]
+	if !ok {
+		log.Printf("requested identifier %q not in registry", req.ConnectorIdentifier)
+	}
+
+	log.Println("addr", con.Address)
+
+	if req.DatabaseName == "" {
+		req.DatabaseName = sutils.RandDBName()
+	}
+
+	if req.Username == "" {
+		req.Username = sutils.RandUserName()
+	}
+
+	if req.Password == "" {
+		req.Password = sutils.RandPassword()
+	}
+
+	dest := fmt.Sprintf("%s/create-database", con.Address)
+
+	log.Println("um...", dest)
+
+	notif.SndLoc(req, dest)
+
+	inet.WriteHeader(w, http.StatusOK)
+	w.Write(make([]byte, 0))
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +86,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Up:         true,
 	}
 
-	registry[req.ConnectorName] = ddnc
+	registry[req.ShortName] = ddnc
 
 	log.Printf("Registered: %s", req.ConnectorName)
 
