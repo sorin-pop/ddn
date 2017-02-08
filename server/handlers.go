@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
@@ -42,8 +43,6 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		log.Printf("requested identifier %q not in registry", req.ConnectorIdentifier)
 	}
 
-	log.Println("addr", con.Address)
-
 	if req.DatabaseName == "" {
 		req.DatabaseName = sutils.RandDBName()
 	}
@@ -56,14 +55,20 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		req.Password = sutils.RandPassword()
 	}
 
-	dest := fmt.Sprintf("%s/create-database", con.Address)
+	dest := fmt.Sprintf("http://%s/create-database", con.Address)
 
-	log.Println("um...", dest)
+	resp, err := notif.SndLoc(req, dest)
+	if err != nil {
+		log.Printf("couldn't create database on connector: %s", err.Error())
 
-	notif.SndLoc(req, dest)
+		inet.SendResponse(w, inet.ErrorResponse())
+		return
+	}
+
+	respBytes := bytes.NewBufferString(resp)
 
 	inet.WriteHeader(w, http.StatusOK)
-	w.Write(make([]byte, 0))
+	w.Write(respBytes.Bytes())
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
@@ -76,13 +81,17 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	index := strings.LastIndex(r.RemoteAddr, ":")
+
+	addr := fmt.Sprintf("%s:%s", r.RemoteAddr[:index], req.Port)
+
 	ddnc := model.Connector{
 		ID:         getID(),
 		ShortName:  req.ShortName,
 		LongName:   req.LongName,
 		Identifier: req.ConnectorName,
 		Version:    req.Version,
-		Address:    r.RemoteAddr,
+		Address:    addr,
 		Up:         true,
 	}
 

@@ -160,6 +160,7 @@ func registerConnector() error {
 		ShortName:     conf.ShortName,
 		LongName:      longname,
 		Version:       version,
+		Port:          conf.ConnectorPort,
 	}
 
 	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")

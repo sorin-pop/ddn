@@ -4,6 +4,7 @@ package inet
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -49,7 +50,7 @@ func AddrExists(url string) bool {
 	defer func() {
 		if p := recover(); p != nil {
 			// panic happens, no need to log anything. It's usually a refusal.
-			// log.Printf("Remote end %q refused the connection", url)
+			log.Printf("Remote end %q refused the connection", url)
 		}
 	}()
 
