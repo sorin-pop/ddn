@@ -76,7 +76,7 @@ func startImport(dbreq model.DBRequest) {
 		path = files[0]
 	}
 
-	if mdb := db.(*mysql); mdb != nil {
+	if mdb, ok := db.(*mysql); ok {
 		ch <- notif.Y{StatusCode: http.StatusOK, Msg: "Validating MySQL dump"}
 		path, err = mdb.validateDump(path)
 
