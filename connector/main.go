@@ -109,7 +109,7 @@ func main() {
 	err = registerConnector()
 	if err != nil {
 		log.Printf("could not register connector: %s", err.Error())
-		log.Println(">> Connector should be restarted once the master server is brought online.")
+		log.Println(">> will try to connect to it if it comes online")
 	}
 
 	go keepAlive()
