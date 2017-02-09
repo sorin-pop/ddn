@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -63,17 +62,6 @@ func (db *oracle) DropDatabase(dbRequest model.DBRequest) error {
 }
 
 func (db *oracle) ImportDatabase(dbRequest model.DBRequest) error {
-	//var errBuf bytes.Buffer
-
-	/*file, err := os.Open(dbreq.DumpLocation)
-	if err != nil {
-		db.DropDatabase(dbreq)
-		return fmt.Errorf("could not open dumpfile '%s': %s", dbreq.DumpLocation, err.Error())
-	}
-	defer file.Close()*/
-
-	log.Println("Dump location: ", dbRequest.DumpLocation)
-
 	dumpDir, fileName := filepath.Split(dbRequest.DumpLocation)
 
 	// Start the import
