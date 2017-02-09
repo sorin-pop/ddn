@@ -21,6 +21,9 @@ type ClientRequest struct {
 // ID when unregistering
 type RegisterRequest struct {
 	ConnectorName string `json:"connector_name"`
+	DBVendor      string `json:"dbvendor"`
+	DBPort        string `json:"dbport"`
+	DBSID         string `json:"dbsid"`
 	ShortName     string `json:"short_name"`
 	LongName      string `json:"long_name"`
 	Version       string `json:"version"`
@@ -36,12 +39,16 @@ type RegisterResponse struct {
 
 // Connector is used to represent a DDN Connector.
 type Connector struct {
-	ID         int
-	ShortName  string
-	LongName   string
-	Identifier string
-	Version    string
-	Address    string
-	Token      string
-	Up         bool
+	ID            int
+	DBVendor      string
+	DBPort        string
+	DBSID         string
+	ShortName     string
+	LongName      string
+	Identifier    string
+	ConnectorPort string
+	Version       string
+	Address       string
+	Token         string
+	Up            bool
 }
