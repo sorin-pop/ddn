@@ -12,6 +12,8 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+var db *mysql
+
 func main() {
 	defer func() {
 		if p := recover(); p != nil {
@@ -51,7 +53,7 @@ func main() {
 
 	conf.Print()
 
-	db := new(mysql)
+	db = new(mysql)
 
 	err = db.connect(conf)
 	if err != nil {

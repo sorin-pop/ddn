@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/sutils"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -81,4 +82,26 @@ func (db *mysql) Alive() error {
 
 	return nil
 
+}
+
+func (db *mysql) persist(req model.ClientRequest) error {
+	if err := db.Alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dumpfile`, `createDate`, `creator`, `connectorName`) VALUES ('%s', '%s', '%s', '%s', NOW(), '%s', '%s')",
+		req.DatabaseName,
+		req.Username,
+		req.Password,
+		req.DumpLocation,
+		req.Requester,
+		req.ConnectorIdentifier,
+	)
+
+	_, err := db.conn.Exec(query)
+	if err != nil {
+		return fmt.Errorf("executing insert query failed: %s", err.Error())
+	}
+
+	return nil
 }

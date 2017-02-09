@@ -40,7 +40,11 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 
 	con, ok := registry[req.ConnectorIdentifier]
 	if !ok {
-		log.Printf("requested identifier %q not in registry", req.ConnectorIdentifier)
+		e := fmt.Errorf("requested identifier %q not in registry", req.ConnectorIdentifier)
+		log.Println(e.Error())
+
+		inet.SendResponse(w, inet.ErrorResponse())
+		return
 	}
 
 	if req.DatabaseName == "" {
@@ -65,10 +69,26 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var msg inet.Message
 	respBytes := bytes.NewBufferString(resp)
 
-	inet.WriteHeader(w, http.StatusOK)
-	w.Write(respBytes.Bytes())
+	err = json.NewDecoder(respBytes).Decode(&msg)
+	if err != nil {
+		e := fmt.Errorf("malformed response from connector: %s", err.Error())
+		log.Println(e.Error())
+
+		inet.SendResponse(w, inet.ErrorJSONResponse(e))
+		return
+	}
+
+	response, status := msg.Compose()
+
+	if status == http.StatusOK {
+		db.persist(req)
+	}
+
+	inet.WriteHeader(w, status)
+	w.Write(response)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {

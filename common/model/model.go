@@ -12,6 +12,7 @@ type DBRequest struct {
 // ClientRequest is used to represent a JSON call between a client and the server
 type ClientRequest struct {
 	ConnectorIdentifier string `json:"connector_identifier"`
+	Requester           string `json:"requester_email"`
 	DBRequest
 }
 
