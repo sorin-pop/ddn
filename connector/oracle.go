@@ -54,6 +54,10 @@ func (db *oracle) DropDatabase(dbRequest model.DBRequest) error {
 
 	res := RunCommand(conf.Exec, args...)
 
+	if res.exitCode == 1918 { // ORA-01918: user xxx does not exist ---> return with success
+		return nil
+	}
+
 	if res.exitCode != 0 {
 		return fmt.Errorf("Unable to drop database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 	}
@@ -62,6 +66,7 @@ func (db *oracle) DropDatabase(dbRequest model.DBRequest) error {
 }
 
 func (db *oracle) ImportDatabase(dbRequest model.DBRequest) error {
+
 	dumpDir, fileName := filepath.Split(dbRequest.DumpLocation)
 
 	// Start the import
