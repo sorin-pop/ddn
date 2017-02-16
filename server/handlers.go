@@ -37,51 +37,35 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.DatabaseName == "" {
-		req.DatabaseName = sutils.RandDBName()
-	}
+	ensureValidRequest(&req)
 
-	if req.Username == "" {
-		req.Username = sutils.RandUserName()
-	}
-
-	if req.Password == "" {
-		req.Password = sutils.RandPassword()
-	}
-
-	con, ok := registry[req.ConnectorIdentifier]
-	if !ok {
-		e := fmt.Errorf("requested identifier %q not in registry", req.ConnectorIdentifier)
-		log.Println(e.Error())
-
-		inet.SendResponse(w, http.StatusNotFound, inet.ErrorResponse())
-		return
-	}
-
-	dest := fmt.Sprintf("http://%s/create-database", con.Address)
-
-	resp, err := notif.SndLoc(req, dest)
+	con, err := doCreateDatabase(req)
 	if err != nil {
-		log.Printf("couldn't create database on connector: %s", err.Error())
-
 		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorResponse())
 		return
 	}
 
-	var msg inet.Message
-	respBytes := bytes.NewBufferString(resp)
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor, req.PortalVersion)))
 
-	err = json.NewDecoder(respBytes).Decode(&msg)
-	if err != nil {
-		e := fmt.Errorf("malformed response from connector: %s", err.Error())
-		log.Println(e.Error())
-
-		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorJSONResponse(e))
-		return
+	var url string
+	switch con.DBVendor {
+	case "mysql":
+		url = mjdbcURL(req.DatabaseName, req.PortalVersion, con.Address, con.DBPort)
+	case "oracle":
+		url = ojdbcURL(con.DBSID, con.Address, con.DBPort)
+	case "postgres":
+		url = pjdbcURL(req.DatabaseName, con.Address, con.DBPort)
 	}
 
-	if msg.Status == status.Success {
-		db.persist(req)
+	buf.WriteString(fmt.Sprintf("jdbc.default.url=%s\n", url))
+
+	buf.WriteString(fmt.Sprintf("jdbc.default.username=%s\n", req.Username))
+	buf.WriteString(fmt.Sprintf("jdbc.default.password=%s\n", req.Password))
+
+	msg := inet.Message{
+		Status:  status.Success,
+		Message: buf.String(),
 	}
 
 	inet.SendResponse(w, http.StatusOK, msg)
@@ -102,57 +86,14 @@ func createDatabaseGET(w http.ResponseWriter, r *http.Request) {
 	req.ConnectorIdentifier = connector
 	req.DatabaseName, req.Username, req.Password = values.Get("dbname"), values.Get("dbuser"), values.Get("dbpass")
 
-	if req.DatabaseName == "" {
-		req.DatabaseName = sutils.RandDBName()
-	}
+	ensureValidRequest(&req)
 
-	if req.Username == "" {
-		req.Username = sutils.RandUserName()
-	}
-
-	if req.Password == "" {
-		req.Password = sutils.RandPassword()
-	}
-
-	con, ok := registry[connector]
-	if !ok {
-		log.Printf("requested identifier %q not in registry", connector)
-
-		fmt.Fprintf(w, "Connector %q not online", connector)
-		return
-	}
-
-	log.Printf("%#v", req)
-
-	dest := fmt.Sprintf("http://%s:%s/create-database", con.Address, con.ConnectorPort)
-
-	resp, err := notif.SndLoc(req, dest)
+	con, err := doCreateDatabase(req)
 	if err != nil {
-		log.Printf("couldn't create database on connector: %s", err.Error())
-
-		fmt.Fprintf(w, "Could not create database: %s", err.Error())
+		inet.WriteHeader(w, http.StatusInternalServerError)
+		fmt.Fprintf(w, "Failed to process request: %s", err.Error())
 		return
 	}
-
-	var msg inet.Message
-	respBytes := bytes.NewBufferString(resp)
-
-	err = json.NewDecoder(respBytes).Decode(&msg)
-	if err != nil {
-		e := fmt.Errorf("malformed response from connector: %s", err.Error())
-		log.Println(e.Error())
-
-		fmt.Fprintf(w, e.Error())
-		return
-	}
-
-	if msg.Status != status.Success {
-		inet.WriteHeader(w, http.StatusOK)
-		fmt.Fprintf(w, msg.Message)
-		return
-	}
-
-	db.persist(req)
 
 	fmt.Fprintf(w, "jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor, version))
 
@@ -248,4 +189,48 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("%+v", msg)
+}
+
+func ensureValidRequest(req *model.ClientRequest) {
+	if req.DatabaseName == "" {
+		req.DatabaseName = sutils.RandDBName()
+	}
+
+	if req.Username == "" {
+		req.Username = sutils.RandUserName()
+	}
+
+	if req.Password == "" {
+		req.Password = sutils.RandPassword()
+	}
+}
+
+func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
+	con, ok := registry[req.ConnectorIdentifier]
+	if !ok {
+		return model.Connector{}, fmt.Errorf("requested identifier %q not in registry", req.ConnectorIdentifier)
+	}
+
+	dest := fmt.Sprintf("http://%s:%s/create-database", con.Address, con.ConnectorPort)
+
+	resp, err := notif.SndLoc(req, dest)
+	if err != nil {
+		return model.Connector{}, fmt.Errorf("couldn't create database on connector: %s", err.Error())
+	}
+
+	var msg inet.Message
+	respBytes := bytes.NewBufferString(resp)
+
+	err = json.NewDecoder(respBytes).Decode(&msg)
+	if err != nil {
+		return model.Connector{}, fmt.Errorf("malformed response from connector: %s", err.Error())
+	}
+
+	if msg.Status != status.Success {
+		return model.Connector{}, fmt.Errorf("creating database failed: %s", msg.Message)
+	}
+
+	db.persist(req)
+
+	return con, nil
 }

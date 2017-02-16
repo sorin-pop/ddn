@@ -13,6 +13,7 @@ type DBRequest struct {
 type ClientRequest struct {
 	ConnectorIdentifier string `json:"connector_identifier"`
 	Requester           string `json:"requester_email"`
+	PortalVersion       string `json:"portal_version"`
 	DBRequest
 }
 
