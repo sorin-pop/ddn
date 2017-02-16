@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/djavorszky/ddn/common/inet"
-	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
+
+	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/ddn/common/status"
 )
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {
@@ -20,12 +22,9 @@ func listConnectors(w http.ResponseWriter, r *http.Request) {
 		list[con.ShortName] = con.LongName
 	}
 
-	msg := inet.MapMessage{Status: http.StatusOK, Message: list}
+	msg := inet.MapMessage{Status: status.Success, Message: list}
 
-	b, st := msg.Compose()
-
-	inet.WriteHeader(w, st)
-	w.Write(b)
+	inet.SendResponse(w, http.StatusOK, msg)
 }
 
 func createDatabase(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +33,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
 	}
 
@@ -55,7 +54,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		e := fmt.Errorf("requested identifier %q not in registry", req.ConnectorIdentifier)
 		log.Println(e.Error())
 
-		inet.SendResponse(w, inet.ErrorResponse())
+		inet.SendResponse(w, http.StatusNotFound, inet.ErrorResponse())
 		return
 	}
 
@@ -65,7 +64,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't create database on connector: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorResponse())
+		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorResponse())
 		return
 	}
 
@@ -77,18 +76,15 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		e := fmt.Errorf("malformed response from connector: %s", err.Error())
 		log.Println(e.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(e))
+		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorJSONResponse(e))
 		return
 	}
 
-	response, status := msg.Compose()
-
-	if status == http.StatusOK {
+	if msg.Status == status.Success {
 		db.persist(req)
 	}
 
-	inet.WriteHeader(w, status)
-	w.Write(response)
+	inet.SendResponse(w, http.StatusOK, msg)
 }
 
 func createDatabaseGET(w http.ResponseWriter, r *http.Request) {
@@ -150,8 +146,8 @@ func createDatabaseGET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if msg.Status != http.StatusOK {
-		inet.WriteHeader(w, msg.Status)
+	if msg.Status != status.Success {
+		inet.WriteHeader(w, http.StatusOK)
 		fmt.Fprintf(w, msg.Message)
 		return
 	}
@@ -181,7 +177,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
 	}
 
@@ -247,7 +243,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
 	}
 

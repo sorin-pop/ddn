@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
+
+	"github.com/djavorszky/ddn/common/status"
 )
 
 // JSONMessage is an interface that can hold many types of messages that
@@ -13,7 +14,7 @@ import (
 // without too much boilerplate code. This way, we can return the status
 // in the same step and, if not needed, discard it.
 type JSONMessage interface {
-	Compose() ([]byte, int)
+	Compose() []byte
 }
 
 // Message is a struct to hold a simple status-message type response
@@ -23,13 +24,13 @@ type Message struct {
 }
 
 // Compose creates a JSON formatted byte slice from the Message
-func (msg Message) Compose() ([]byte, int) {
+func (msg Message) Compose() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return b, msg.Status
+	return b
 }
 
 // ListMessage is a struct to hold a status-list of strings type response
@@ -39,13 +40,13 @@ type ListMessage struct {
 }
 
 // Compose creates a JSON formatted byte slice from the ListMessage
-func (msg ListMessage) Compose() ([]byte, int) {
+func (msg ListMessage) Compose() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return b, msg.Status
+	return b
 }
 
 // MapMessage is a struct to hold a status and a key+value type response
@@ -55,13 +56,13 @@ type MapMessage struct {
 }
 
 // Compose creates a JSON formatted byte slice from the Message
-func (msg MapMessage) Compose() ([]byte, int) {
+func (msg MapMessage) Compose() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return b, msg.Status
+	return b
 }
 
 // ErrorResponse composes a Message with an 500 response code. It should be used
@@ -69,8 +70,8 @@ func (msg MapMessage) Compose() ([]byte, int) {
 func ErrorResponse() Message {
 	var errMsg Message
 
-	errMsg.Status = http.StatusServiceUnavailable
-	errMsg.Message = "The server is unable to process requests as the underlying database is down."
+	errMsg.Status = status.ServerError
+	errMsg.Message = "Something went wrong on the server."
 
 	return errMsg
 }
@@ -82,7 +83,7 @@ func ErrorJSONResponse(err error) Message {
 
 	log.Println("Could not decode JSON message:", err.Error())
 
-	msg.Status = http.StatusBadRequest
+	msg.Status = status.ClientError
 	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
 
 	return msg
@@ -93,7 +94,7 @@ func ErrorJSONResponse(err error) Message {
 func InvalidResponse() Message {
 	var msg Message
 
-	msg.Status = http.StatusBadRequest
+	msg.Status = status.ClientError
 	msg.Message = "One or more required fields are missing from the call"
 
 	return msg

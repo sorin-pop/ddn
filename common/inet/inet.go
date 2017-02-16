@@ -69,8 +69,8 @@ func AddrExists(url string) bool {
 
 // SendResponse composes the message, writes the header, then writes the bytes
 // to the ResponseWriter
-func SendResponse(w http.ResponseWriter, msg JSONMessage) {
-	b, status := msg.Compose()
+func SendResponse(w http.ResponseWriter, status int, msg JSONMessage) {
+	b := msg.Compose()
 
 	WriteHeader(w, status)
 

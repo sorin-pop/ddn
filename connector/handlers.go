@@ -12,6 +12,7 @@ import (
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/ddn/common/status"
 )
 
 // index should display whenever someone visits the main page.
@@ -30,26 +31,27 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, createDB)...); !ok {
-		inet.SendResponse(w, inet.InvalidResponse())
+		inet.SendResponse(w, http.StatusBadRequest, inet.InvalidResponse())
 		return
 	}
 
+	httpStatus := http.StatusOK
 	err = db.CreateDatabase(dbreq)
 	if err != nil {
-		log.Printf("creating database failed: %s", err.Error())
-		msg.Status = http.StatusInternalServerError
-		msg.Message = err.Error()
+		httpStatus = http.StatusInternalServerError
+		msg.Status = status.ServerError
+		msg.Message = fmt.Sprintf("creating database failed: %s", err.Error())
 	} else {
-		msg.Status = http.StatusOK
+		msg.Status = status.Success
 		msg.Message = "Successfully created the database and user!"
 	}
 
-	inet.SendResponse(w, msg)
+	inet.SendResponse(w, httpStatus, msg)
 }
 
 // listDatabase lists the supervised databases in a JSON format
@@ -59,16 +61,16 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 		err error
 	)
 
-	msg.Status = http.StatusOK
+	msg.Status = status.Success
 	msg.Message, err = db.ListDatabase()
 	if err != nil {
 		log.Printf("listing databases failed: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorResponse())
+		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorResponse())
 		return
 	}
 
-	inet.SendResponse(w, msg)
+	inet.SendResponse(w, http.StatusOK, msg)
 }
 
 // echo echoes whatever it receives (as JSON) to the log.
@@ -79,7 +81,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
 	}
 
@@ -97,28 +99,28 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't drop database: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, dropDB)...); !ok {
-		inet.SendResponse(w, inet.InvalidResponse())
+		inet.SendResponse(w, http.StatusBadRequest, inet.InvalidResponse())
 		return
 	}
 
+	httpStatus := http.StatusOK
+
 	err = db.DropDatabase(dbreq)
 	if err != nil {
-		log.Printf("dropping database failed: %s", err.Error())
-
-		msg.Status = http.StatusInternalServerError
-		msg.Message = err.Error()
+		httpStatus = http.StatusInternalServerError
+		msg.Status = status.ServerError
+		msg.Message = fmt.Sprintf("dropping database failed: %s", err.Error())
 	} else {
-		msg.Status = http.StatusOK
+		msg.Status = status.Success
 		msg.Message = "Successfully dropped the database and user!"
 	}
 
-	inet.SendResponse(w, msg)
-
+	inet.SendResponse(w, httpStatus, msg)
 }
 
 // importDatabase will import the specified dumpfile to the database
@@ -133,38 +135,36 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("couldn't decode json request: %s", err.Error())
 
-		inet.SendResponse(w, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, importDB)...); !ok {
-		inet.SendResponse(w, inet.InvalidResponse())
+		inet.SendResponse(w, http.StatusBadRequest, inet.InvalidResponse())
 		return
 	}
 
 	if exists := inet.AddrExists(dbreq.DumpLocation); !exists {
-		msg.Status = http.StatusNotFound
+		msg.Status = status.NotFound
 		msg.Message = "Specified file doesn't exist or is not reachable."
 
-		inet.SendResponse(w, msg)
+		inet.SendResponse(w, http.StatusNotFound, msg)
 		return
 	}
 
 	err = db.CreateDatabase(dbreq)
 	if err != nil {
-		log.Printf("creating database failed: %s", err.Error())
+		msg.Status = status.ServerError
+		msg.Message = fmt.Sprintf("creating database failed: %s", err.Error())
 
-		msg.Status = http.StatusInternalServerError
-		msg.Message = err.Error()
-
-		inet.SendResponse(w, msg)
+		inet.SendResponse(w, http.StatusInternalServerError, msg)
 		return
 	}
 
-	msg.Status = http.StatusOK
+	msg.Status = status.Accepted
 	msg.Message = "Understood request, starting import process."
 
-	inet.SendResponse(w, msg)
+	inet.SendResponse(w, http.StatusOK, msg)
 
 	go startImport(dbreq)
 }
@@ -183,16 +183,16 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 
 	var msg inet.MapMessage
 
-	msg.Status = http.StatusOK
+	msg.Status = status.Success
 	msg.Message = info
 
-	inet.SendResponse(w, msg)
+	inet.SendResponse(w, http.StatusOK, msg)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
 	var msg inet.Message
 
-	msg.Status = http.StatusOK
+	msg.Status = status.Success
 	msg.Message = "Still alive"
 
 	err := db.Alive()
@@ -201,5 +201,5 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 		msg = inet.ErrorResponse()
 	}
 
-	inet.SendResponse(w, msg)
+	inet.SendResponse(w, http.StatusOK, msg)
 }
