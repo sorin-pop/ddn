@@ -45,6 +45,10 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if con.Address == "[::1]" {
+		con.Address = "localhost"
+	}
+
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor, req.PortalVersion)))
 
@@ -93,6 +97,10 @@ func createDatabaseGET(w http.ResponseWriter, r *http.Request) {
 		inet.WriteHeader(w, http.StatusInternalServerError)
 		fmt.Fprintf(w, "Failed to process request: %s", err.Error())
 		return
+	}
+
+	if con.Address == "[::1]" {
+		con.Address = "127.0.0.1"
 	}
 
 	fmt.Fprintf(w, "jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor, version))
