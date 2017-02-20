@@ -169,7 +169,7 @@ func unregister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delete(registry, con.Identifier)
+	delete(registry, con.ShortName)
 
 	log.Printf("Unregistered: %s", con.Identifier)
 }
