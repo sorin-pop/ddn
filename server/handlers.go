@@ -16,6 +16,10 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 )
 
+func index(w http.ResponseWriter, r *http.Request) {
+	displayWelcomePage(w)
+}
+
 func listConnectors(w http.ResponseWriter, r *http.Request) {
 	list := make(map[string]string, 10)
 	for _, con := range registry {

@@ -55,4 +55,10 @@ var routes = Routes{
 		"/echo",
 		echo,
 	},
+	route{
+		"index",
+		"GET",
+		"/",
+		index,
+	},
 }
