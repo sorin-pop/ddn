@@ -13,6 +13,10 @@ func Logger(inner http.Handler, handler string) http.Handler {
 
 		inner.ServeHTTP(w, r)
 
+		if r.RequestURI == "/alive" {
+			return
+		}
+
 		log.Printf("[%s]\t%s\t%s\t%s\t",
 			r.RemoteAddr, r.Method, r.RequestURI, time.Since(start))
 	})
