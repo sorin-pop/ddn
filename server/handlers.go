@@ -17,7 +17,7 @@ import (
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
-	displayWelcomePage(w)
+	displayWelcomePage(w, r)
 }
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {
