@@ -1,0 +1,36 @@
+<h3>Create database</h3>
+<form>
+    <div class="form-group row">
+        <label for="connector" class="col-sm-3 col-form-label">Connector</label>
+        <div class="col-sm-9">
+            <select id="connector" class="form-control">
+                {{range .Connectors}}
+                    <option value="{{.ShortName}}">{{.LongName}}</option>
+                {{end}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="dbname" class="col-sm-3 col-form-label">Database name</label>
+        <div class="col-sm-9">
+            <input type="text" class="form-control" id="dbname" placeholder="Database name (optional)">
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="user" class="col-sm-3 col-form-label">Database user</label>
+        <div class="col-sm-9">
+            <input type="text" class="form-control" id="user" placeholder="Database user (optional)">
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="password" class="col-sm-3 col-form-label">Database password</label>
+        <div class="col-sm-9">
+            <input type="password" class="form-control" id="password" placeholder="Database password (optional)">
+        </div>
+    </div>
+    <div class="form-group row">
+      <div class="offset-sm-3 col-sm-9">
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    </div>
+</form>

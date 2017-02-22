@@ -12,6 +12,7 @@ import (
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
 	Connectors *map[string]model.Connector
+	AnyOnline  bool
 }
 
 func displayWelcomePage(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +32,7 @@ func displayWelcomePage(w http.ResponseWriter, r *http.Request) {
 
 func buildPage(debug string) Page {
 	if debug == "" {
-		return Page{Connectors: &registry}
+		return Page{Connectors: &registry, AnyOnline: len(registry) > 0}
 	}
 
 	conns := make(map[string]model.Connector)
@@ -85,7 +86,7 @@ func buildPage(debug string) Page {
 		Up:            true,
 	}
 
-	return Page{Connectors: &conns}
+	return Page{Connectors: &conns, AnyOnline: len(conns) > 0}
 }
 
 func buildTemplate() (*template.Template, error) {

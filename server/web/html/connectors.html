@@ -1,7 +1,11 @@
-<h3>Active connectors</h3>
+{{if .AnyOnline}}
+    <h3>Active connectors</h3>
 
-<ul class="list-unstyled">
-{{range $n, $v := .Connectors}}
-    <li><i class="fa fa-database" aria-hidden="true"></i> {{$n}} ({{$v.LongName}})</li>
+    <ul class="list-unstyled">
+    {{range $n, $v := .Connectors}}
+        <li><i class="fa fa-database" aria-hidden="true"></i> {{$n}} ({{$v.LongName}})</li>
+    {{end}}
+    </ul>
+{{else}}
+    <h3>None of the connectors are online</h3>
 {{end}}
-</ul>
