@@ -4,14 +4,18 @@
     <div class="container">
       {{template "nav.html" .}}
       <div class="row">
-        <div class="col md-8">
-          {{if .AnyOnline}}
+        {{if .AnyOnline}}
+          <div class="col md-8">
             {{template "dbform.html" .}}
+          </div>
+          <div class="col-md-4">
+            {{template "connectors.html" .}}
+          </div>
+          {{else}}
+            <div class="col-md-4 offset-md-4">
+              <h3>All databases are down :-(</h3>
+            </div>
           {{end}}
-        </div>
-        <div class="col-md-4">
-          {{template "connectors.html" .}}
-        </div>
       </div>
     </div>
   </body>
