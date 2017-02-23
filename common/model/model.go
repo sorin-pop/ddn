@@ -1,5 +1,16 @@
 package model
 
+import (
+	"fmt"
+
+	"encoding/json"
+
+	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/notif"
+	"github.com/djavorszky/sutils"
+)
+
 // DBRequest is used to represent JSON call about creating, dropping or importing databases
 type DBRequest struct {
 	ID           int    `json:"id"`
@@ -52,4 +63,47 @@ type Connector struct {
 	Address       string
 	Token         string
 	Up            bool
+}
+
+// CreateDatabase sends a request to the connector to create a database.
+func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
+	if dbname == "" && dbuser != "" {
+		dbname = dbuser
+	}
+
+	if dbname == "" {
+		dbname = sutils.RandDBName()
+	}
+
+	if dbuser == "" {
+		dbuser = sutils.RandUserName()
+	}
+
+	if dbpass == "" {
+		dbpass = sutils.RandPassword()
+	}
+
+	dbreq := DBRequest{
+		ID:           id,
+		DatabaseName: dbname,
+		Username:     dbuser,
+		Password:     dbpass,
+	}
+
+	dest := fmt.Sprintf("http://%s:%s/create-database", c.Address, c.ConnectorPort)
+
+	resp, err := notif.SndLoc(dbreq, dest)
+	if err != nil {
+		return "", fmt.Errorf("sending json message failed: %s", err.Error())
+	}
+
+	var respMsg inet.Message
+
+	json.Unmarshal([]byte(resp), &respMsg)
+
+	if respMsg.Status != status.Success {
+		return "", fmt.Errorf("creating database failed: %s", respMsg.Message)
+	}
+
+	return respMsg.Message, nil
 }

@@ -61,4 +61,16 @@ var routes = Routes{
 		"/",
 		index,
 	},
+	route{
+		"create",
+		"POST",
+		"/create",
+		create,
+	},
+	route{
+		"createdb",
+		"GET",
+		"/createdb",
+		createdb,
+	},
 }

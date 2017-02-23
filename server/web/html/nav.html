@@ -5,12 +5,17 @@
   <a class="navbar-brand" href="#">Cloud DB 2</a>
   <div class="collapse navbar-collapse" id="navbarCollapse">
     <ul class="navbar-nav mr-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Something</a>
-      </li>
+      {{range $uri, $name := .Pages}}
+        {{if eq $uri $.ActivePage}}
+          <li class="nav-item active">
+            <a class="nav-link" href="{{$uri}}">{{$name}} <span class="sr-only">(current)</span></a>
+          </li>
+        {{else}}
+          <li class="nav-item">
+            <a class="nav-link" href="{{$uri}}">{{$name}}</a>
+          </li>
+        {{end}}
+      {{end}}
     </ul>
   </div>
 </nav>

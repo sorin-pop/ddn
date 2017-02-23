@@ -17,7 +17,37 @@ import (
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
-	displayWelcomePage(w, r)
+	loadPage(w, r, "home")
+}
+
+func createdb(w http.ResponseWriter, r *http.Request) {
+	loadPage(w, r, "dbform")
+}
+
+func create(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	var (
+		connector = r.PostFormValue("connector")
+		dbname    = r.PostFormValue("dbname")
+		dbuser    = r.PostFormValue("user")
+		dbpass    = r.PostFormValue("password")
+	)
+
+	conn, ok := registry[connector]
+	if !ok {
+		log.Printf("connector %q not found in registry", connector)
+	}
+
+	ID := getID()
+
+	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
+	if err != nil {
+		log.Printf("failed to create database: %s", err.Error())
+	}
+	log.Println(resp)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +167,10 @@ func register(w http.ResponseWriter, r *http.Request) {
 	index := strings.LastIndex(r.RemoteAddr, ":")
 	addr := r.RemoteAddr[:index]
 
+	if addr == "[::1]" {
+		addr = "127.0.0.1"
+	}
+
 	ddnc := model.Connector{
 		ID:            getID(),
 		DBVendor:      req.DBVendor,
@@ -154,7 +188,6 @@ func register(w http.ResponseWriter, r *http.Request) {
 	registry[req.ShortName] = ddnc
 
 	log.Printf("Registered: %s", req.ConnectorName)
-	log.Printf("%+v", ddnc)
 
 	conAddr := fmt.Sprintf("%s:%s", ddnc.Address, ddnc.ConnectorPort)
 

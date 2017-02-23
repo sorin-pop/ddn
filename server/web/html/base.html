@@ -1,0 +1,14 @@
+{{define "base"}}
+<!doctype html>
+<html>
+  {{template "head.html" .}}
+  <body>
+    <div class="container">
+      {{template "nav.html" .}}
+      <div class="row">
+        {{template "content" .}}
+      </div>
+    </div>
+  </body>
+</html>
+{{end}}
