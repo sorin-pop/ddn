@@ -14,7 +14,10 @@ import (
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/gorilla/sessions"
 )
+
+var store = sessions.NewCookieStore([]byte("veryverysecretkey"))
 
 func index(w http.ResponseWriter, r *http.Request) {
 	loadPage(w, r, "home")
@@ -33,19 +36,29 @@ func create(w http.ResponseWriter, r *http.Request) {
 		dbuser    = r.PostFormValue("user")
 		dbpass    = r.PostFormValue("password")
 	)
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
 
 	conn, ok := registry[connector]
 	if !ok {
-		log.Printf("connector %q not found in registry", connector)
+		session.AddFlash(fmt.Sprintf("Failed creating database, connector %s went offline", connector), "fail")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 
 	ID := getID()
 
 	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
 	if err != nil {
-		log.Printf("failed to create database: %s", err.Error())
+		session.AddFlash(fmt.Sprintf("failed to create database: %s", err.Error()), "fail")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
-	log.Println(resp)
+
+	// TODO: Persist the thing.
+
+	session.AddFlash(resp, "success")
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

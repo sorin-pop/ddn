@@ -10,16 +10,39 @@ import (
 
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
-	Connectors *map[string]model.Connector
-	AnyOnline  bool
-	Title      string
-	Pages      map[string]string
-	ActivePage string
+	Connectors  *map[string]model.Connector
+	AnyOnline   bool
+	Title       string
+	Pages       map[string]string
+	ActivePage  string
+	Message     string
+	MessageType string
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
-	page := buildPage(r.URL.Path)
-	page.ActivePage = r.URL.Path
+	page := Page{
+		Connectors: &registry,
+		AnyOnline:  len(registry) > 0,
+		Title:      getTitle(r.URL.Path),
+		Pages:      getPages(),
+		ActivePage: r.URL.Path,
+	}
+
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	if flashes := session.Flashes("success"); len(flashes) > 0 {
+		page.Message = flashes[0].(string)
+		page.MessageType = "success"
+	} else if flashes := session.Flashes("fail"); len(flashes) > 0 {
+		page.Message = flashes[0].(string)
+		page.MessageType = "danger"
+	} else {
+		page.Message = ""
+	}
+	session.Save(r, w)
 
 	toLoad := []string{"base", "head", "nav", "connectors"}
 	toLoad = append(toLoad, pages...)
@@ -34,23 +57,9 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	}
 }
 
-func buildPage(activePage string) Page {
-	p := Page{
-		Connectors: &registry,
-		AnyOnline:  len(registry) > 0,
-		Title:      getTitle(activePage),
-		Pages:      getPages(),
-		ActivePage: activePage,
-	}
-
-	return p
-
-}
-
 func buildTemplate(pages ...string) (*template.Template, error) {
 	var templates []string
 	for _, page := range pages {
-
 		templates = append(templates, fmt.Sprintf("web/html/%s.html", page))
 	}
 

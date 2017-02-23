@@ -1,9 +1,24 @@
 {{define "content"}}
+
+{{if ne .Message ""}}
+    <div class="col-md-12">
+        <div class="alert alert-{{.MessageType}}">{{.Message}}</div>
+    </div>
+{{end}}
+
 <div class="col-md-8">
     <h3>Cloud DB 2.0</h3>
-    <p>The </p>
-
-
+    <p>The successor to the previous cloud database, this one is much more versatile and extensible.</p>
+    <p>On the right, you can see the active <code>connectors</code>; These are the available databases in which you can create, and later, import a database.</p>
+    <p>Currently, the following database vendors are tested and supported:</p>
+    <ol>
+        <li>MySQL 5.5, 5.6, 5.7</li>
+        <li>PostgreSQL 9.4</li>
+        <li>Oracle 11g</li>
+    </ol>
+    <p>There are plans to add support for SQL Server as well</p>
+    <p>To create a database, click on the "Create Database" link in the navbar - that will take you to a form.</p>
+    <p>In the form you can optionally add your choice for database name, user and password, however if you don't, that's also fine, the page will generate them for you.</p>
 </div>
 <div class="col-md-4">
     {{template "connectors.html" .}}
