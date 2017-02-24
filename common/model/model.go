@@ -75,20 +75,9 @@ type Connector struct {
 
 // CreateDatabase sends a request to the connector to create a database.
 func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
-	if dbname == "" && dbuser != "" {
-		dbname = dbuser
-	}
 
-	if dbname == "" {
-		dbname = sutils.RandDBName()
-	}
-
-	if dbuser == "" {
-		dbuser = sutils.RandUserName()
-	}
-
-	if dbpass == "" {
-		dbpass = sutils.RandPassword()
+	if ok := sutils.Present(dbname, dbpass, dbuser); !ok {
+		return "", fmt.Errorf("asked to persist database with missing values: dbname: %q, dbuser: %q, dbpass: %q", dbname, dbpass, dbuser)
 	}
 
 	dbreq := DBRequest{

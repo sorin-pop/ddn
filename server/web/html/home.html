@@ -23,4 +23,11 @@
 <div class="col-md-4">
     {{template "connectors.html" .}}
 </div>
+
+{{ if .HasProperties }}
+    <div class="col-md-12">
+        {{template "properties.html" .}}
+    </div>
+{{end}}
+
 {{end}}

@@ -53,12 +53,12 @@ func main() {
 
 	usr, err = user.Current()
 	if err != nil {
-		log.Fatal("couldn't get default user:", err.Error())
+		log.Fatal("couldn't get default user: ", err.Error())
 	}
 
 	hostname, err = os.Hostname()
 	if err != nil {
-		log.Fatal("couldn't get hostname:", err.Error())
+		log.Fatal("couldn't get hostname: ", err.Error())
 	}
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {

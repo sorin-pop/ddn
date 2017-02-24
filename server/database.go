@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/sutils"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -84,18 +84,18 @@ func (db *mysql) Alive() error {
 
 }
 
-func (db *mysql) persist(req model.ClientRequest) error {
+func (db *mysql) persist(dbentry DBEntry) error {
 	if err := db.Alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
 	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dumpfile`, `createDate`, `creator`, `connectorName`) VALUES ('%s', '%s', '%s', '%s', NOW(), '%s', '%s')",
-		req.DatabaseName,
-		req.Username,
-		req.Password,
-		req.DumpLocation,
-		req.Requester,
-		req.ConnectorIdentifier,
+		dbentry.DBName,
+		dbentry.DBUser,
+		dbentry.DBPass,
+		dbentry.Dumpfile,
+		dbentry.Creator,
+		dbentry.ConnectorName,
 	)
 
 	_, err := db.conn.Exec(query)
@@ -104,4 +104,44 @@ func (db *mysql) persist(req model.ClientRequest) error {
 	}
 
 	return nil
+}
+
+func (db *mysql) list() ([]DBEntry, error) {
+	var entries []DBEntry
+
+	rows, err := db.conn.Query("SELECT id, dbname, dbuser, dbpass, dumpfile, createDate, creator, connectorName FROM `databases`")
+	if err != nil {
+		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
+	}
+
+	for rows.Next() {
+		var row DBEntry
+
+		err = rows.Scan(&row.ID, &row.DBName, &row.DBUser, &row.DBPass, &row.Dumpfile, &row.CreateDate, &row.Creator, &row.ConnectorName)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+
+		entries = append(entries, row)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+	}
+
+	return entries, nil
+}
+
+// DBEntry represents a row in the "databases" table.
+type DBEntry struct {
+	ID            int
+	DBVendor      string
+	DBName        string
+	DBUser        string
+	DBPass        string
+	Dumpfile      string
+	CreateDate    string
+	Creator       string
+	ConnectorName string
 }

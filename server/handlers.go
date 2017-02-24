@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/djavorszky/notif"
-	"github.com/djavorszky/sutils"
-
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/notif"
+	"github.com/djavorszky/sutils"
+
 	"github.com/gorilla/sessions"
 )
 
@@ -28,6 +28,8 @@ func createdb(w http.ResponseWriter, r *http.Request) {
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
 	r.ParseForm()
 
 	var (
@@ -36,6 +38,7 @@ func create(w http.ResponseWriter, r *http.Request) {
 		dbuser    = r.PostFormValue("user")
 		dbpass    = r.PostFormValue("password")
 	)
+
 	session, err := store.Get(r, "user-session")
 	if err != nil {
 		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
@@ -45,22 +48,33 @@ func create(w http.ResponseWriter, r *http.Request) {
 	conn, ok := registry[connector]
 	if !ok {
 		session.AddFlash(fmt.Sprintf("Failed creating database, connector %s went offline", connector), "fail")
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
 
 	ID := getID()
+	if dbname == "" && dbuser != "" {
+		dbname = dbuser
+	}
+
+	ensureHasValues(&dbname, &dbuser, &dbpass)
 
 	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
 	if err != nil {
 		session.AddFlash(fmt.Sprintf("failed to create database: %s", err.Error()), "fail")
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
 
-	// TODO: Persist the thing.
+	entry := DBEntry{
+		DBName:        dbname,
+		DBUser:        dbuser,
+		DBPass:        dbpass,
+		ConnectorName: connector,
+		DBVendor:      conn.DBVendor,
+	}
+	db.persist(entry)
 
+	session.Values["dbentry"] = entry
 	session.AddFlash(resp, "success")
-
-	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func listConnectors(w http.ResponseWriter, r *http.Request) {
@@ -84,11 +98,15 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ensureValidRequest(&req)
+	ensureHasValues(&req.DatabaseName, &req.Username, &req.Password)
 
 	con, err := doCreateDatabase(req)
 	if err != nil {
-		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorResponse())
+		msg := inet.Message{
+			Status:  status.ServerError,
+			Message: "Failed to create database: " + err.Error(),
+		}
+		inet.SendResponse(w, http.StatusInternalServerError, msg)
 		return
 	}
 
@@ -137,7 +155,7 @@ func createDatabaseGET(w http.ResponseWriter, r *http.Request) {
 	req.ConnectorIdentifier = connector
 	req.DatabaseName, req.Username, req.Password = values.Get("dbname"), values.Get("dbuser"), values.Get("dbpass")
 
-	ensureValidRequest(&req)
+	ensureHasValues(&req.DatabaseName, &req.Username, &req.Password)
 
 	con, err := doCreateDatabase(req)
 	if err != nil {
@@ -249,17 +267,11 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%+v", msg)
 }
 
-func ensureValidRequest(req *model.ClientRequest) {
-	if req.DatabaseName == "" {
-		req.DatabaseName = sutils.RandDBName()
-	}
-
-	if req.Username == "" {
-		req.Username = sutils.RandUserName()
-	}
-
-	if req.Password == "" {
-		req.Password = sutils.RandPassword()
+func ensureHasValues(vals ...*string) {
+	for _, v := range vals {
+		if *v == "" {
+			*v = sutils.RandName()
+		}
 	}
 }
 
@@ -288,7 +300,16 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		return model.Connector{}, fmt.Errorf("creating database failed: %s", msg.Message)
 	}
 
-	db.persist(req)
+	dbentry := DBEntry{
+		DBName:        req.DatabaseName,
+		DBUser:        req.Username,
+		DBPass:        req.Password,
+		Creator:       req.Requester,
+		Dumpfile:      req.DumpLocation,
+		ConnectorName: req.ConnectorIdentifier,
+	}
+
+	db.persist(dbentry)
 
 	return con, nil
 }

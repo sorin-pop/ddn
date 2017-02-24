@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/djavorszky/ddn/common/model"
@@ -10,13 +11,15 @@ import (
 
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
-	Connectors  *map[string]model.Connector
-	AnyOnline   bool
-	Title       string
-	Pages       map[string]string
-	ActivePage  string
-	Message     string
-	MessageType string
+	Connectors    *map[string]model.Connector
+	AnyOnline     bool
+	Title         string
+	Pages         map[string]string
+	ActivePage    string
+	Message       string
+	MessageType   string
+	Property      DBEntry
+	HasProperties bool
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
@@ -34,18 +37,32 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	}
 
 	if flashes := session.Flashes("success"); len(flashes) > 0 {
+		log.Println("success flash.")
 		page.Message = flashes[0].(string)
 		page.MessageType = "success"
+
+		var dbentry *DBEntry
+
+		val := session.Values["dbentry"]
+		dbentry, ok := val.(*DBEntry)
+		if ok {
+			page.HasProperties = true
+			page.Property = *dbentry
+		}
 	} else if flashes := session.Flashes("fail"); len(flashes) > 0 {
+		log.Println("danger flash.")
+
 		page.Message = flashes[0].(string)
 		page.MessageType = "danger"
 	} else {
 		page.Message = ""
 	}
+
 	session.Save(r, w)
 
-	toLoad := []string{"base", "head", "nav", "connectors"}
+	toLoad := []string{"base", "head", "nav", "connectors", "properties"}
 	toLoad = append(toLoad, pages...)
+
 	tmpl, err := buildTemplate(toLoad...)
 	if err != nil {
 		panic(err)
