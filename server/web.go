@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 
 	"github.com/djavorszky/ddn/common/model"
@@ -11,15 +10,16 @@ import (
 
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
-	Connectors    *map[string]model.Connector
-	AnyOnline     bool
-	Title         string
-	Pages         map[string]string
-	ActivePage    string
-	Message       string
-	MessageType   string
-	Property      DBEntry
-	HasProperties bool
+	Connectors  *map[string]model.Connector
+	AnyOnline   bool
+	Title       string
+	Pages       map[string]string
+	ActivePage  string
+	Message     string
+	MessageType string
+	HasEntry    bool
+	Ext62       model.PortalExt
+	ExtDXP      model.PortalExt
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
@@ -37,26 +37,34 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	}
 
 	if flashes := session.Flashes("success"); len(flashes) > 0 {
-		log.Println("success flash.")
 		page.Message = flashes[0].(string)
 		page.MessageType = "success"
 
-		var dbentry *DBEntry
+		id := session.Values["id"].(int64)
 
-		val := session.Values["dbentry"]
-		dbentry, ok := val.(*DBEntry)
-		if ok {
-			page.HasProperties = true
-			page.Property = *dbentry
-		}
+		page.HasEntry = true
+		entry := db.entryByID(id)
+
+		page.ExtDXP = portalExt(entry, true)
+		page.Ext62 = portalExt(entry, false)
+
 	} else if flashes := session.Flashes("fail"); len(flashes) > 0 {
-		log.Println("danger flash.")
-
 		page.Message = flashes[0].(string)
 		page.MessageType = "danger"
 	} else {
 		page.Message = ""
 	}
+
+	/*
+		// DEBUG:
+		if !page.HasEntry {
+			page.HasEntry = true
+			entry := db.entryByID(1)
+
+			page.ExtDXP = portalExt(entry, true)
+			page.Ext62 = portalExt(entry, false)
+		}
+	*/
 
 	session.Save(r, w)
 

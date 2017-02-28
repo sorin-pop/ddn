@@ -1,8 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
 
-func jdbcClassName(vendor, version string) string {
+	"github.com/djavorszky/ddn/common/model"
+)
+
+func jdbcClassName(vendor string) string {
 	var class string
 
 	switch vendor {
@@ -35,4 +39,32 @@ func mjdbcURL(dbname, version, address, port string) string {
 
 func pjdbcURL(dbname, address, port string) string {
 	return fmt.Sprintf("jdbc:postgresql://%s:%s/%s", address, port, dbname)
+}
+
+func portalExt(dbentry model.DBEntry, dxp bool) model.PortalExt {
+	var ext model.PortalExt
+
+	version := "6210"
+	if dxp {
+		version = "7"
+	}
+
+	var url string
+	switch dbentry.DBVendor {
+	case "mysql":
+		url = mjdbcURL(dbentry.DBName, version, dbentry.DBAddress, dbentry.DBPort)
+	case "oracle":
+		url = ojdbcURL(dbentry.DBSID, dbentry.DBAddress, dbentry.DBPort)
+	case "postgres":
+		url = pjdbcURL(dbentry.DBName, dbentry.DBAddress, dbentry.DBPort)
+	}
+
+	ext.URL = fmt.Sprintf("jdbc.default.url=%s\n", url)
+
+	ext.Driver = fmt.Sprintf("jdbc.default.driverClassName=%s\n", jdbcClassName(dbentry.DBVendor))
+
+	ext.User = fmt.Sprintf("jdbc.default.username=%s\n", dbentry.DBUser)
+	ext.Password = fmt.Sprintf("jdbc.default.password=%s\n", dbentry.DBPass)
+
+	return ext
 }

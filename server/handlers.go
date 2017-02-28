@@ -64,16 +64,22 @@ func create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry := DBEntry{
+	entry := model.DBEntry{
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
 		ConnectorName: connector,
+		DBAddress:     conn.Address,
+		DBPort:        conn.DBPort,
 		DBVendor:      conn.DBVendor,
 	}
-	db.persist(entry)
 
-	session.Values["dbentry"] = entry
+	dbID, err := db.persist(entry)
+	if err != nil {
+		log.Printf("Error: %s", err.Error())
+	}
+
+	session.Values["id"] = dbID
 	session.AddFlash(resp, "success")
 }
 
@@ -115,7 +121,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor, req.PortalVersion)))
+	buf.WriteString(fmt.Sprintf("jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor)))
 
 	var url string
 	switch con.DBVendor {
@@ -168,7 +174,7 @@ func createDatabaseGET(w http.ResponseWriter, r *http.Request) {
 		con.Address = "127.0.0.1"
 	}
 
-	fmt.Fprintf(w, "jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor, version))
+	fmt.Fprintf(w, "jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor))
 
 	var url string
 	switch con.DBVendor {
@@ -300,7 +306,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		return model.Connector{}, fmt.Errorf("creating database failed: %s", msg.Message)
 	}
 
-	dbentry := DBEntry{
+	dbentry := model.DBEntry{
 		DBName:        req.DatabaseName,
 		DBUser:        req.Username,
 		DBPass:        req.Password,

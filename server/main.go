@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/gob"
 	"flag"
 	"fmt"
 	"log"
@@ -49,9 +48,6 @@ func main() {
 	if _, err := toml.DecodeFile(*filename, &conf); err != nil {
 		log.Fatal("couldn't read configuration file: ", err.Error())
 	}
-
-	// For the session
-	gob.Register(&DBEntry{})
 
 	log.Println("Starting with properties:")
 

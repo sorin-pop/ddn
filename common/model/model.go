@@ -73,6 +73,22 @@ type Connector struct {
 	Up            bool
 }
 
+// DBEntry represents a row in the "databases" table.
+type DBEntry struct {
+	ID            int
+	DBVendor      string
+	DBName        string
+	DBUser        string
+	DBPass        string
+	DBSID         string
+	Dumpfile      string
+	CreateDate    string
+	Creator       string
+	ConnectorName string
+	DBAddress     string
+	DBPort        string
+}
+
 // CreateDatabase sends a request to the connector to create a database.
 func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
 

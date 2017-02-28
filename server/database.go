@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/sutils"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -37,7 +38,7 @@ func (db *mysql) connect(c Config) error {
 		return fmt.Errorf("couldn't connect to the database: %s", err.Error())
 	}
 
-	_, err = db.conn.Exec("CREATE TABLE IF NOT EXISTS `databases` ( `id` INT NOT NULL AUTO_INCREMENT, `dbname` VARCHAR(255) NULL, `dbuser` VARCHAR(255) NULL, `dbpass` VARCHAR(255) NULL, `dumpfile` LONGTEXT NULL, `createDate` DATETIME NULL, `creator` VARCHAR(255) NULL, `connectorName` VARCHAR(255) NULL,  PRIMARY KEY (`id`));")
+	_, err = db.conn.Exec("CREATE TABLE IF NOT EXISTS `databases` ( `id` INT NOT NULL AUTO_INCREMENT, `dbname` VARCHAR(255) NULL, `dbuser` VARCHAR(255) NULL, `dbpass` VARCHAR(255) NULL, `dbsid` VARCHAR(45) NULL, `dumpfile` LONGTEXT NULL, `createDate` DATETIME NULL, `creator` VARCHAR(255) NULL, `connectorName` VARCHAR(255) NULL, `dbAddress` VARCHAR(255) NULL, `dbPort` VARCHAR(45) NULL, `dbvendor` VARCHAR(255) NULL,  PRIMARY KEY (`id`));")
 	if err != nil {
 		return fmt.Errorf("executing create table query failed: %s", sutils.TrimNL(err.Error()))
 	}
@@ -84,40 +85,56 @@ func (db *mysql) Alive() error {
 
 }
 
-func (db *mysql) persist(dbentry DBEntry) error {
+func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 	if err := db.Alive(); err != nil {
-		return fmt.Errorf("database down: %s", err.Error())
+		return 0, fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dumpfile`, `createDate`, `creator`, `connectorName`) VALUES ('%s', '%s', '%s', '%s', NOW(), '%s', '%s')",
+	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), '%s', '%s', '%s','%s', '%s')",
 		dbentry.DBName,
 		dbentry.DBUser,
 		dbentry.DBPass,
+		dbentry.DBSID,
 		dbentry.Dumpfile,
 		dbentry.Creator,
 		dbentry.ConnectorName,
+		dbentry.DBAddress,
+		dbentry.DBPort,
+		dbentry.DBVendor,
 	)
 
-	_, err := db.conn.Exec(query)
+	res, err := db.conn.Exec(query)
 	if err != nil {
-		return fmt.Errorf("executing insert query failed: %s", err.Error())
+		return 0, fmt.Errorf("executing insert query failed: %s", err.Error())
 	}
 
-	return nil
+	return res.LastInsertId()
 }
 
-func (db *mysql) list() ([]DBEntry, error) {
-	var entries []DBEntry
+func (db *mysql) list() ([]model.DBEntry, error) {
+	var entries []model.DBEntry
 
-	rows, err := db.conn.Query("SELECT id, dbname, dbuser, dbpass, dumpfile, createDate, creator, connectorName FROM `databases`")
+	rows, err := db.conn.Query("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, creator, connectorName, dbAddress, dbPort, dbVendor FROM `databases`")
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}
 
 	for rows.Next() {
-		var row DBEntry
+		var row model.DBEntry
 
-		err = rows.Scan(&row.ID, &row.DBName, &row.DBUser, &row.DBPass, &row.Dumpfile, &row.CreateDate, &row.Creator, &row.ConnectorName)
+		err = rows.Scan(
+			&row.ID,
+			&row.DBName,
+			&row.DBUser,
+			&row.DBPass,
+			&row.DBSID,
+			&row.Dumpfile,
+			&row.CreateDate,
+			&row.Creator,
+			&row.ConnectorName,
+			&row.DBAddress,
+			&row.DBPort,
+			&row.DBVendor)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
@@ -133,15 +150,24 @@ func (db *mysql) list() ([]DBEntry, error) {
 	return entries, nil
 }
 
-// DBEntry represents a row in the "databases" table.
-type DBEntry struct {
-	ID            int
-	DBVendor      string
-	DBName        string
-	DBUser        string
-	DBPass        string
-	Dumpfile      string
-	CreateDate    string
-	Creator       string
-	ConnectorName string
+func (db *mysql) entryByID(ID int64) model.DBEntry {
+	var entry model.DBEntry
+
+	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, creator, connectorName, dbAddress, dbPort, dbVendor FROM `databases` WHERE id = ?", ID)
+
+	row.Scan(
+		&entry.ID,
+		&entry.DBName,
+		&entry.DBUser,
+		&entry.DBPass,
+		&entry.DBSID,
+		&entry.Dumpfile,
+		&entry.CreateDate,
+		&entry.Creator,
+		&entry.ConnectorName,
+		&entry.DBAddress,
+		&entry.DBPort,
+		&entry.DBVendor)
+
+	return entry
 }

@@ -6,6 +6,12 @@
     </div>
 {{end}}
 
+{{ if .HasEntry }}
+<div class="col-md-12">
+    {{template "properties.html" .}}
+</div>
+{{end}}
+
 <div class="col-md-8">
     <h3>Cloud DB 2.0</h3>
     <p>The successor to the previous cloud database, this one is much more versatile and extensible.</p>
@@ -23,11 +29,5 @@
 <div class="col-md-4">
     {{template "connectors.html" .}}
 </div>
-
-{{ if .HasProperties }}
-    <div class="col-md-12">
-        {{template "properties.html" .}}
-    </div>
-{{end}}
 
 {{end}}
