@@ -5,12 +5,14 @@
             <div class="card-block">
                 <h4 class="card-title"><= 6.2 EE properties</h4>
             </div>
+           <code>
             {{with .Ext62 -}}
-                {{.Driver}}
-                {{.URL}}
-                {{.User}}
-                {{.Password}}
+                <small>{{.Driver}}</small><br>
+                <small>{{.URL}}</small><br>
+                <small>{{.User}}</small><br>
+                <small>{{.Password}}</small><br>
             {{end -}}
+            </code>
         </div>
     </div>
     <div class="col-md-6">
@@ -19,12 +21,14 @@
             <div class="card-block">
                 <h4 class="card-title">DXP properties</h4>
             </div>
+            <code>
             {{with .ExtDXP -}}
-                {{.Driver}}
-                {{.URL}}
-                {{.User}}
-                {{.Password}}
+                <small>{{.Driver}}</small><br>
+                <small>{{.URL}}</small><br>
+                <small>{{.User}}</small><br>
+                <small>{{.Password}}</small><br>
             {{end -}}
+            </code>
         </div>
     </div>
 </div>
