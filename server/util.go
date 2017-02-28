@@ -59,12 +59,12 @@ func portalExt(dbentry model.DBEntry, dxp bool) model.PortalExt {
 		url = pjdbcURL(dbentry.DBName, dbentry.DBAddress, dbentry.DBPort)
 	}
 
-	ext.URL = fmt.Sprintf("jdbc.default.url=%s\n", url)
+	ext.URL = fmt.Sprintf("jdbc.default.url=%s", url)
 
-	ext.Driver = fmt.Sprintf("jdbc.default.driverClassName=%s\n", jdbcClassName(dbentry.DBVendor))
+	ext.Driver = fmt.Sprintf("jdbc.default.driverClassName=%s", jdbcClassName(dbentry.DBVendor))
 
-	ext.User = fmt.Sprintf("jdbc.default.username=%s\n", dbentry.DBUser)
-	ext.Password = fmt.Sprintf("jdbc.default.password=%s\n", dbentry.DBPass)
+	ext.User = fmt.Sprintf("jdbc.default.username=%s", dbentry.DBUser)
+	ext.Password = fmt.Sprintf("jdbc.default.password=%s", dbentry.DBPass)
 
 	return ext
 }
