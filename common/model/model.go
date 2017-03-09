@@ -83,6 +83,7 @@ type DBEntry struct {
 	DBSID         string
 	Dumpfile      string
 	CreateDate    string
+	ExpiryDate    string
 	Creator       string
 	ConnectorName string
 	DBAddress     string
