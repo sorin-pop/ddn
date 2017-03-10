@@ -85,4 +85,22 @@ var routes = Routes{
 		"/logout",
 		logout,
 	},
+	route{
+		"extend",
+		"GET",
+		"/extend/{id:[0-9]+}",
+		extend,
+	},
+	route{
+		"drop",
+		"GET",
+		"/drop/{id:[0-9]+}",
+		drop,
+	},
+	route{
+		"portalext",
+		"GET",
+		"/portalext/{id:[0-9]+}",
+		portalext,
+	},
 }

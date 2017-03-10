@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
@@ -278,6 +280,30 @@ func logout(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, userCookie)
 }
+
+func extend(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	ID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "couldn't convert id to int.", http.StatusInternalServerError)
+		return
+	}
+
+	db.updateColumn(ID, "expiryDate", "NOW() + INTERVAL 30 DAY")
+
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	session.AddFlash("Successfully extended the expiry date", "msg")
+	session.Save(r, w)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func drop(w http.ResponseWriter, r *http.Request)      {}
+func portalext(w http.ResponseWriter, r *http.Request) {}
 
 // upd8 updates the status of the databases.
 func upd8(w http.ResponseWriter, r *http.Request) {
