@@ -17,6 +17,8 @@ type Page struct {
 	ActivePage   string
 	Message      string
 	MessageType  string
+	User         string
+	HasUser      bool
 	HasEntry     bool
 	Databases    []model.DBEntry
 	HasDatabases bool
@@ -25,6 +27,7 @@ type Page struct {
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
+
 	page := Page{
 		Connectors: &registry,
 		AnyOnline:  len(registry) > 0,
@@ -32,6 +35,25 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		Pages:      getPages(),
 		ActivePage: r.URL.Path,
 	}
+
+	userCookie, err := r.Cookie("user")
+	if err != nil || userCookie.Value == "" {
+		// if there's an err, it can only happen if there is no cookie.
+		toLoad := []string{"base", "head", "nav", "login"}
+		tmpl, err := buildTemplate(toLoad...)
+		if err != nil {
+			panic(err)
+		}
+
+		err = tmpl.ExecuteTemplate(w, "base", page)
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	page.User = userCookie.Value
+	page.HasUser = true
 
 	session, err := store.Get(r, "user-session")
 	if err != nil {
@@ -73,19 +95,21 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 	session.Save(r, w)
 
+	if pages[0] == "home" {
+		pages = append(pages, "databases")
+
+		page.Databases, _ = db.list()
+		if len(page.Databases) != 0 {
+			page.HasDatabases = true
+		}
+	}
+
 	toLoad := []string{"base", "head", "nav", "connectors", "properties"}
 	toLoad = append(toLoad, pages...)
 
 	tmpl, err := buildTemplate(toLoad...)
 	if err != nil {
 		panic(err)
-	}
-
-	if pages[0] == "home" {
-		page.Databases, _ = db.list()
-		if len(page.Databases) != 0 {
-			page.HasDatabases = true
-		}
 	}
 
 	err = tmpl.ExecuteTemplate(w, "base", page)

@@ -217,3 +217,12 @@ func (db *mysql) entryByID(ID int64) model.DBEntry {
 
 	return entry
 }
+
+func (db *mysql) updateColumn(ID int, column string, value interface{}) {
+	q := fmt.Sprintf("UPDATE `databases` SET %s=%v WHERE id=%d", column, value, ID)
+
+	_, err := db.conn.Exec(q)
+	if err != nil {
+		log.Printf("Failed to update: %s", err.Error())
+	}
+}

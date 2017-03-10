@@ -14,7 +14,7 @@ import (
 )
 
 func startImport(dbreq model.DBRequest) {
-	upd8Path := fmt.Sprintf("%s/%s", conf.MasterAddress, "echo")
+	upd8Path := fmt.Sprintf("%s/%s", conf.MasterAddress, "upd8")
 
 	ch := notif.New(dbreq.ID, upd8Path)
 	defer close(ch)

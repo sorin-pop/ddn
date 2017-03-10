@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
@@ -247,8 +248,37 @@ func alive(w http.ResponseWriter, r *http.Request) {
 	w.Write(buf.Bytes())
 }
 
-// echo echoes whatever it receives (as JSON) to the log.
-func echo(w http.ResponseWriter, r *http.Request) {
+func login(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	r.ParseForm()
+
+	email := r.PostFormValue("email")
+
+	cookie := http.Cookie{
+		Name:    "user",
+		Value:   email,
+		Expires: time.Now().AddDate(1, 0, 0),
+	}
+
+	http.SetCookie(w, &cookie)
+}
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	userCookie, err := r.Cookie("user")
+	if err != nil {
+		return
+	}
+
+	userCookie.Value = ""
+
+	http.SetCookie(w, userCookie)
+}
+
+// upd8 updates the status of the databases.
+func upd8(w http.ResponseWriter, r *http.Request) {
 	var msg notif.Msg
 
 	err := json.NewDecoder(r.Body).Decode(&msg)
@@ -259,7 +289,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("%+v", msg)
+	db.updateColumn(msg.ID, "status", msg.StatusID)
 }
 
 func ensureHasValues(vals ...*string) {

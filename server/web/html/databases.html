@@ -1,0 +1,47 @@
+<h3>Your databases</h3>
+<div class="col-md-12">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>DBName</th>
+                <th>DBUser</th>
+                <th>DBPass</th>
+                <th>Create Date</th>
+                <th>Expiry Date</th>
+                <th>Connector</th>
+                <th>Vendor</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Databases}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td>{{.DBName}}</td>
+                <td>{{.DBUser}}</td>
+                <td>{{.DBPass}}</td>
+                <td>{{.CreateDate}}</td>
+                <td>{{.ExpiryDate}}</td>
+                <td>{{.ConnectorName}}</td>
+                <td>{{.DBVendor}}</td>
+                <td>{{.Status}}</td>
+                <td>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/update/{{.ID}}/extend">Extend Expiry</a>
+                            <!--<a class="dropdown-item" href="/update/{{.ID}}/transfer">Transfer ownership</a>-->
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="/update/{{.ID}}/drop">Drop Database</a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>

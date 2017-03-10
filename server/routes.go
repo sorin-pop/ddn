@@ -38,10 +38,10 @@ var routes = Routes{
 		alive,
 	},
 	route{
-		"echo",
+		"upd8",
 		"POST",
-		"/echo",
-		echo,
+		"/upd8",
+		upd8,
 	},
 	route{
 		"index",
@@ -72,5 +72,17 @@ var routes = Routes{
 		"GET",
 		"/importdb",
 		importdb,
+	},
+	route{
+		"login",
+		"POST",
+		"/login",
+		login,
+	},
+	route{
+		"logout",
+		"GET",
+		"/logout",
+		logout,
 	},
 }

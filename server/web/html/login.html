@@ -1,0 +1,11 @@
+{{define "content"}}
+        <div class="col-md-6 offset-md-3">
+            <form class="form-signin" method="POST", action="/login">
+                <h2 class="form-signin-heading">Please provide your email address</h2>
+                <label class="sr-only" for="email">Email address</label>
+                <input id="email" name="email" class="form-control" type="email" autofocus="" required="" placeholder="Email address">
+            
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Done</button>
+            </form>
+        </div>
+{{end}}

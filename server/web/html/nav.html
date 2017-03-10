@@ -17,5 +17,10 @@
         {{end}}
       {{end}}
     </ul>
+    {{if .HasUser}}
+      <span class="navbar-text">
+        {{.User}} (<a class="link" href="/logout">logout</a>)
+      </span>
+    {{end}}
   </div>
 </nav>
