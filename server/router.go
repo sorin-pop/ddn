@@ -25,8 +25,12 @@ func Router() *mux.Router {
 	}
 
 	// Add static serving of files in dumps directory.
-	s := http.StripPrefix("/dumps", http.FileServer(http.Dir("./web/dumps/")))
-	router.PathPrefix("/dumps").Handler(s)
+	dumps := http.StripPrefix("/dumps/", http.FileServer(http.Dir("./web/dumps/")))
+	router.PathPrefix("/dumps/").Handler(dumps)
+
+	// Add static serving of images / css / js from res directory.
+	res := http.StripPrefix("/res/", http.FileServer(http.Dir("./web/res")))
+	router.PathPrefix("/res/").Handler(res)
 
 	return router
 }
