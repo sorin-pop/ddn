@@ -98,7 +98,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	if pages[0] == "home" {
 		pages = append(pages, "databases")
 
-		page.Databases, _ = db.list()
+		page.Databases, _ = db.listWhere(clause{"creator", page.User})
 		if len(page.Databases) != 0 {
 			page.HasDatabases = true
 		}

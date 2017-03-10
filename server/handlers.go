@@ -91,6 +91,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		DBUser:        dbuser,
 		DBPass:        dbpass,
 		ConnectorName: connector,
+		Creator:       getUser(r),
 		Dumpfile:      url,
 		DBAddress:     conn.Address,
 		DBPort:        conn.DBPort,
@@ -155,6 +156,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		DBUser:        dbuser,
 		DBPass:        dbpass,
 		ConnectorName: connector,
+		Creator:       getUser(r),
 		DBAddress:     conn.Address,
 		DBPort:        conn.DBPort,
 		DBVendor:      conn.DBVendor,
@@ -338,4 +340,10 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 	db.persist(dbentry)
 
 	return con, nil
+}
+
+func getUser(r *http.Request) string {
+	usr, _ := r.Cookie("user")
+
+	return usr.Value
 }

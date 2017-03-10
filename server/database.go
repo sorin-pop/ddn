@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
@@ -153,13 +154,30 @@ func (db *mysql) list() ([]model.DBEntry, error) {
 	return entries, nil
 }
 
-func (db *mysql) listWhere(creator string, status int) ([]model.DBEntry, error) {
-	var entries []model.DBEntry
+type clause struct {
+	Column string
+	Value  interface{}
+}
 
-	rows, err := db.conn.Query("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE creator = ? AND status = ?", creator, status)
+func (db *mysql) listWhere(clauses ...clause) ([]model.DBEntry, error) {
+	var buf bytes.Buffer
+
+	for _, clause := range clauses {
+		buf.WriteString(" AND ")
+		buf.WriteString(clause.Column)
+		buf.WriteString("='")
+		buf.WriteString(fmt.Sprintf("%v", clause.Value))
+		buf.WriteString("'")
+	}
+
+	query := "SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE 1=1" + buf.String()
+
+	rows, err := db.conn.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}
+
+	var entries []model.DBEntry
 
 	for rows.Next() {
 		var row model.DBEntry
