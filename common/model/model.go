@@ -93,8 +93,8 @@ type DBEntry struct {
 // CreateDatabase sends a request to the connector to create a database.
 func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
 
-	if ok := sutils.Present(dbname, dbpass, dbuser); !ok {
-		return "", fmt.Errorf("asked to persist database with missing values: dbname: %q, dbuser: %q, dbpass: %q", dbname, dbpass, dbuser)
+	if ok := sutils.Present(dbname, dbuser, dbpass); !ok {
+		return "", fmt.Errorf("asked to create database with missing values: dbname: %q, dbuser: %q, dbpass: %q", dbname, dbuser, dbpass)
 	}
 
 	dbreq := DBRequest{
@@ -104,7 +104,28 @@ func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string
 		Password:     dbpass,
 	}
 
-	dest := fmt.Sprintf("http://%s:%s/create-database", c.Address, c.ConnectorPort)
+	return c.executeAction(dbreq, "create-database")
+}
+
+// ImportDatabase starts the import on the connector.
+func (c Connector) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string) (string, error) {
+	if ok := sutils.Present(dbname, dbuser, dbpass, dumploc); !ok {
+		return "", fmt.Errorf("asked to import database with missing values: dbname: %q, dbuser: %q, dbpass: %q, dumploc: %q", dbname, dbuser, dbpass, dumploc)
+	}
+
+	dbreq := DBRequest{
+		ID:           id,
+		DatabaseName: dbname,
+		Username:     dbuser,
+		Password:     dbpass,
+		DumpLocation: dumploc,
+	}
+
+	return c.executeAction(dbreq, "import-database")
+}
+
+func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, error) {
+	dest := fmt.Sprintf("http://%s:%s/%s", c.Address, c.ConnectorPort, endpoint)
 
 	resp, err := notif.SndLoc(dbreq, dest)
 	if err != nil {
@@ -116,7 +137,7 @@ func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string
 	json.Unmarshal([]byte(resp), &respMsg)
 
 	if respMsg.Status != status.Success {
-		return "", fmt.Errorf("creating database failed: %s", respMsg.Message)
+		return "", fmt.Errorf("executing action on endpoint %q failed: %s", endpoint, respMsg.Message)
 	}
 
 	return respMsg.Message, nil
