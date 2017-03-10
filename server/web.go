@@ -105,6 +105,7 @@ func getPages() map[string]string {
 
 	pages["/"] = "Home"
 	pages["/createdb"] = "Create database"
+	pages["/importdb"] = "Import database"
 
 	return pages
 }

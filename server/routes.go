@@ -20,18 +20,6 @@ var routes = Routes{
 		listConnectors,
 	},
 	route{
-		"createDatabase",
-		"POST",
-		"/create-database",
-		createDatabase,
-	},
-	route{
-		"createDatabase",
-		"GET",
-		"/create-database",
-		createDatabaseGET,
-	},
-	route{
 		"register",
 		"POST",
 		"/register",
@@ -65,12 +53,24 @@ var routes = Routes{
 		"create",
 		"POST",
 		"/create",
-		create,
+		createAction,
 	},
 	route{
 		"createdb",
 		"GET",
 		"/createdb",
 		createdb,
+	},
+	route{
+		"import",
+		"POST",
+		"/import",
+		importAction,
+	},
+	route{
+		"importdb",
+		"GET",
+		"/importdb",
+		importdb,
 	},
 }

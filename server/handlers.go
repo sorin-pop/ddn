@@ -24,10 +24,18 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func createdb(w http.ResponseWriter, r *http.Request) {
-	loadPage(w, r, "dbform")
+	loadPage(w, r, "createdb")
 }
 
-func create(w http.ResponseWriter, r *http.Request) {
+func importdb(w http.ResponseWriter, r *http.Request) {
+	loadPage(w, r, "importdb")
+}
+
+func importAction(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func createAction(w http.ResponseWriter, r *http.Request) {
 	defer http.Redirect(w, r, "/", http.StatusSeeOther)
 
 	r.ParseForm()
@@ -92,103 +100,6 @@ func listConnectors(w http.ResponseWriter, r *http.Request) {
 	msg := inet.MapMessage{Status: status.Success, Message: list}
 
 	inet.SendResponse(w, http.StatusOK, msg)
-}
-
-func createDatabase(w http.ResponseWriter, r *http.Request) {
-	var req model.ClientRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		log.Printf("couldn't decode json request: %s", err.Error())
-
-		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
-		return
-	}
-
-	ensureHasValues(&req.DatabaseName, &req.Username, &req.Password)
-
-	con, err := doCreateDatabase(req)
-	if err != nil {
-		msg := inet.Message{
-			Status:  status.ServerError,
-			Message: "Failed to create database: " + err.Error(),
-		}
-		inet.SendResponse(w, http.StatusInternalServerError, msg)
-		return
-	}
-
-	if con.Address == "[::1]" {
-		con.Address = "localhost"
-	}
-
-	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor)))
-
-	var url string
-	switch con.DBVendor {
-	case "mysql":
-		url = mjdbcURL(req.DatabaseName, req.PortalVersion, con.Address, con.DBPort)
-	case "oracle":
-		url = ojdbcURL(con.DBSID, con.Address, con.DBPort)
-	case "postgres":
-		url = pjdbcURL(req.DatabaseName, con.Address, con.DBPort)
-	}
-
-	buf.WriteString(fmt.Sprintf("jdbc.default.url=%s\n", url))
-
-	buf.WriteString(fmt.Sprintf("jdbc.default.username=%s\n", req.Username))
-	buf.WriteString(fmt.Sprintf("jdbc.default.password=%s\n", req.Password))
-
-	msg := inet.Message{
-		Status:  status.Success,
-		Message: buf.String(),
-	}
-
-	inet.SendResponse(w, http.StatusOK, msg)
-}
-
-func createDatabaseGET(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-
-	connector, version := values.Get("db"), values.Get("lrversion")
-
-	if connector == "" || version == "" {
-		fmt.Fprintf(w, "Not enough parameters specified. Required: 'db', 'lrversion'")
-		return
-	}
-
-	var req model.ClientRequest
-
-	req.ConnectorIdentifier = connector
-	req.DatabaseName, req.Username, req.Password = values.Get("dbname"), values.Get("dbuser"), values.Get("dbpass")
-
-	ensureHasValues(&req.DatabaseName, &req.Username, &req.Password)
-
-	con, err := doCreateDatabase(req)
-	if err != nil {
-		inet.WriteHeader(w, http.StatusInternalServerError)
-		fmt.Fprintf(w, "Failed to process request: %s", err.Error())
-		return
-	}
-
-	if con.Address == "[::1]" {
-		con.Address = "127.0.0.1"
-	}
-
-	fmt.Fprintf(w, "jdbc.default.driverClassName=%s\n", jdbcClassName(con.DBVendor))
-
-	var url string
-	switch con.DBVendor {
-	case "mysql":
-		url = mjdbcURL(req.DatabaseName, version, con.Address, con.DBPort)
-	case "oracle":
-		url = ojdbcURL(con.DBSID, con.Address, con.DBPort)
-	case "postgres":
-		url = pjdbcURL(req.DatabaseName, con.Address, con.DBPort)
-	}
-
-	fmt.Fprintf(w, "jdbc.default.url=%s\n", url)
-	fmt.Fprintf(w, "jdbc.default.username=%s\n", req.Username)
-	fmt.Fprintf(w, "jdbc.default.password=%s\n", req.Password)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {

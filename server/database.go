@@ -90,7 +90,7 @@ func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 		return 0, fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate` `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s')",
+	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s')",
 		dbentry.DBName,
 		dbentry.DBUser,
 		dbentry.DBPass,
@@ -154,7 +154,7 @@ func (db *mysql) list() ([]model.DBEntry, error) {
 func (db *mysql) entryByID(ID int64) model.DBEntry {
 	var entry model.DBEntry
 
-	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, creator, connectorName, dbAddress, dbPort, dbVendor FROM `databases` WHERE id = ?", ID)
+	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor FROM `databases` WHERE id = ?", ID)
 
 	row.Scan(
 		&entry.ID,

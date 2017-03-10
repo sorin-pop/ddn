@@ -1,0 +1,55 @@
+{{define "content"}}
+<div class="col md-8">
+    {{if .AnyOnline}}
+        <h3>Import database</h3>
+        <form method="POST" enctype="multipart/form-data" action="/import">
+            <div class="form-group row">
+                <label for="connector" class="col-sm-3 col-form-label">Database</label>
+                <div class="col-sm-9">
+                    <select id="connector" name="connector" class="form-control">
+                        {{range .Connectors}}
+                            <option value="{{.ShortName}}">{{.LongName}}</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="dbname" class="col-sm-3 col-form-label">Dumpfile</label>
+                <div class="col-sm-9">
+                    <input type="file" class="form-control" id="dbdump" name="dbdump" required>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="dbname" class="col-sm-3 col-form-label">Database name</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="dbname" name="dbname" placeholder="Database name (optional)">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="user" class="col-sm-3 col-form-label">Database user</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="user" name="user" placeholder="Database user (optional)">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="password" class="col-sm-3 col-form-label">Database password</label>
+                <div class="col-sm-9">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Database password (optional)">
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="offset-sm-3 col-sm-9">
+                    <button type="submit" class="btn btn-primary">Start import</button>
+                </div>
+            </div>
+        </form>
+        <h3>Import functionality still work in progress.</h3>
+    {{else}}
+        <h3>Connectors are offline</h3>
+        <p>Since none of the connectors are online, I'm afraid I can't let you start an import process.</p>
+    {{end}}
+</div>
+<div class="col-md-4">
+    {{template "connectors.html" .}}
+</div>
+{{end}}
