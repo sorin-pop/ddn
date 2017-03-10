@@ -51,6 +51,9 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	} else if flashes := session.Flashes("fail"); len(flashes) > 0 {
 		page.Message = flashes[0].(string)
 		page.MessageType = "danger"
+	} else if flashes := session.Flashes("debug"); len(flashes) > 0 {
+		page.Message = flashes[0].(string)
+		page.MessageType = "success"
 	} else {
 		page.Message = ""
 	}

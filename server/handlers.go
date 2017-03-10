@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/djavorszky/ddn/common/inet"
@@ -32,7 +34,37 @@ func importdb(w http.ResponseWriter, r *http.Request) {
 }
 
 func importAction(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
 
+	r.ParseMultipartForm(32 << 20)
+	file, handler, err := r.FormFile("dbdump")
+	if err != nil {
+		log.Printf("File upload failed: %s", err.Error())
+		http.Error(w, "File upload failed: "+err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+	defer file.Close()
+
+	f, err := os.OpenFile("./web/dumps/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Printf("Saving file to dumps directory failed: %s", err.Error())
+		http.Error(w, "Saving file to dumps directory failed: "+err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+	defer f.Close()
+
+	io.Copy(f, file)
+
+	// This is for debugging reasons only:
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
+
+	session.AddFlash("Successfully saved file: http://localhost:7010/dumps/"+handler.Filename, "debug")
 }
 
 func createAction(w http.ResponseWriter, r *http.Request) {
