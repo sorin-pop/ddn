@@ -12,6 +12,34 @@
 </div>
 {{end}}
 
+<div class="col-md-12">
+    <table class="table">
+        <tr>
+            <th>ID</th>
+            <th>DBName</th>
+            <th>DBUser</th>
+            <th>DBPass</th>
+            <th>Create Date</th>
+            <th>Expiry Date</th>
+            <th>Connector</th>
+            <th>Vendor</th>
+            <th>Actions</th>
+        </tr>
+        {{range .Databases}}
+        <tr>
+            <td>{{.ID}}</td>
+            <td>{{.DBName}}</td>
+            <td>{{.DBUser}}</td>
+            <td>{{.DBPass}}</td>
+            <td>{{.CreateDate}}</td>
+            <td>{{.ExpiryDate}}</td>
+            <td>{{.ConnectorName}}</td>
+            <td>{{.DBVendor}}</td>
+            <td>Dummy</td>
+        </tr>
+        {{end}}
+    </table>
+</div>
 <div class="col-md-8">
     <h3>Cloud DB 2.0</h3>
     <p>The successor to the previous cloud database, this one is much more versatile and extensible.</p>

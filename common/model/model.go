@@ -136,9 +136,10 @@ func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, erro
 
 	json.Unmarshal([]byte(resp), &respMsg)
 
-	if respMsg.Status != status.Success {
+	switch respMsg.Status {
+	case status.Success, status.Accepted, status.Started, status.Created:
+		return respMsg.Message, nil
+	default:
 		return "", fmt.Errorf("executing action on endpoint %q failed: %s", endpoint, respMsg.Message)
 	}
-
-	return respMsg.Message, nil
 }

@@ -37,6 +37,14 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	defer http.Redirect(w, r, "/", http.StatusSeeOther)
 
 	r.ParseMultipartForm(32 << 20)
+
+	var (
+		connector = r.PostFormValue("connector")
+		dbname    = r.PostFormValue("dbname")
+		dbuser    = r.PostFormValue("user")
+		dbpass    = r.PostFormValue("password")
+	)
+
 	file, handler, err := r.FormFile("dbdump")
 	if err != nil {
 		log.Printf("File upload failed: %s", err.Error())
@@ -57,6 +65,10 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	io.Copy(f, file)
 
+	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, handler.Filename)
+
+	log.Println(url)
+
 	// This is for debugging reasons only:
 	session, err := store.Get(r, "user-session")
 	if err != nil {
@@ -64,7 +76,26 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Save(r, w)
 
-	session.AddFlash("Successfully saved file: http://localhost:7010/dumps/"+handler.Filename, "debug")
+	conn, ok := registry[connector]
+	if !ok {
+		session.AddFlash(fmt.Sprintf("Failed creating database, connector %s went offline", connector), "fail")
+		return
+	}
+
+	//	ID := getID()
+	if dbname == "" && dbuser != "" {
+		dbname = dbuser
+	}
+
+	ensureHasValues(&dbname, &dbuser, &dbpass)
+
+	resp, err := conn.ImportDatabase(id, dbname, dbuser, dbpass, url)
+	if err != nil {
+		session.AddFlash(fmt.Sprintf("failed to create database: %s", err.Error()), "fail")
+		return
+	}
+
+	session.AddFlash(resp, "success")
 }
 
 func createAction(w http.ResponseWriter, r *http.Request) {

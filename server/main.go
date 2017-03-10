@@ -12,7 +12,10 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-var db *mysql
+var (
+	db     *mysql
+	config Config
+)
 
 func main() {
 	defer func() {
@@ -34,28 +37,27 @@ func main() {
 
 	flag.Parse()
 
-	var conf Config
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
 		log.Println("Couldn't find properties file, generating one.")
 
-		filename, conf = setup(*filename)
+		filename, config = setup(*filename)
 
-		if err := createProps(*filename, conf); err != nil {
+		if err := createProps(*filename, config); err != nil {
 			log.Fatal("couldn't create properties file:", err.Error())
 		}
 	}
 
-	if _, err := toml.DecodeFile(*filename, &conf); err != nil {
+	if _, err := toml.DecodeFile(*filename, &config); err != nil {
 		log.Fatal("couldn't read configuration file: ", err.Error())
 	}
 
 	log.Println("Starting with properties:")
 
-	conf.Print()
+	config.Print()
 
 	db = new(mysql)
 
-	err = db.connect(conf)
+	err = db.connect(config)
 	if err != nil {
 		log.Fatal("database connection failed:", err.Error())
 	}
@@ -66,7 +68,7 @@ func main() {
 	initRegistry()
 	log.Println("Registry initialized")
 
-	port := fmt.Sprintf(":%s", conf.ServerPort)
+	port := fmt.Sprintf(":%s", config.ServerPort)
 
 	log.Fatal("died:", http.ListenAndServe(port, Router()))
 }

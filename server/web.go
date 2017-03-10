@@ -18,6 +18,7 @@ type Page struct {
 	Message     string
 	MessageType string
 	HasEntry    bool
+	Databases   []model.DBEntry
 	Ext62       model.PortalExt
 	ExtDXP      model.PortalExt
 }
@@ -78,6 +79,8 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	if err != nil {
 		panic(err)
 	}
+
+	page.Databases, _ = db.list()
 
 	err = tmpl.ExecuteTemplate(w, "base", page)
 	if err != nil {
