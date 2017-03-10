@@ -88,6 +88,7 @@ type DBEntry struct {
 	ConnectorName string
 	DBAddress     string
 	DBPort        string
+	Status        int
 }
 
 // CreateDatabase sends a request to the connector to create a database.

@@ -67,9 +67,6 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, handler.Filename)
 
-	log.Println(url)
-
-	// This is for debugging reasons only:
 	session, err := store.Get(r, "user-session")
 	if err != nil {
 		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
@@ -82,19 +79,36 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//	ID := getID()
 	if dbname == "" && dbuser != "" {
 		dbname = dbuser
 	}
 
 	ensureHasValues(&dbname, &dbuser, &dbpass)
 
-	resp, err := conn.ImportDatabase(id, dbname, dbuser, dbpass, url)
+	entry := model.DBEntry{
+		DBName:        dbname,
+		DBUser:        dbuser,
+		DBPass:        dbpass,
+		ConnectorName: connector,
+		Dumpfile:      url,
+		DBAddress:     conn.Address,
+		DBPort:        conn.DBPort,
+		DBVendor:      conn.DBVendor,
+		Status:        status.Started,
+	}
+
+	dbID, err := db.persist(entry)
+	if err != nil {
+		log.Printf("Error: %s", err.Error())
+	}
+
+	resp, err := conn.ImportDatabase(int(dbID), dbname, dbuser, dbpass, url)
 	if err != nil {
 		session.AddFlash(fmt.Sprintf("failed to create database: %s", err.Error()), "fail")
 		return
 	}
 
+	session.Values["id"] = dbID
 	session.AddFlash(resp, "success")
 }
 
@@ -143,6 +157,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		DBAddress:     conn.Address,
 		DBPort:        conn.DBPort,
 		DBVendor:      conn.DBVendor,
+		Status:        status.Success,
 	}
 
 	dbID, err := db.persist(entry)
@@ -287,6 +302,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		Creator:       req.Requester,
 		Dumpfile:      req.DumpLocation,
 		ConnectorName: req.ConnectorIdentifier,
+		Status:        status.Success,
 	}
 
 	db.persist(dbentry)

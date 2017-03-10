@@ -10,17 +10,18 @@ import (
 
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
-	Connectors  *map[string]model.Connector
-	AnyOnline   bool
-	Title       string
-	Pages       map[string]string
-	ActivePage  string
-	Message     string
-	MessageType string
-	HasEntry    bool
-	Databases   []model.DBEntry
-	Ext62       model.PortalExt
-	ExtDXP      model.PortalExt
+	Connectors   *map[string]model.Connector
+	AnyOnline    bool
+	Title        string
+	Pages        map[string]string
+	ActivePage   string
+	Message      string
+	MessageType  string
+	HasEntry     bool
+	Databases    []model.DBEntry
+	HasDatabases bool
+	Ext62        model.PortalExt
+	ExtDXP       model.PortalExt
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
@@ -80,7 +81,12 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		panic(err)
 	}
 
-	page.Databases, _ = db.list()
+	if pages[0] == "home" {
+		page.Databases, _ = db.list()
+		if len(page.Databases) != 0 {
+			page.HasDatabases = true
+		}
+	}
 
 	err = tmpl.ExecuteTemplate(w, "base", page)
 	if err != nil {
