@@ -356,7 +356,41 @@ func drop(w http.ResponseWriter, r *http.Request) {
 	session.AddFlash("Successfully dropped the database.", "msg")
 }
 
-func portalext(w http.ResponseWriter, r *http.Request) {}
+func portalext(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
+
+	user := getUser(r)
+
+	if user == "" {
+		log.Println("Drop database tried without a logged in user.")
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	ID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "couldn't convert id to int.", http.StatusInternalServerError)
+		return
+	}
+
+	dbe := db.entryByID(int64(ID))
+
+	if dbe.Creator != user {
+		log.Printf("User %q tried to drop database of user %q.", user, dbe.Creator)
+		session.AddFlash("Failed dropping database: You can only drop databases you created.", "fail")
+		return
+	}
+
+	session.Values["id"] = int64(ID)
+	session.AddFlash("Portal-exts are as follows", "success")
+}
 
 // upd8 updates the status of the databases.
 func upd8(w http.ResponseWriter, r *http.Request) {
