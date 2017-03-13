@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"time"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -34,8 +36,26 @@ func main() {
 
 	var err error
 	filename := flag.String("p", "server.conf", "Specify the configuration file's name")
+	logname := flag.String("l", "server.log", "Specify the log's filename")
 
 	flag.Parse()
+
+	if _, err = os.Stat(*logname); err == nil {
+		rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
+
+		fmt.Printf("Logfile %s already exists, rotating it to %s", *logname, rotated)
+
+		os.Rename(*logname, rotated)
+	}
+
+	logOut, err := os.OpenFile(*logname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Printf("error opening file %s, will continue logging to stderr: %s", *logname, err.Error())
+		logOut = os.Stderr
+	}
+	defer logOut.Close()
+
+	log.SetOutput(logOut)
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
 		log.Println("Couldn't find properties file, generating one.")
