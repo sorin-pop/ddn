@@ -101,7 +101,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 		page.Databases, err = db.listWhere(clause{"creator", page.User})
 		if err != nil {
-			log.Println("um... ", err.Error())
+			log.Println("couldn't list databases: ", err.Error())
 		}
 
 		if len(page.Databases) != 0 {
