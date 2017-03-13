@@ -185,6 +185,22 @@ func (c Connector) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string
 	return c.executeAction(dbreq, "import-database")
 }
 
+// DropDatabase sends a request to the connector to create a database.
+func (c Connector) DropDatabase(id int, dbname, dbuser string) (string, error) {
+
+	if ok := sutils.Present(dbname, dbuser); !ok {
+		return "", fmt.Errorf("asked to create database with missing values: dbname: %q, dbuser: %q", dbname, dbuser)
+	}
+
+	dbreq := DBRequest{
+		ID:           id,
+		DatabaseName: dbname,
+		Username:     dbuser,
+	}
+
+	return c.executeAction(dbreq, "drop-database")
+}
+
 func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, error) {
 	dest := fmt.Sprintf("http://%s:%s/%s", c.Address, c.ConnectorPort, endpoint)
 

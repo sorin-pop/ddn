@@ -67,12 +67,13 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 		id := session.Values["id"].(int64)
 
-		page.HasEntry = true
-		entry := db.entryByID(id)
+		if id != 0 {
+			page.HasEntry = true
+			entry := db.entryByID(id)
 
-		page.ExtDXP = portalExt(entry, true)
-		page.Ext62 = portalExt(entry, false)
-
+			page.ExtDXP = portalExt(entry, true)
+			page.Ext62 = portalExt(entry, false)
+		}
 	} else if flashes := session.Flashes("fail"); len(flashes) > 0 {
 		page.Message = flashes[0].(string)
 		page.MessageType = "danger"

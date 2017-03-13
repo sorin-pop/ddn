@@ -116,8 +116,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//session.Values["id"] = dbID
-	session.AddFlash(resp, "success")
+	session.AddFlash(resp, "msg")
 }
 
 func createAction(w http.ResponseWriter, r *http.Request) {
@@ -306,7 +305,57 @@ func extend(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func drop(w http.ResponseWriter, r *http.Request)      {}
+func drop(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
+
+	user := getUser(r)
+
+	if user == "" {
+		log.Println("Drop database tried without a logged in user.")
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	ID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "couldn't convert id to int.", http.StatusInternalServerError)
+		return
+	}
+
+	dbe := db.entryByID(int64(ID))
+
+	if dbe.Creator != user {
+		log.Printf("User %q tried to drop database of user %q.", user, dbe.Creator)
+		session.AddFlash("Failed dropping database: You can only drop databases you created.", "fail")
+		return
+	}
+
+	conn, ok := registry[dbe.ConnectorName]
+	if !ok {
+		log.Printf("Connector %q is offline, can't drop database with id '%d'", dbe.ConnectorName, ID)
+		session.AddFlash("Unable to drop database: Connector is down.", "fail")
+		return
+	}
+
+	_, err = conn.DropDatabase(ID, dbe.DBName, dbe.DBUser)
+	if err != nil {
+		log.Printf("Couldn't drop database %q on connector %q: %s", dbe.DBName, dbe.ConnectorName, err.Error())
+		session.AddFlash(fmt.Sprintf("Unable to drop database: %s", err.Error()), "fail")
+		return
+	}
+
+	db.delete(int64(ID))
+
+	session.AddFlash("Successfully dropped the database.", "msg")
+}
+
 func portalext(w http.ResponseWriter, r *http.Request) {}
 
 // upd8 updates the status of the databases.
