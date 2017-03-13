@@ -91,6 +91,66 @@ type DBEntry struct {
 	Status        int
 }
 
+// InProgress returns true if the DBEntry's status denotes that something's in progress.
+func (dbe DBEntry) InProgress() bool {
+	return dbe.Status < 100
+}
+
+// IsStatusOk returns true if the DBEntry's status is OK.
+func (dbe DBEntry) IsStatusOk() bool {
+	return dbe.Status > 99 && dbe.Status < 200
+}
+
+// IsClientErr returns true if something went wrong with the client request.
+func (dbe DBEntry) IsClientErr() bool {
+	return dbe.Status > 199 && dbe.Status < 300
+}
+
+// IsServerErr returns true if something went wrong on the server.
+func (dbe DBEntry) IsServerErr() bool {
+	return dbe.Status > 299
+}
+
+// IsErr returns true if something went wrong either on the server or with the client request.
+func (dbe DBEntry) IsErr() bool {
+	return dbe.IsServerErr() || dbe.IsClientErr()
+}
+
+// StatusLabel returns the string representation of the status
+func (dbe DBEntry) StatusLabel() string {
+	label, ok := status.Labels[dbe.Status]
+	if !ok {
+		return "Unknown"
+	}
+
+	return label
+}
+
+// Progress returns the progress as 0 <= progress <= 100 of its current import.
+// If error, returns 0; If success, returns 100;
+func (dbe DBEntry) Progress() int {
+	if dbe.IsClientErr() || dbe.IsServerErr() {
+		return 0
+	}
+
+	if dbe.IsStatusOk() {
+		return 100
+	}
+
+	switch dbe.Status {
+	case status.DownloadInProgress:
+		return 0
+	case status.ExtractingArchive:
+		return 25
+	case status.ValidatingDump:
+		return 50
+	case status.ImportInProgress:
+		return 75
+	default:
+		return 0
+	}
+}
+
 // CreateDatabase sends a request to the connector to create a database.
 func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
 

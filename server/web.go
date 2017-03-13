@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/djavorszky/ddn/common/model"
@@ -92,13 +93,16 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 			page.Ext62 = portalExt(entry, false)
 		}
 	*/
-
 	session.Save(r, w)
 
 	if pages[0] == "home" {
 		pages = append(pages, "databases")
 
-		page.Databases, _ = db.listWhere(clause{"creator", page.User})
+		page.Databases, err = db.listWhere(clause{"creator", page.User})
+		if err != nil {
+			log.Println("um... ", err.Error())
+		}
+
 		if len(page.Databases) != 0 {
 			page.HasDatabases = true
 		}

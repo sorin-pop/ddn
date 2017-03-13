@@ -113,6 +113,12 @@ func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 	return res.LastInsertId()
 }
 
+func (db *mysql) delete(id int64) {
+	query := fmt.Sprintf("DELETE FROM `databases` WHERE id = %d", id)
+
+	db.conn.Exec(query)
+}
+
 func (db *mysql) list() ([]model.DBEntry, error) {
 	var entries []model.DBEntry
 
@@ -162,6 +168,8 @@ type clause struct {
 func (db *mysql) listWhere(clauses ...clause) ([]model.DBEntry, error) {
 	var buf bytes.Buffer
 
+	buf.WriteString("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE 1=1")
+
 	for _, clause := range clauses {
 		buf.WriteString(" AND ")
 		buf.WriteString(clause.Column)
@@ -170,9 +178,9 @@ func (db *mysql) listWhere(clauses ...clause) ([]model.DBEntry, error) {
 		buf.WriteString("'")
 	}
 
-	query := "SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE 1=1" + buf.String()
+	buf.WriteString(" ORDER BY id DESC")
 
-	rows, err := db.conn.Query(query)
+	rows, err := db.conn.Query(buf.String())
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}

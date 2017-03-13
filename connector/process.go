@@ -19,20 +19,20 @@ func startImport(dbreq model.DBRequest) {
 	ch := notif.New(dbreq.ID, upd8Path)
 	defer close(ch)
 
-	ch <- notif.Y{StatusCode: status.Started, Msg: "Starting download"}
+	ch <- notif.Y{StatusCode: status.DownloadInProgress, Msg: "Downloading dump"}
 
 	path, err := inet.DownloadFile(usr.HomeDir, dbreq.DumpLocation)
 	if err != nil {
 		db.DropDatabase(dbreq)
 		log.Printf("could not download file: %s", err.Error())
 
-		ch <- notif.Y{StatusCode: status.Update, Msg: "Downloading file failed: " + err.Error()}
+		ch <- notif.Y{StatusCode: status.ServerError, Msg: "Downloading file failed: " + err.Error()}
 		return
 	}
 	defer os.Remove(path)
 
 	if isArchive(path) {
-		ch <- notif.Y{StatusCode: status.Update, Msg: "Extracting archive"}
+		ch <- notif.Y{StatusCode: status.ExtractingArchive, Msg: "Extracting archive"}
 
 		var (
 			files []string
@@ -77,7 +77,7 @@ func startImport(dbreq model.DBRequest) {
 	}
 
 	if mdb, ok := db.(*mysql); ok {
-		ch <- notif.Y{StatusCode: status.Update, Msg: "Validating MySQL dump"}
+		ch <- notif.Y{StatusCode: status.ValidatingDump, Msg: "Validating dump"}
 		path, err = mdb.validateDump(path)
 
 		if err != nil {
@@ -91,7 +91,7 @@ func startImport(dbreq model.DBRequest) {
 
 	dbreq.DumpLocation = path
 
-	ch <- notif.Y{StatusCode: status.Update, Msg: "Starting import"}
+	ch <- notif.Y{StatusCode: status.ImportInProgress, Msg: "Importing"}
 
 	err = db.ImportDatabase(dbreq)
 	if err != nil {
@@ -101,5 +101,5 @@ func startImport(dbreq model.DBRequest) {
 		return
 	}
 
-	ch <- notif.Y{StatusCode: status.Success, Msg: "Import finished successfully"}
+	ch <- notif.Y{StatusCode: status.Success, Msg: "Completed"}
 }

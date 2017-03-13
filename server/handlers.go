@@ -104,15 +104,19 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	dbID, err := db.persist(entry)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
+		session.AddFlash(fmt.Sprintf("failed persisting database locally: %s", err.Error()))
+		return
 	}
 
 	resp, err := conn.ImportDatabase(int(dbID), dbname, dbuser, dbpass, url)
 	if err != nil {
-		session.AddFlash(fmt.Sprintf("failed to create database: %s", err.Error()), "fail")
+		session.AddFlash(fmt.Sprintf("failed to import database: %s", err.Error()), "fail")
+
+		db.delete(dbID)
 		return
 	}
 
-	session.Values["id"] = dbID
+	//session.Values["id"] = dbID
 	session.AddFlash(resp, "success")
 }
 
@@ -318,6 +322,20 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db.updateColumn(msg.ID, "status", msg.StatusID)
+
+	dbe := db.entryByID(int64(msg.ID))
+
+	// Delete the dumpfile once import is started or if an error has occurred.
+	if dbe.Status == status.ImportInProgress || dbe.IsErr() {
+		loc := strings.LastIndex(dbe.Dumpfile, "/")
+
+		file := fmt.Sprintf("./web/dumps/%s", dbe.Dumpfile[loc+1:])
+
+		err = os.Remove(file)
+		if err != nil {
+			log.Printf("Failed to remove dumpfile %s: %s", file, err.Error())
+		}
+	}
 }
 
 func ensureHasValues(vals ...*string) {
