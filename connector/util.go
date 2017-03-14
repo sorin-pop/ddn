@@ -17,8 +17,6 @@ import (
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
-	"time"
-
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 )
@@ -202,32 +200,4 @@ func unregisterConnector() {
 	}
 
 	log.Fatalf("Successfully unregistered the connector.")
-}
-
-// This method should always be called asynchronously
-func keepAlive() {
-	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
-
-	ticker := time.NewTicker(10 * time.Second)
-	for range ticker.C {
-		if !inet.AddrExists(endpoint) {
-			if registered {
-				log.Println("Lost connection to master server, will attempt to reconnect once it's back.")
-
-				registered = false
-			}
-
-			continue
-		}
-
-		if !registered {
-			log.Println("Master server back online.")
-
-			err := registerConnector()
-			if err != nil {
-				log.Printf("couldn't register with master: %s", err.Error())
-			}
-		}
-	}
-
 }

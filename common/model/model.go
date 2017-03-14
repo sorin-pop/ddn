@@ -5,6 +5,8 @@ import (
 
 	"encoding/json"
 
+	"time"
+
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/notif"
@@ -82,8 +84,8 @@ type DBEntry struct {
 	DBPass        string
 	DBSID         string
 	Dumpfile      string
-	CreateDate    string
-	ExpiryDate    string
+	CreateDate    time.Time
+	ExpiryDate    time.Time
 	Creator       string
 	ConnectorName string
 	DBAddress     string
@@ -114,6 +116,11 @@ func (dbe DBEntry) IsServerErr() bool {
 // IsErr returns true if something went wrong either on the server or with the client request.
 func (dbe DBEntry) IsErr() bool {
 	return dbe.IsServerErr() || dbe.IsClientErr()
+}
+
+// IsWarn returns true if something went wrong either on the server or with the client request.
+func (dbe DBEntry) IsWarn() bool {
+	return dbe.Status > 399
 }
 
 // StatusLabel returns the string representation of the status

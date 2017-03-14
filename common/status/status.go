@@ -8,7 +8,7 @@ var Labels map[int]string
 func init() {
 	Labels = make(map[int]string)
 
-	// Progress
+	// Info
 	Labels[Started] = "Started"
 	Labels[InProgress] = "In Progress"
 	Labels[DownloadInProgress] = "Downloading"
@@ -28,6 +28,9 @@ func init() {
 
 	// Server Error
 	Labels[ServerError] = "Server Error"
+
+	// Warnings
+	Labels[RemovalScheduled] = "Removal scheduled"
 }
 
 // Info statuses are used to convey that something has happened
@@ -41,7 +44,7 @@ const (
 	DownloadInProgress int = 3 // status.DownloadInProgress
 	ExtractingArchive  int = 4 // status.ExtractingArchive
 	ValidatingDump     int = 5 // status.ValidatingDump
-	ImportInProgress   int = 6 //status.ImportInProgress
+	ImportInProgress   int = 6 // status.ImportInProgress
 )
 
 // Success statuses are used to convey a successful result.
@@ -63,4 +66,9 @@ const (
 // on the server.
 const (
 	ServerError int = 300 // status.ServerError
+)
+
+// Warnings are for issuing warnings.
+const (
+	RemovalScheduled int = 400 // status.RemovalScheduled
 )

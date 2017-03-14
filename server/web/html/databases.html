@@ -18,6 +18,8 @@
                     <tr class="table-success">
                 {{else if .InProgress}}
                     <tr class="table-info">
+                {{else if .IsWarn}}
+                    <tr class="table-warning">
                 {{else}}
                     <tr class="table-danger">
                 {{end}}

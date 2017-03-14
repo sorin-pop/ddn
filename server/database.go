@@ -50,7 +50,7 @@ func (db *mysql) connect(c Config) error {
 func (db *mysql) connectDS(datasource string) error {
 	var err error
 
-	db.conn, err = sql.Open("mysql", datasource)
+	db.conn, err = sql.Open("mysql", datasource+"?parseTime=true")
 	if err != nil {
 		return fmt.Errorf("creating connection pool failed: %s", err.Error())
 	}
