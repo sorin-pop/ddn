@@ -48,26 +48,28 @@ func main() {
 
 	var err error
 	filename := flag.String("p", "ddnc.conf", "Specify the configuration file's name")
-	logname := flag.String("l", "connector.log", "Specify the log's filename")
+	logname := flag.String("l", "std", "Specify the log's filename. If set to std, logs to the terminal.")
 
 	flag.Parse()
 
-	if _, err = os.Stat(*logname); err == nil {
-		rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
+	if *logname != "std" {
+		if _, err = os.Stat(*logname); err == nil {
+			rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
 
-		fmt.Printf("Logfile %s already exists, rotating it to %s", *logname, rotated)
+			fmt.Printf("Logfile %s already exists, rotating it to %s", *logname, rotated)
 
-		os.Rename(*logname, rotated)
+			os.Rename(*logname, rotated)
+		}
+
+		logOut, err := os.OpenFile(*logname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Printf("error opening file %s, will continue logging to stderr: %s", *logname, err.Error())
+			logOut = os.Stderr
+		}
+		defer logOut.Close()
+
+		log.SetOutput(logOut)
 	}
-
-	logOut, err := os.OpenFile(*logname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		fmt.Printf("error opening file %s, will continue logging to stderr: %s", *logname, err.Error())
-		logOut = os.Stderr
-	}
-	defer logOut.Close()
-
-	log.SetOutput(logOut)
 
 	usr, err = user.Current()
 	if err != nil {
