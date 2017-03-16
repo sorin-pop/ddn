@@ -160,6 +160,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
+		DBSID:         conn.DBSID,
 		ConnectorName: connector,
 		Creator:       getUser(r),
 		DBAddress:     conn.Address,
