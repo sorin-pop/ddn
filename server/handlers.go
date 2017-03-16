@@ -38,7 +38,6 @@ func importdb(w http.ResponseWriter, r *http.Request) {
 
 func importAction(w http.ResponseWriter, r *http.Request) {
 	defer http.Redirect(w, r, "/", http.StatusSeeOther)
-	defer r.MultipartForm.RemoveAll()
 
 	r.ParseMultipartForm(32 << 20)
 
@@ -74,6 +73,11 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 
 	io.Copy(f, file)
+
+	err = r.MultipartForm.RemoveAll()
+	if err != nil {
+		log.Printf("Could not removeall multipartform: %s", err.Error())
+	}
 
 	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, handler.Filename)
 
