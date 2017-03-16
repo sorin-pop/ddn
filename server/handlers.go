@@ -48,10 +48,16 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		dbpass    = r.PostFormValue("password")
 	)
 
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
+
 	file, handler, err := r.FormFile("dbdump")
 	if err != nil {
 		log.Printf("File upload failed: %s", err.Error())
-		http.Error(w, "File upload failed: "+err.Error(), http.StatusInternalServerError)
+		session.AddFlash("File upload failed: "+err.Error(), "fail")
 
 		return
 	}
@@ -60,7 +66,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	f, err := os.OpenFile("./web/dumps/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		log.Printf("Saving file to dumps directory failed: %s", err.Error())
-		http.Error(w, "Saving file to dumps directory failed: "+err.Error(), http.StatusInternalServerError)
+		session.AddFlash("Saving file to dumps directory failed: "+err.Error(), "fail")
 
 		return
 	}
@@ -69,12 +75,6 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	io.Copy(f, file)
 
 	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, handler.Filename)
-
-	session, err := store.Get(r, "user-session")
-	if err != nil {
-		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
-	}
-	defer session.Save(r, w)
 
 	conn, ok := registry[connector]
 	if !ok {
