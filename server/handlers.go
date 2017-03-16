@@ -38,6 +38,7 @@ func importdb(w http.ResponseWriter, r *http.Request) {
 
 func importAction(w http.ResponseWriter, r *http.Request) {
 	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+	defer r.MultipartForm.RemoveAll()
 
 	r.ParseMultipartForm(32 << 20)
 
