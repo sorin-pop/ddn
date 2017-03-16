@@ -20,9 +20,11 @@ type Config struct {
 	SID        string `toml:"oracle-sid"`
 	Tablespace string `toml:"oracle-tablespace"`
 
-	ConnectorPort string `toml:"connectorPort"`
-	ShortName     string `toml:"shortname"`
-	ConnectorName string `toml:"connectorName"`
+	ConnectorDBPort string `toml:"connectorDBPort"`
+	ConnectorDBHost string `toml:"connectorDBHost"`
+	ConnectorPort   string `toml:"connectorPort"`
+	ShortName       string `toml:"shortname"`
+	ConnectorName   string `toml:"connectorName"`
 
 	MasterAddress string `toml:"masterAddress"`
 }
@@ -41,6 +43,8 @@ func (c Config) Print() {
 	}
 
 	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
+	log.Printf("Connector DB port:\t%s\n", conf.ConnectorDBPort)
+	log.Printf("Connector DB host:\t%s\n", conf.ConnectorDBHost)
 	log.Printf("Short name:\t\t%s\n", conf.ShortName)
 	log.Printf("Username:\t\t%s\n", conf.User)
 	log.Printf("Password:\t\t****\n")
@@ -55,15 +59,17 @@ func NewConfig(vendor string) Config {
 	switch vendor {
 	case "mysql":
 		conf = Config{
-			Vendor:        "mysql",
-			Version:       "5.5.53",
-			ShortName:     "mysql-55",
-			DBPort:        "3306",
-			DBAddress:     "localhost",
-			ConnectorPort: "7000",
-			User:          "root",
-			Password:      "root",
-			MasterAddress: "http://localhost:7010",
+			Vendor:          "mysql",
+			Version:         "5.5.53",
+			ShortName:       "mysql-55",
+			DBPort:          "3306",
+			DBAddress:       "localhost",
+			ConnectorPort:   "7000",
+			ConnectorDBPort: "3306",
+			ConnectorDBHost: "localhost",
+			User:            "root",
+			Password:        "root",
+			MasterAddress:   "http://localhost:7010",
 		}
 
 		switch runtime.GOOS {
@@ -76,15 +82,17 @@ func NewConfig(vendor string) Config {
 		}
 	case "postgres":
 		conf = Config{
-			Vendor:        "postgres",
-			Version:       "9.4.9",
-			ShortName:     "postgre-94",
-			DBPort:        "5432",
-			DBAddress:     "localhost",
-			ConnectorPort: "7000",
-			User:          "postgres",
-			Password:      "password",
-			MasterAddress: "http://localhost:7010",
+			Vendor:          "postgres",
+			Version:         "9.4.9",
+			ShortName:       "postgre-94",
+			DBPort:          "5432",
+			DBAddress:       "localhost",
+			ConnectorPort:   "7000",
+			ConnectorDBPort: "5432",
+			ConnectorDBHost: "localhost",
+			User:            "postgres",
+			Password:        "password",
+			MasterAddress:   "http://localhost:7010",
 		}
 
 		switch runtime.GOOS {
@@ -97,17 +105,19 @@ func NewConfig(vendor string) Config {
 		}
 	case "oracle":
 		conf = Config{
-			Vendor:        "oracle",
-			Version:       "11g",
-			ShortName:     "oracle-11g",
-			DBPort:        "1521",
-			DBAddress:     "localhost",
-			ConnectorPort: "7000",
-			User:          "system",
-			Password:      "password",
-			SID:           "orcl",
-			Tablespace:    "USERS",
-			MasterAddress: "http://localhost:7010",
+			Vendor:          "oracle",
+			Version:         "11g",
+			ShortName:       "oracle-11g",
+			DBPort:          "1521",
+			DBAddress:       "localhost",
+			ConnectorPort:   "7000",
+			ConnectorDBPort: "1521",
+			ConnectorDBHost: "localhost",
+			User:            "system",
+			Password:        "password",
+			SID:             "orcl",
+			Tablespace:      "USERS",
+			MasterAddress:   "http://localhost:7010",
 		}
 		switch runtime.GOOS {
 		case "windows":
@@ -141,8 +151,8 @@ func generateInteractive(filename string) (string, Config) {
 
 	config.Vendor = vendor
 	config.Version = prompter.Ask("What is the database version?")
-	config.DBPort = prompter.AskDef("What is the database port?", def.DBPort)
-	config.DBAddress = prompter.AskDef("What is the database address?", def.DBAddress)
+	config.DBPort = prompter.AskDef("What is the database local port?", def.DBPort)
+	config.DBAddress = prompter.AskDef("What is the database local address?", def.DBAddress)
 
 	if vendor == "oracle" {
 		config.SID = prompter.AskDef("What is the SID?", def.SID)
@@ -157,6 +167,8 @@ func generateInteractive(filename string) (string, Config) {
 	config.User = prompter.AskDef("Who is the database user?", def.User)
 	config.Password = prompter.AskDef("What is the database password?", def.Password)
 	config.ConnectorPort = prompter.AskDef("What should the connector's port be?", def.ConnectorPort)
+	config.ConnectorDBPort = prompter.AskDef("What should the connector's Database port be?", def.ConnectorDBPort)
+	config.ConnectorDBHost = prompter.AskDef("What should the connector's Database host be?", def.ConnectorDBHost)
 	config.ShortName = prompter.AskDef("What should the connector's short name be?", def.ShortName)
 	config.ConnectorName = prompter.AskDef("What should the connector's identifier name be?", def.ConnectorName)
 	config.MasterAddress = prompter.AskDef("What is the address of the Master server?", def.MasterAddress)

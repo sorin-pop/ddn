@@ -92,10 +92,11 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
+		DBSID:         conn.DBSID,
 		ConnectorName: connector,
 		Creator:       getUser(r),
 		Dumpfile:      url,
-		DBAddress:     conn.Address,
+		DBAddress:     conn.DBAddr,
 		DBPort:        conn.DBPort,
 		DBVendor:      conn.DBVendor,
 		Status:        status.Started,
@@ -163,7 +164,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		DBSID:         conn.DBSID,
 		ConnectorName: connector,
 		Creator:       getUser(r),
-		DBAddress:     conn.Address,
+		DBAddress:     conn.DBAddr,
 		DBPort:        conn.DBPort,
 		DBVendor:      conn.DBVendor,
 		Status:        status.Success,
@@ -210,6 +211,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		ID:            getID(),
 		DBVendor:      req.DBVendor,
 		DBPort:        req.DBPort,
+		DBAddr:        req.DBAddr,
 		DBSID:         req.DBSID,
 		ShortName:     req.ShortName,
 		LongName:      req.LongName,
@@ -370,7 +372,7 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 	user := getUser(r)
 
 	if user == "" {
-		log.Println("Drop database tried without a logged in user.")
+		log.Println("Portal-ext request without logged in user.")
 		return
 	}
 
@@ -385,7 +387,7 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 	dbe := db.entryByID(int64(ID))
 
 	if dbe.Creator != user {
-		log.Printf("User %q tried to drop database of user %q.", user, dbe.Creator)
+		log.Printf("User %q tried to get portalext of db created by %q.", user, dbe.Creator)
 		session.AddFlash("Failed dropping database: You can only drop databases you created.", "fail")
 		return
 	}

@@ -159,7 +159,8 @@ func registerConnector() error {
 		LongName:      longname,
 		Version:       version,
 		DBVendor:      conf.Vendor,
-		DBPort:        conf.DBPort,
+		DBPort:        conf.ConnectorDBPort,
+		DBAddr:        conf.ConnectorDBHost,
 		DBSID:         conf.SID,
 		Port:          conf.ConnectorPort,
 	}

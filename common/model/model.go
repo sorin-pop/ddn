@@ -45,6 +45,7 @@ type RegisterRequest struct {
 	ConnectorName string `json:"connector_name"`
 	DBVendor      string `json:"dbvendor"`
 	DBPort        string `json:"dbport"`
+	DBAddr        string `json:"dbaddr"`
 	DBSID         string `json:"dbsid"`
 	ShortName     string `json:"short_name"`
 	LongName      string `json:"long_name"`
@@ -64,6 +65,7 @@ type Connector struct {
 	ID            int
 	DBVendor      string
 	DBPort        string
+	DBAddr        string
 	DBSID         string
 	ShortName     string
 	LongName      string
