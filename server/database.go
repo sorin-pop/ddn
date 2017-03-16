@@ -77,7 +77,7 @@ func (db *mysql) Alive() error {
 		}
 	}()
 
-	_, err := db.conn.Exec("select * from mysql.user WHERE 1 = 0")
+	_, err := db.conn.Exec("select * from `databases` WHERE 1 = 0")
 	if err != nil {
 		return fmt.Errorf("executing stayalive query failed: %s", sutils.TrimNL(err.Error()))
 	}
