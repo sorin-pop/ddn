@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/liferay"
 )
 
 // Page is a struct holding the data to be displayed on the welcome page.
@@ -23,8 +24,8 @@ type Page struct {
 	HasEntry     bool
 	Databases    []model.DBEntry
 	HasDatabases bool
-	Ext62        model.PortalExt
-	ExtDXP       model.PortalExt
+	Ext62        liferay.JDBC
+	ExtDXP       liferay.JDBC
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
@@ -71,8 +72,17 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 			page.HasEntry = true
 			entry := db.entryByID(id)
 
-			page.ExtDXP = portalExt(entry, true)
-			page.Ext62 = portalExt(entry, false)
+			switch entry.DBVendor {
+			case "mysql":
+				page.Ext62 = liferay.MysqlJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+				page.ExtDXP = liferay.MysqlJDBCDXP(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+			case "postgres":
+				page.Ext62 = liferay.PostgreJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+				page.ExtDXP = page.Ext62
+			case "oracle":
+				page.Ext62 = liferay.OracleJDBC(entry.DBAddress, entry.DBPort, entry.DBSID, entry.DBUser, entry.DBPass)
+				page.ExtDXP = page.Ext62
+			}
 		}
 	} else if flashes := session.Flashes("fail"); len(flashes) > 0 {
 		page.Message = flashes[0].(string)

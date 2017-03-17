@@ -30,14 +30,6 @@ type ClientRequest struct {
 	DBRequest
 }
 
-// PortalExt contains the portal-ext.properties for the created database
-type PortalExt struct {
-	Driver   string
-	URL      string
-	User     string
-	Password string
-}
-
 // RegisterRequest is used to represent a JSON call between the connector and the server.
 // ID can be null if it's the initial registration, but must correspond to the connector's
 // ID when unregistering
