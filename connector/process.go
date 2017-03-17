@@ -27,7 +27,7 @@ func startImport(dbreq model.DBRequest) {
 		db.DropDatabase(dbreq)
 		log.Printf("could not download file: %s", err.Error())
 
-		ch <- notif.Y{StatusCode: status.ServerError, Msg: "Downloading file failed: " + err.Error()}
+		ch <- notif.Y{StatusCode: status.DownloadFailed, Msg: "Downloading file failed: " + err.Error()}
 		return
 	}
 	defer os.Remove(path)
@@ -51,7 +51,7 @@ func startImport(dbreq model.DBRequest) {
 			db.DropDatabase(dbreq)
 			log.Println("import process stopped; encountered unsupported archive")
 
-			ch <- notif.Y{StatusCode: status.ClientError, Msg: "Unsupported archive"}
+			ch <- notif.Y{StatusCode: status.ArchiveNotSupported, Msg: "archive not supported"}
 			return
 		}
 		for _, f := range files {
@@ -62,7 +62,7 @@ func startImport(dbreq model.DBRequest) {
 			db.DropDatabase(dbreq)
 			log.Printf("could not extract archive: %s", err.Error())
 
-			ch <- notif.Y{StatusCode: status.ServerError, Msg: "Extracting file failed: " + err.Error()}
+			ch <- notif.Y{StatusCode: status.ExtractingArchiveFailed, Msg: "Extracting file failed: " + err.Error()}
 			return
 		}
 
@@ -70,7 +70,7 @@ func startImport(dbreq model.DBRequest) {
 			db.DropDatabase(dbreq)
 			log.Println("import process stopped; more than one file found in archive")
 
-			ch <- notif.Y{StatusCode: status.ClientError, Msg: "Archive contains more than one file, import stopped"}
+			ch <- notif.Y{StatusCode: status.MultipleFilesInArchive, Msg: "Archive contains more than one file, import stopped"}
 			return
 		}
 
@@ -85,7 +85,7 @@ func startImport(dbreq model.DBRequest) {
 			db.DropDatabase(dbreq)
 			log.Printf("database validation failed: %s", err.Error())
 
-			ch <- notif.Y{StatusCode: status.ServerError, Msg: "Validating dump failed: " + err.Error()}
+			ch <- notif.Y{StatusCode: status.ValidationFailed, Msg: "Validating dump failed: " + err.Error()}
 			return
 		}
 	}
@@ -98,7 +98,7 @@ func startImport(dbreq model.DBRequest) {
 	if err != nil {
 		log.Printf("could not import database: %s", err.Error())
 
-		ch <- notif.Y{StatusCode: status.ServerError, Msg: "Importing dump failed: " + err.Error()}
+		ch <- notif.Y{StatusCode: status.ImportFailed, Msg: "Importing dump failed: " + err.Error()}
 		return
 	}
 

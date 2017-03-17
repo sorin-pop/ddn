@@ -25,9 +25,15 @@ func init() {
 	// Client Error
 	Labels[ClientError] = "Client Error"
 	Labels[NotFound] = "Not found"
+	Labels[DownloadFailed] = "Download failed"
+	Labels[ArchiveNotSupported] = "Archive not suppported"
+	Labels[MultipleFilesInArchive] = "Archive contains multiple files"
 
 	// Server Error
 	Labels[ServerError] = "Server Error"
+	Labels[ExtractingArchiveFailed] = "Extracting archive failed"
+	Labels[ValidationFailed] = "Validation failed"
+	Labels[ImportFailed] = "Import failed"
 
 	// Warnings
 	Labels[RemovalScheduled] = "Removal scheduled"
@@ -58,14 +64,20 @@ const (
 // Client errors are used to convey that something was
 // wrong with a client request.
 const (
-	ClientError int = 200 // status.ClientError
-	NotFound    int = 201 // status.NotFound
+	ClientError            int = 200 // status.ClientError
+	NotFound               int = 201 // status.NotFound
+	DownloadFailed         int = 202 // status.DownloadFailed
+	ArchiveNotSupported    int = 203 // status.ArchiveNotSupported
+	MultipleFilesInArchive int = 204 // status.MultipleFilesInArchive
 )
 
 // Server errors are used to convey that something went wrong
 // on the server.
 const (
-	ServerError int = 300 // status.ServerError
+	ServerError             int = 300 // status.ServerError
+	ExtractingArchiveFailed int = 302 // status.ExtractingArchiveFailed
+	ValidationFailed        int = 303 // status.ValidationFailed
+	ImportFailed            int = 304 // status.ImportFailed
 )
 
 // Warnings are for issuing warnings.
