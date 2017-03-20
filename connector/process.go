@@ -104,8 +104,6 @@ func startImport(dbreq model.DBRequest) {
 
 	dbreq.DumpLocation = path
 
-	log.Println(dbreq.DumpLocation)
-
 	ch <- notif.Y{StatusCode: status.ImportInProgress, Msg: "Importing"}
 
 	err = db.ImportDatabase(dbreq)
