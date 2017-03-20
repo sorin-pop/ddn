@@ -9,6 +9,8 @@ import (
 
 	"github.com/djavorszky/notif"
 
+	"strings"
+
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
@@ -22,7 +24,7 @@ func startImport(dbreq model.DBRequest) {
 
 	ch <- notif.Y{StatusCode: status.DownloadInProgress, Msg: "Downloading dump"}
 
-	path, err := inet.DownloadFile(usr.HomeDir, dbreq.DumpLocation)
+	path, err := inet.DownloadFile("dumps", dbreq.DumpLocation)
 	if err != nil {
 		db.DropDatabase(dbreq)
 		log.Printf("could not download file: %s", err.Error())
@@ -90,7 +92,19 @@ func startImport(dbreq model.DBRequest) {
 		}
 	}
 
+	if !strings.Contains(path, "dumps") {
+		oldPath := path
+		path = "dumps/" + path
+
+		os.Rename(oldPath, path)
+	}
+
+	path, _ = filepath.Abs(path)
+	defer os.Remove(path)
+
 	dbreq.DumpLocation = path
+
+	log.Println(dbreq.DumpLocation)
 
 	ch <- notif.Y{StatusCode: status.ImportInProgress, Msg: "Importing"}
 
