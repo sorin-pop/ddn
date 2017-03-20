@@ -94,7 +94,7 @@ func startImport(dbreq model.DBRequest) {
 
 	if !strings.Contains(path, "dumps") {
 		oldPath := path
-		path = "dumps/" + path
+		path = "dumps" + string(os.PathSeparator) + path
 
 		os.Rename(oldPath, path)
 	}

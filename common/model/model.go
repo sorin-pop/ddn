@@ -43,6 +43,7 @@ type RegisterRequest struct {
 	LongName      string `json:"long_name"`
 	Version       string `json:"version"`
 	Port          string `json:"port"`
+	Addr          string `json:"address"`
 }
 
 // RegisterResponse is used as the response to the RegisterRequest

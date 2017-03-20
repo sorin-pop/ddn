@@ -23,6 +23,7 @@ type Config struct {
 	ConnectorDBPort string `toml:"connectorDBPort"`
 	ConnectorDBHost string `toml:"connectorDBHost"`
 	ConnectorPort   string `toml:"connectorPort"`
+	ConnectorAddr   string `toml:"connectorAddr"`
 	ShortName       string `toml:"shortname"`
 	ConnectorName   string `toml:"connectorName"`
 
@@ -43,6 +44,7 @@ func (c Config) Print() {
 	}
 
 	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
+	log.Printf("Connector addr:\t%s\n", conf.ConnectorAddr)
 	log.Printf("Connector DB port:\t%s\n", conf.ConnectorDBPort)
 	log.Printf("Connector DB host:\t%s\n", conf.ConnectorDBHost)
 	log.Printf("Short name:\t\t%s\n", conf.ShortName)
@@ -65,6 +67,7 @@ func NewConfig(vendor string) Config {
 			DBPort:          "3306",
 			DBAddress:       "localhost",
 			ConnectorPort:   "7000",
+			ConnectorAddr:   "http://localhost",
 			ConnectorDBPort: "3306",
 			ConnectorDBHost: "localhost",
 			User:            "root",
@@ -88,6 +91,7 @@ func NewConfig(vendor string) Config {
 			DBPort:          "5432",
 			DBAddress:       "localhost",
 			ConnectorPort:   "7000",
+			ConnectorAddr:   "http://localhost",
 			ConnectorDBPort: "5432",
 			ConnectorDBHost: "localhost",
 			User:            "postgres",
@@ -111,6 +115,7 @@ func NewConfig(vendor string) Config {
 			DBPort:          "1521",
 			DBAddress:       "localhost",
 			ConnectorPort:   "7000",
+			ConnectorAddr:   "http://localhost",
 			ConnectorDBPort: "1521",
 			ConnectorDBHost: "localhost",
 			User:            "system",
@@ -166,9 +171,13 @@ func generateInteractive(filename string) (string, Config) {
 
 	config.User = prompter.AskDef("Who is the database user?", def.User)
 	config.Password = prompter.AskDef("What is the database password?", def.Password)
+
+	config.ConnectorAddr = prompter.AskDef("What is the connector's address?", def.ConnectorAddr)
 	config.ConnectorPort = prompter.AskDef("What should the connector's port be?", def.ConnectorPort)
+
 	config.ConnectorDBPort = prompter.AskDef("What should the connector's Database port be?", def.ConnectorDBPort)
 	config.ConnectorDBHost = prompter.AskDef("What should the connector's Database host be?", def.ConnectorDBHost)
+
 	config.ShortName = prompter.AskDef("What should the connector's short name be?", def.ShortName)
 	config.ConnectorName = prompter.AskDef("What should the connector's identifier name be?", def.ConnectorName)
 	config.MasterAddress = prompter.AskDef("What is the address of the Master server?", def.MasterAddress)

@@ -205,13 +205,6 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	index := strings.LastIndex(r.RemoteAddr, ":")
-	addr := r.RemoteAddr[:index]
-
-	if addr == "[::1]" {
-		addr = "127.0.0.1"
-	}
-
 	ddnc := model.Connector{
 		ID:            getID(),
 		DBVendor:      req.DBVendor,
@@ -222,14 +215,16 @@ func register(w http.ResponseWriter, r *http.Request) {
 		LongName:      req.LongName,
 		Identifier:    req.ConnectorName,
 		Version:       req.Version,
-		Address:       addr,
+		Address:       req.Addr,
 		ConnectorPort: req.Port,
 		Up:            true,
 	}
 
 	registry[req.ShortName] = ddnc
 
-	log.Printf("Registered: %s", req.ConnectorName)
+	log.Printf("Registered: %v", req.ConnectorName)
+
+	log.Printf("%+v", ddnc)
 
 	conAddr := fmt.Sprintf("%s:%s", ddnc.Address, ddnc.ConnectorPort)
 

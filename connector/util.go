@@ -163,6 +163,7 @@ func registerConnector() error {
 		DBAddr:        conf.ConnectorDBHost,
 		DBSID:         conf.SID,
 		Port:          conf.ConnectorPort,
+		Addr:          conf.ConnectorAddr,
 	}
 
 	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
