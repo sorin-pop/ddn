@@ -28,6 +28,8 @@ func init() {
 	Labels[DownloadFailed] = "Download failed"
 	Labels[ArchiveNotSupported] = "Archive not suppported"
 	Labels[MultipleFilesInArchive] = "Archive contains multiple files"
+	Labels[MissingParameters] = "Missing Parameters"
+	Labels[InvalidJSON] = "Invalid JSON Request"
 
 	// Server Error
 	Labels[ServerError] = "Server Error"
@@ -69,6 +71,9 @@ const (
 	DownloadFailed         int = 202 // status.DownloadFailed
 	ArchiveNotSupported    int = 203 // status.ArchiveNotSupported
 	MultipleFilesInArchive int = 204 // status.MultipleFilesInArchive
+	MissingParameters      int = 205 // status.MissingParameters
+	InvalidJSON            int = 206 // status.InvalidJSON
+
 )
 
 // Server errors are used to convey that something went wrong

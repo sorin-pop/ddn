@@ -83,7 +83,7 @@ func ErrorJSONResponse(err error) Message {
 
 	log.Println("Could not decode JSON message:", err.Error())
 
-	msg.Status = status.ClientError
+	msg.Status = status.InvalidJSON
 	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
 
 	return msg
@@ -94,7 +94,7 @@ func ErrorJSONResponse(err error) Message {
 func InvalidResponse() Message {
 	var msg Message
 
-	msg.Status = status.ClientError
+	msg.Status = status.MissingParameters
 	msg.Message = "One or more required fields are missing from the call"
 
 	return msg
