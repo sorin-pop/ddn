@@ -206,7 +206,7 @@ func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, erro
 	dest := fmt.Sprintf("http://%s:%s/%s", c.Address, c.ConnectorPort, endpoint)
 
 	resp, err := notif.SndLoc(dbreq, dest)
-	if err != nil {
+	if err != nil && resp == "" {
 		return "", fmt.Errorf("sending json message failed: %s", err.Error())
 	}
 
@@ -217,6 +217,12 @@ func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, erro
 	switch respMsg.Status {
 	case status.Success, status.Accepted, status.Started, status.Created:
 		return respMsg.Message, nil
+	case status.MissingParameters:
+		return "", fmt.Errorf("Missing parameters from the request")
+	case status.InvalidJSON:
+		return "", fmt.Errorf("Invalid JSON request")
+	case status.CreateDatabaseFailed, status.ListDatabaseFailed, status.DropDatabaseFailed:
+		return "", fmt.Errorf("Connector issue: %s", respMsg.Message)
 	default:
 		return "", fmt.Errorf("executing action on endpoint %q failed: %s", endpoint, respMsg.Message)
 	}

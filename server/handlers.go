@@ -116,7 +116,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := conn.ImportDatabase(int(dbID), dbname, dbuser, dbpass, url)
 	if err != nil {
-		session.AddFlash(fmt.Sprintf("failed to import database: %s", err.Error()), "fail")
+		session.AddFlash(err.Error(), "fail")
 
 		db.delete(dbID)
 		return
@@ -158,7 +158,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
 	if err != nil {
-		session.AddFlash(fmt.Sprintf("failed to create database: %s", err.Error()), "fail")
+		session.AddFlash(err.Error(), "fail")
 		return
 	}
 
@@ -339,7 +339,6 @@ func drop(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dbe := db.entryByID(int64(ID))
-
 	if dbe.Creator != user {
 		log.Printf("User %q tried to drop database of user %q.", user, dbe.Creator)
 		session.AddFlash("Failed dropping database: You can only drop databases you created.", "fail")
@@ -356,7 +355,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 	_, err = conn.DropDatabase(ID, dbe.DBName, dbe.DBUser)
 	if err != nil {
 		log.Printf("Couldn't drop database %q on connector %q: %s", dbe.DBName, dbe.ConnectorName, err.Error())
-		session.AddFlash(fmt.Sprintf("Unable to drop database: %s", err.Error()), "fail")
+		session.AddFlash(err.Error(), "fail")
 		return
 	}
 
