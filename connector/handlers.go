@@ -16,7 +16,6 @@ import (
 )
 
 // index should display whenever someone visits the main page.
-
 func index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Welcome to the index!")
 }
@@ -44,7 +43,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	err = db.CreateDatabase(dbreq)
 	if err != nil {
 		httpStatus = http.StatusInternalServerError
-		msg.Status = status.ServerError
+		msg.Status = status.CreateDatabaseFailed
 		msg.Message = fmt.Sprintf("creating database failed: %s", err.Error())
 	} else {
 		msg.Status = status.Success
@@ -64,9 +63,15 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	msg.Status = status.Success
 	msg.Message, err = db.ListDatabase()
 	if err != nil {
-		log.Printf("listing databases failed: %s", err.Error())
+		errStr := fmt.Sprintf("listing databases failed: %s", err.Error())
+		log.Printf(errStr)
 
-		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorResponse())
+		var errMsg inet.Message
+
+		errMsg.Status = status.ListDatabaseFailed
+		errMsg.Message = errStr
+
+		inet.SendResponse(w, http.StatusInternalServerError, errMsg)
 		return
 	}
 
@@ -113,7 +118,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 	err = db.DropDatabase(dbreq)
 	if err != nil {
 		httpStatus = http.StatusInternalServerError
-		msg.Status = status.ServerError
+		msg.Status = status.DropDatabaseFailed
 		msg.Message = fmt.Sprintf("dropping database failed: %s", err.Error())
 	} else {
 		msg.Status = status.Success
@@ -154,7 +159,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 
 	err = db.CreateDatabase(dbreq)
 	if err != nil {
-		msg.Status = status.ServerError
+		msg.Status = status.CreateDatabaseFailed
 		msg.Message = fmt.Sprintf("creating database failed: %s", err.Error())
 
 		inet.SendResponse(w, http.StatusInternalServerError, msg)

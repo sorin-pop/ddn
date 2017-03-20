@@ -15,6 +15,7 @@ func init() {
 	Labels[ExtractingArchive] = "Extracting Archive"
 	Labels[ValidatingDump] = "Validating Dump"
 	Labels[ImportInProgress] = "Importing"
+	Labels[PendingImmediateRemoval] = "Pending immediate removal"
 
 	// Success
 	Labels[Success] = "Completed"
@@ -36,6 +37,9 @@ func init() {
 	Labels[ExtractingArchiveFailed] = "Extracting archive failed"
 	Labels[ValidationFailed] = "Validation failed"
 	Labels[ImportFailed] = "Import failed"
+	Labels[CreateDatabaseFailed] = "Creating database failed"
+	Labels[ListDatabaseFailed] = "Listing databases failed"
+	Labels[DropDatabaseFailed] = "Dropping database failed"
 
 	// Warnings
 	Labels[RemovalScheduled] = "Removal scheduled"
@@ -49,10 +53,11 @@ const (
 	Started    int = 1 // status.Started
 	InProgress int = 2 // status.InProgress
 
-	DownloadInProgress int = 3 // status.DownloadInProgress
-	ExtractingArchive  int = 4 // status.ExtractingArchive
-	ValidatingDump     int = 5 // status.ValidatingDump
-	ImportInProgress   int = 6 // status.ImportInProgress
+	DownloadInProgress      int = 3 // status.DownloadInProgress
+	ExtractingArchive       int = 4 // status.ExtractingArchive
+	ValidatingDump          int = 5 // status.ValidatingDump
+	ImportInProgress        int = 6 // status.ImportInProgress
+	PendingImmediateRemoval int = 7 // status.PendingImmediateRemoval
 )
 
 // Success statuses are used to convey a successful result.
@@ -73,7 +78,6 @@ const (
 	MultipleFilesInArchive int = 204 // status.MultipleFilesInArchive
 	MissingParameters      int = 205 // status.MissingParameters
 	InvalidJSON            int = 206 // status.InvalidJSON
-
 )
 
 // Server errors are used to convey that something went wrong
@@ -83,6 +87,9 @@ const (
 	ExtractingArchiveFailed int = 302 // status.ExtractingArchiveFailed
 	ValidationFailed        int = 303 // status.ValidationFailed
 	ImportFailed            int = 304 // status.ImportFailed
+	CreateDatabaseFailed    int = 305 // status.CreateDatabaseFailed
+	ListDatabaseFailed      int = 306 // status.ListDatabaseFailed
+	DropDatabaseFailed      int = 307 // status.DropDatabaseFailed
 )
 
 // Warnings are for issuing warnings.
