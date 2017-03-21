@@ -8,13 +8,13 @@ import (
 
 // Config to hold the database server and ddn server configuration
 type Config struct {
-	DBAddress  string `toml:"dbaddress"`
-	DBPort     string `toml:"dbport"`
-	DBUser     string `toml:"dbuser"`
-	DBPass     string `toml:"dbpass"`
-	DBName     string `toml:"dbname"`
-	ServerHost string `toml:"serverhost"`
-	ServerPort string `toml:"serverport"`
+	DBAddress  string `toml:"db.address"`
+	DBPort     string `toml:"db.port"`
+	DBUser     string `toml:"db.user.name"`
+	DBPass     string `toml:"db.user.password"`
+	DBName     string `toml:"db.name"`
+	ServerHost string `toml:"server.host"`
+	ServerPort string `toml:"server.port"`
 }
 
 // Print prints the configuration to the log.
