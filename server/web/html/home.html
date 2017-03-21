@@ -15,15 +15,16 @@
 <div class="col-md-8">
     <h3>Cloud DB 2.0</h3>
     <p>The successor to the previous cloud database, this one is much more versatile and extensible.</p>
+    <p><strong>Found bugs?</strong> Have feature requests? Report them <a target="_blank" href="https://github.com/djavorszky/ddn/issues">here</a>.</p>
     <p>On the right, you can see the active <code>connectors</code>; These are the available database servers in which you can create and import databases.</p>
-    <p>Currently, the following database vendors are tested and supported:</p>
-    <ol>
-        <li>MySQL 5.5, 5.6, 5.7</li>
-        <!--li>PostgreSQL 9.4 (backend not yet created)</li-->
-        <li>Oracle 11g</li>
-    </ol>
-    <p>There are plans to add support for PostgreSQL and SQL Server as well</p>
     <p>Also works with <code>.zip</code>, <code>.tar</code>, <code>.gz</code> and <code>.tar.gz</code> archives</p>
+    <p><strong>Known issues:</strong>
+    <ul>
+        <li>Uploading large compressed archives to the mysql servers fail if exploded archive is larger than 9 Gb (5G in case of .tar.gz)</li>
+        <li>Oracle import log not accessible yet</li>
+        <li>User/database name autogeneration not unique enough</li>
+    </ul>
+    </p>
 </div>
 <div class="col-md-4">
     {{template "connectors.html" .}}
