@@ -26,8 +26,8 @@
                 <td>{{.DBName}}</td>
                 <td>{{.DBVendor}}</td>
                 <td>{{.ConnectorName}}</td>
-                <td>{{.CreateDate}}</td>
-                <td>{{.ExpiryDate}}</td>
+                <td>{{.CreateDate.Format "2006, January 02"}}</td>
+                <td>{{.ExpiryDate.Format "2006, January 02"}}</td>
                 <td>{{.StatusLabel}}</td>
                 <td>
                     {{if .InProgress}}
