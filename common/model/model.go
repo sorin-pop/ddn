@@ -1,10 +1,9 @@
 package model
 
 import (
-	"fmt"
-
 	"encoding/json"
-
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
@@ -204,7 +203,11 @@ func (c Connector) DropDatabase(id int, dbname, dbuser string) (string, error) {
 }
 
 func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, error) {
-	dest := fmt.Sprintf("http://%s:%s/%s", c.Address, c.ConnectorPort, endpoint)
+	dest := fmt.Sprintf("%s:%s/%s", c.Address, c.ConnectorPort, endpoint)
+
+	if !strings.HasPrefix(dest, "http://") && !strings.HasPrefix(dest, "https://") {
+		dest = fmt.Sprintf("http://%s", dest)
+	}
 
 	resp, err := notif.SndLoc(dbreq, dest)
 	if err != nil && resp == "" {
