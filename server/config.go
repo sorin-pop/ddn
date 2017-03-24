@@ -2,19 +2,25 @@ package main
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/djavorszky/prompter"
 )
 
 // Config to hold the database server and ddn server configuration
 type Config struct {
-	DBAddress  string `toml:"db.address"`
-	DBPort     string `toml:"db.port"`
-	DBUser     string `toml:"db.user.name"`
-	DBPass     string `toml:"db.user.password"`
-	DBName     string `toml:"db.name"`
-	ServerHost string `toml:"server.host"`
-	ServerPort string `toml:"server.port"`
+	DBAddress   string `toml:"db.address"`
+	DBPort      string `toml:"db.port"`
+	DBUser      string `toml:"db.user.name"`
+	DBPass      string `toml:"db.user.password"`
+	DBName      string `toml:"db.name"`
+	ServerHost  string `toml:"server.host"`
+	ServerPort  string `toml:"server.port"`
+	SMTPAddr    string `toml:"smtp.host"`
+	SMTPPort    int    `toml:"smtp.port"`
+	SMTPUser    string `toml:"smtp.user"`
+	SMTPPass    string `toml:"smtp.password"`
+	EmailSender string `toml:"email.sender"`
 }
 
 // Print prints the configuration to the log.
@@ -26,6 +32,10 @@ func (c Config) Print() {
 	log.Printf("Database Name:\t\t%s", c.DBName)
 	log.Printf("Server Host:\t\t%s", c.ServerHost)
 	log.Printf("Server Port:\t\t%s", c.ServerPort)
+
+	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
+		log.Printf("Server configured to send emails.")
+	}
 }
 
 func newConfig() Config {
@@ -52,6 +62,12 @@ func setup(filename string) (*string, Config) {
 	config.DBName = prompter.AskDef("What should the database's name be?", def.DBName)
 	config.ServerHost = prompter.AskDef("What is the server's hostname?", def.ServerHost)
 	config.ServerPort = prompter.AskDef("What should the server's port be?", def.ServerPort)
+
+	config.SMTPAddr = prompter.Ask("What is the SMTP address?")
+	config.SMTPPort, _ = strconv.Atoi(prompter.Ask("What is the SMTP port?"))
+	config.SMTPUser = prompter.Ask("Who is the SMTP user?")
+	config.SMTPPass = prompter.Ask("What is the password of the SMTP user?")
+	config.EmailSender = prompter.Ask("What address should be used to send the emails from?")
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)
 
