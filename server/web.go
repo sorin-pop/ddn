@@ -70,18 +70,22 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 		if id != 0 {
 			page.HasEntry = true
-			entry := db.entryByID(id)
-
-			switch entry.DBVendor {
-			case "mysql":
-				page.Ext62 = liferay.MysqlJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
-				page.ExtDXP = liferay.MysqlJDBCDXP(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
-			case "postgres":
-				page.Ext62 = liferay.PostgreJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
-				page.ExtDXP = page.Ext62
-			case "oracle":
-				page.Ext62 = liferay.OracleJDBC(entry.DBAddress, entry.DBPort, entry.DBSID, entry.DBUser, entry.DBPass)
-				page.ExtDXP = page.Ext62
+			entry, err := db.entryByID(id)
+			if err != nil {
+				log.Printf("Failed querying for database: %s", err.Error())
+				session.AddFlash("Failed querying database", "fail")
+			} else {
+				switch entry.DBVendor {
+				case "mysql":
+					page.Ext62 = liferay.MysqlJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+					page.ExtDXP = liferay.MysqlJDBCDXP(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+				case "postgres":
+					page.Ext62 = liferay.PostgreJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+					page.ExtDXP = page.Ext62
+				case "oracle":
+					page.Ext62 = liferay.OracleJDBC(entry.DBAddress, entry.DBPort, entry.DBSID, entry.DBUser, entry.DBPass)
+					page.ExtDXP = page.Ext62
+				}
 			}
 		}
 	} else if flashes := session.Flashes("fail"); len(flashes) > 0 {
@@ -111,7 +115,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 		page.Databases, err = db.listWhere(clause{"creator", page.User})
 		if err != nil {
-			log.Println("couldn't list databases: ", err.Error())
+			log.Printf("couldn't list databases: %s", err.Error())
 		}
 
 		if len(page.Databases) != 0 {

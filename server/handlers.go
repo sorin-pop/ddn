@@ -334,7 +334,13 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe := db.entryByID(int64(ID))
+	dbe, err := db.entryByID(int64(ID))
+	if err != nil {
+		log.Printf("Failed querying for database: %s", err.Error())
+		session.AddFlash("Failed querying database", "fail")
+		return
+	}
+
 	if dbe.Creator != user {
 		log.Printf("User %q tried to drop database of user %q.", user, dbe.Creator)
 		session.AddFlash("Failed dropping database: You can only drop databases you created.", "fail")
@@ -384,7 +390,12 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe := db.entryByID(int64(ID))
+	dbe, err := db.entryByID(int64(ID))
+	if err != nil {
+		log.Printf("Failed querying for database: %s", err.Error())
+		session.AddFlash("Failed querying database", "fail")
+		return
+	}
 
 	if dbe.Creator != user {
 		log.Printf("User %q tried to get portalext of db created by %q.", user, dbe.Creator)
@@ -410,7 +421,11 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 
 	db.updateColumn(msg.ID, "status", msg.StatusID)
 
-	dbe := db.entryByID(int64(msg.ID))
+	dbe, err := db.entryByID(int64(msg.ID))
+	if err != nil {
+		log.Printf("Failed querying for database: %s", err.Error())
+		return
+	}
 
 	// Delete the dumpfile once import is started or if an error has occurred.
 	if dbe.Status == status.ImportInProgress || dbe.IsErr() {

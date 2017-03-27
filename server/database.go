@@ -16,6 +16,8 @@ type mysql struct {
 	conn *sql.DB
 }
 
+var panicked bool
+
 func (db *mysql) connect(c Config) error {
 	var err error
 
@@ -79,11 +81,20 @@ func (db *mysql) Alive() error {
 
 	_, err := db.conn.Exec("select * from `databases` WHERE 1 = 0")
 	if err != nil {
+		if !panicked && config.AdminEmail != "" {
+			sendMail(config.AdminEmail, "[Cloud DB] Local database down", fmt.Sprintf("<p>Something wrong:</p>%s", err.Error()))
+			panicked = true
+		}
+
 		return fmt.Errorf("executing stayalive query failed: %s", sutils.TrimNL(err.Error()))
 	}
 
-	return nil
+	if panicked {
+		sendMail(config.AdminEmail, "[Cloud DB] Local database back online", "Yay")
+		panicked = false
+	}
 
+	return nil
 }
 
 func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
@@ -120,6 +131,10 @@ func (db *mysql) delete(id int64) {
 }
 
 func (db *mysql) list() ([]model.DBEntry, error) {
+	if err := db.Alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
 	var entries []model.DBEntry
 
 	rows, err := db.conn.Query("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases`")
@@ -166,6 +181,10 @@ type clause struct {
 }
 
 func (db *mysql) listWhere(clauses ...clause) ([]model.DBEntry, error) {
+	if err := db.Alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
 	var buf bytes.Buffer
 
 	buf.WriteString("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE 1=1")
@@ -220,7 +239,11 @@ func (db *mysql) listWhere(clauses ...clause) ([]model.DBEntry, error) {
 	return entries, nil
 }
 
-func (db *mysql) entryByID(ID int64) model.DBEntry {
+func (db *mysql) entryByID(ID int64) (model.DBEntry, error) {
+	if err := db.Alive(); err != nil {
+		return model.DBEntry{}, fmt.Errorf("database down: %s", err.Error())
+	}
+
 	var entry model.DBEntry
 
 	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE id = ?", ID)
@@ -241,14 +264,20 @@ func (db *mysql) entryByID(ID int64) model.DBEntry {
 		&entry.DBVendor,
 		&entry.Status)
 
-	return entry
+	return entry, nil
 }
 
-func (db *mysql) updateColumn(ID int, column string, value interface{}) {
+func (db *mysql) updateColumn(ID int, column string, value interface{}) error {
+	if err := db.Alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
 	q := fmt.Sprintf("UPDATE `databases` SET %s=%v WHERE id=%d", column, value, ID)
 
 	_, err := db.conn.Exec(q)
 	if err != nil {
-		log.Printf("Failed to update: %s", err.Error())
+		return fmt.Errorf("failed to update: %s", err.Error())
 	}
+
+	return nil
 }
