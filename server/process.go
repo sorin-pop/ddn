@@ -19,7 +19,7 @@ import (
 //Second
 // Maintain should always be ran in a goroutine.
 func maintain() {
-	ticker := time.NewTicker(1000 * time.Millisecond)
+	ticker := time.NewTicker(24 * time.Hour)
 
 	for range ticker.C {
 		dbs, err := db.list()
