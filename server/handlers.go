@@ -18,6 +18,7 @@ import (
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
+	"github.com/djavorszky/liferay"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -421,6 +422,59 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("Failed to remove dumpfile %s: %s", file, err.Error())
 		}
+	}
+
+	if dbe.IsErr() {
+		sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q failed", dbe.DBName), fmt.Sprintf(`<h3>Import database failed</h3>
+		
+<p>Your request to import a(n) %q database named %q has failed with the following message:</p>
+<p>%q</p>
+
+<p>We're sorry for the inconvenience caused.</p>
+<p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBVendor, dbe.DBName, msg.Message))
+	}
+
+	if dbe.Status == status.Success {
+		var (
+			jdbc62x liferay.JDBC
+			jdbcDXP liferay.JDBC
+		)
+
+		switch dbe.DBVendor {
+		case "mysql":
+			jdbc62x = liferay.MysqlJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+			jdbcDXP = liferay.MysqlJDBCDXP(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+		case "postgres":
+			jdbc62x = liferay.PostgreJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+			jdbcDXP = jdbc62x
+		case "oracle":
+			jdbc62x = liferay.OracleJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBSID, dbe.DBUser, dbe.DBPass)
+			jdbcDXP = jdbc62x
+		}
+
+		sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q succeeded", dbe.DBName), fmt.Sprintf(`<h3>Import database successful</h3>
+		
+<p>The %s import that you started completed successfully.</p>
+<p>Below you can find the portal-exts, should you need them:</p>
+
+<h2><= 6.2 EE properties</h2>
+<pre>
+%s
+%s
+%s
+%s
+</pre>
+
+<h2>DXP properties</h2>
+<pre>
+%s
+%s
+%s
+%s
+</pre>
+
+<p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a> for more awesomeness.</p>
+<p>Cheers</p>`, dbe.DBVendor, jdbc62x.Driver, jdbc62x.URL, jdbc62x.User, jdbc62x.Password, jdbcDXP.Driver, jdbcDXP.URL, jdbcDXP.User, jdbcDXP.Password))
 	}
 }
 
