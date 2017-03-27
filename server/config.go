@@ -21,6 +21,7 @@ type Config struct {
 	SMTPUser    string `toml:"smtp.user"`
 	SMTPPass    string `toml:"smtp.password"`
 	EmailSender string `toml:"email.sender"`
+	AdminEmail  string `toml:"admin.email"`
 }
 
 // Print prints the configuration to the log.
@@ -34,6 +35,7 @@ func (c Config) Print() {
 	log.Printf("Server Port:\t\t%s", c.ServerPort)
 
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
+		log.Printf("Admin email:\t\t%s", c.AdminEmail)
 		log.Printf("Server configured to send emails.")
 	}
 }
@@ -47,6 +49,7 @@ func newConfig() Config {
 		DBName:     "ddn",
 		ServerHost: "localhost",
 		ServerPort: "7010",
+		AdminEmail: "webmaster@example.com",
 	}
 }
 
@@ -68,6 +71,7 @@ func setup(filename string) (*string, Config) {
 	config.SMTPUser = prompter.Ask("Who is the SMTP user?")
 	config.SMTPPass = prompter.Ask("What is the password of the SMTP user?")
 	config.EmailSender = prompter.Ask("What address should be used to send the emails from?")
+	config.AdminEmail = prompter.AskDef("Who should be notified if something goes horribly wrong?", def.AdminEmail)
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)
 

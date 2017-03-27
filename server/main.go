@@ -22,7 +22,9 @@ var (
 func main() {
 	defer func() {
 		if p := recover(); p != nil {
-			// PANIC! Do something.
+			if config.AdminEmail != "" {
+				sendMail(config.AdminEmail, "[FATAL] Cloud DB server paniced", fmt.Sprintf("%v", p))
+			}
 		}
 	}()
 
@@ -95,5 +97,9 @@ func main() {
 
 	port := fmt.Sprintf(":%s", config.ServerPort)
 
-	log.Fatal("died:", http.ListenAndServe(port, Router()))
+	http.ListenAndServe(port, Router())
+
+	if config.AdminEmail != "" {
+		sendMail(config.AdminEmail, "[FATAL] Cloud DB server down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
+	}
 }
