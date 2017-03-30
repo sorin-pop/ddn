@@ -7,7 +7,7 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 )
 
-var vendors = []string{"mysql", "oracle", "postgres"}
+var vendors = []string{"mysql", "oracle", "postgres", "mssql"}
 
 const (
 	createDB int = iota
@@ -77,6 +77,8 @@ func GetDB(vendor string) (Database, error) {
 		db = new(postgres)
 	case "oracle":
 		db = new(oracle)
+	case "mssql":
+		db = new(mssql)
 	default:
 		return nil, fmt.Errorf("database not recognized: %s", vendor)
 	}
