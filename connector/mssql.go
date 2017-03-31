@@ -45,7 +45,7 @@ func (db *mssql) CreateDatabase(dbRequest model.DBRequest) error {
 
 func (db *mssql) DropDatabase(dbRequest model.DBRequest) error {
 
-	args := []string{"-b", " -U", conf.User, "-P", conf.Password, "-Q", fmt.Sprintf("DROP DATABASE %s", dbRequest.DatabaseName)}
+	args := []string{"-b", "-U", conf.User, "-P", conf.Password, "-Q", fmt.Sprintf("DROP DATABASE %s", dbRequest.DatabaseName)}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -80,16 +80,16 @@ func (db *mssql) ListDatabase() ([]string, error) {
 
 func (db *mssql) Version() (string, error) {
 
-	/*args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/get_db_version.sql"}
+	args := []string{"-b", "-h", "-1", "-W", "-U", conf.User, "-P", conf.Password, "-Q",
+		"SET NOCOUNT ON; SELECT (CAST(SERVERPROPERTY('productversion') AS nvarchar(128)) + SPACE(1) + CAST(SERVERPROPERTY('productlevel') AS nvarchar(128)) + SPACE(1) + CAST(SERVERPROPERTY('edition') AS nvarchar(128)))"}
 
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		return "", fmt.Errorf("Unable to get Oracle version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		return "", fmt.Errorf("Unable to get SQL Server version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 	}
 
-	return strings.TrimSpace(res.stdout), nil*/
-	return "SQL Server 2012", nil
+	return strings.TrimSpace(res.stdout), nil
 }
 
 func (db *mssql) RequiredFields(dbreq model.DBRequest, reqType int) []string {
