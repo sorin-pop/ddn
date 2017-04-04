@@ -90,12 +90,11 @@ func maintain() {
 // checkConnectors checks whether the registered connectors are alive or not.
 // If they are not alive, it'll update their status.
 func checkConnectors() {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 
 	for range ticker.C {
 		for name, conn := range registry {
 			addr := fmt.Sprintf("%s:%s/heartbeat", conn.Address, conn.ConnectorPort)
-			log.Printf("Checking %q at %q", name, addr)
 
 			if !inet.AddrExists(addr) && conn.Up {
 				conn.Up = false
