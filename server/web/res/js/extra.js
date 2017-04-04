@@ -1,4 +1,9 @@
 $(document).ready(function() {
+    // Enable tooltips
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+
     checkConnector()
     
     $("#dbname").keyup(function() {
