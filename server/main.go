@@ -100,6 +100,6 @@ func main() {
 	http.ListenAndServe(port, Router())
 
 	if config.AdminEmail != "" {
-		sendMail(config.AdminEmail, "[FATAL] Cloud DB server down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
+		sendMail(config.AdminEmail, "[Cloud DB] Server went down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
 	}
 }
