@@ -13,8 +13,10 @@ func Logger(inner http.Handler, handler string) http.Handler {
 
 		inner.ServeHTTP(w, r)
 
-		if r.RequestURI == "/alive" {
+		switch r.RequestURI {
+		case "/alive", "/heartbeat":
 			return
+
 		}
 
 		log.Printf("[%s]\t%s\t%s\t%s\t",
