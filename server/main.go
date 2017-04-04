@@ -93,7 +93,11 @@ func main() {
 	initRegistry()
 	log.Println("Registry initialized")
 
+	// Start maintenance goroutine
 	go maintain()
+
+	// Start connector checker goroutine
+	go checkConnectors()
 
 	port := fmt.Sprintf(":%s", config.ServerPort)
 

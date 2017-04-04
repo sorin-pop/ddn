@@ -7,6 +7,7 @@ import (
 
 	gomail "gopkg.in/gomail.v2"
 
+	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/status"
 )
 
@@ -81,6 +82,36 @@ func maintain() {
 <p>This is to inform you that the database %q will be removed in 7 days.</p>
 <p>If you'd like to extend it, please visit <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>
 <p>Cheers</p>`, dbe.DBName))
+			}
+		}
+	}
+}
+
+// checkConnectors checks whether the registered connectors are alive or not.
+// If they are not alive, it'll update their status.
+func checkConnectors() {
+	ticker := time.NewTicker(10 * time.Second)
+
+	for range ticker.C {
+		for name, conn := range registry {
+			addr := fmt.Sprintf("%s:%s/heartbeat", conn.Address, conn.ConnectorPort)
+			log.Printf("Checking %q at %q", name, addr)
+
+			if !inet.AddrExists(addr) && conn.Up {
+				conn.Up = false
+
+				registry[name] = conn
+
+				sendMail(config.AdminEmail, "[Cloud DB] Connector disappeared without trace",
+					fmt.Sprintf("Connector %q at %q no longer exists.", name, addr))
+
+				continue
+			}
+
+			if !conn.Up && inet.AddrExists(addr) {
+				conn.Up = true
+
+				registry[name] = conn
 			}
 		}
 	}
