@@ -8,7 +8,9 @@
                 <div class="col-sm-9">
                     <select id="connector" name="connector" class="form-control">
                         {{range .Connectors}}
-                            <option value="{{.ShortName}}">{{.LongName}}</option>
+                            {{if .Up}}
+                                <option value="{{.ShortName}}">{{.LongName}}</option>
+                            {{end}}
                         {{end}}
                     </select>
                 </div>
