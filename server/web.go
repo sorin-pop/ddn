@@ -32,10 +32,16 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 	page := Page{
 		Connectors: &registry,
-		AnyOnline:  len(registry) > 0,
 		Title:      getTitle(r.URL.Path),
 		Pages:      getPages(),
 		ActivePage: r.URL.Path,
+	}
+
+	for _, conn := range registry {
+		if conn.Up {
+			page.AnyOnline = true
+			break
+		}
 	}
 
 	userCookie, err := r.Cookie("user")
