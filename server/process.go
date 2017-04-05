@@ -17,7 +17,7 @@ import (
 // another email is sent.
 //
 // If they are expired, then they are dropped.
-//Second
+//
 // Maintain should always be ran in a goroutine.
 func maintain() {
 	ticker := time.NewTicker(24 * time.Hour)
@@ -57,6 +57,8 @@ func maintain() {
 			// on the next check the expiry date will be in the past.
 			dayPlus := now.AddDate(0, 0, 1)
 			if dbe.ExpiryDate.Before(dayPlus) {
+				db.updateColumn(dbe.ID, "status", status.PendingImmediateRemoval)
+
 				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in 1 day", dbe.DBName), fmt.Sprintf(`
 <h3>Database removal imminent</h3>
 				

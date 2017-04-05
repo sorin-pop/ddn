@@ -15,7 +15,6 @@ func init() {
 	Labels[ExtractingArchive] = "Extracting Archive"
 	Labels[ValidatingDump] = "Validating Dump"
 	Labels[ImportInProgress] = "Importing"
-	Labels[PendingImmediateRemoval] = "Pending immediate removal"
 
 	// Success
 	Labels[Success] = "Completed"
@@ -42,6 +41,7 @@ func init() {
 	Labels[DropDatabaseFailed] = "Dropping database failed"
 
 	// Warnings
+	Labels[PendingImmediateRemoval] = "Pending immediate removal"
 	Labels[RemovalScheduled] = "Removal scheduled"
 }
 
@@ -53,11 +53,10 @@ const (
 	Started    int = 1 // status.Started
 	InProgress int = 2 // status.InProgress
 
-	DownloadInProgress      int = 3 // status.DownloadInProgress
-	ExtractingArchive       int = 4 // status.ExtractingArchive
-	ValidatingDump          int = 5 // status.ValidatingDump
-	ImportInProgress        int = 6 // status.ImportInProgress
-	PendingImmediateRemoval int = 7 // status.PendingImmediateRemoval
+	DownloadInProgress int = 3 // status.DownloadInProgress
+	ExtractingArchive  int = 4 // status.ExtractingArchive
+	ValidatingDump     int = 5 // status.ValidatingDump
+	ImportInProgress   int = 6 // status.ImportInProgress
 )
 
 // Success statuses are used to convey a successful result.
@@ -94,5 +93,6 @@ const (
 
 // Warnings are for issuing warnings.
 const (
-	RemovalScheduled int = 400 // status.RemovalScheduled
+	RemovalScheduled        int = 400 // status.RemovalScheduled
+	PendingImmediateRemoval int = 401 // status.PendingImmediateRemoval
 )

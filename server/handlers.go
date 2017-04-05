@@ -354,16 +354,21 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = conn.DropDatabase(ID, dbe.DBName, dbe.DBUser)
+	db.updateColumn(ID, "status", status.PendingImmediateRemoval)
+
+	go dropAsync(conn, ID, dbe.DBName, dbe.DBUser)
+
+	session.AddFlash("Started to drop the database.", "msg")
+}
+
+func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
+	_, err := conn.DropDatabase(ID, dbname, dbuser)
 	if err != nil {
-		log.Printf("Couldn't drop database %q on connector %q: %s", dbe.DBName, dbe.ConnectorName, err.Error())
-		session.AddFlash(err.Error(), "fail")
+		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
 		return
 	}
 
 	db.delete(int64(ID))
-
-	session.AddFlash("Successfully dropped the database.", "msg")
 }
 
 func portalext(w http.ResponseWriter, r *http.Request) {
