@@ -39,8 +39,9 @@ func importdb(w http.ResponseWriter, r *http.Request) {
 
 func importAction(w http.ResponseWriter, r *http.Request) {
 	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+	defer r.Body.Close()
 
-	r.ParseMultipartForm(32 << 20)
+	r.ParseMultipartForm(32 << 24)
 
 	var (
 		connector = r.PostFormValue("connector")
@@ -55,36 +56,43 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Save(r, w)
 
-	file, handler, err := r.FormFile("dbdump")
-	if err != nil {
-		log.Printf("File upload failed: %s", err.Error())
-		session.AddFlash("File upload failed: "+err.Error(), "fail")
+	var filename string
+	for _, uploadFile := range r.MultipartForm.File {
+		filename = uploadFile[0].Filename
 
-		return
+		dst, err := os.OpenFile("./web/dumps/"+filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Printf("Failed creating file: %s", err.Error())
+			return
+		}
+		defer dst.Close()
+
+		upf, err := uploadFile[0].Open()
+		if err != nil {
+			log.Printf("Failed opening uploaded file: %s", err.Error())
+			return
+		}
+
+		_, err = io.Copy(dst, upf)
+		if err != nil {
+			log.Printf("Failed saving file: %s", err.Error())
+
+			os.Remove("./web/dumps/" + filename)
+			return
+		}
 	}
-	defer file.Close()
-
-	f, err := os.OpenFile("./web/dumps/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		log.Printf("Saving file to dumps directory failed: %s", err.Error())
-		session.AddFlash("Saving file to dumps directory failed: "+err.Error(), "fail")
-
-		return
-	}
-	defer f.Close()
-
-	io.Copy(f, file)
 
 	err = r.MultipartForm.RemoveAll()
 	if err != nil {
 		log.Printf("Could not removeall multipartform: %s", err.Error())
 	}
 
-	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, handler.Filename)
+	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
 
 	conn, ok := registry[connector]
 	if !ok {
-		session.AddFlash(fmt.Sprintf("Failed creating database, connector %s went offline", connector), "fail")
+		session.AddFlash(fmt.Sprintf("Failed importing database, connector %s went offline", connector), "fail")
+		os.Remove("./web/dumps/" + filename)
 		return
 	}
 
@@ -112,6 +120,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
 		session.AddFlash(fmt.Sprintf("failed persisting database locally: %s", err.Error()))
+		os.Remove("./web/dumps/" + filename)
 		return
 	}
 
@@ -120,6 +129,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		session.AddFlash(err.Error(), "fail")
 
 		db.delete(dbID)
+		os.Remove("./web/dumps/" + filename)
 		return
 	}
 
