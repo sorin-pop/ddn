@@ -22,6 +22,7 @@ type Config struct {
 	SMTPPass    string `toml:"smtp.password"`
 	EmailSender string `toml:"email.sender"`
 	AdminEmail  string `toml:"admin.email"`
+	UseCDN      bool   `toml:"use.cdn"`
 }
 
 // Print prints the configuration to the log.
@@ -33,6 +34,7 @@ func (c Config) Print() {
 	log.Printf("Database Name:\t\t%s", c.DBName)
 	log.Printf("Server Host:\t\t%s", c.ServerHost)
 	log.Printf("Server Port:\t\t%s", c.ServerPort)
+	log.Printf("Using CDN:\t\t\t%t", c.UseCDN)
 
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
 		log.Printf("Admin email:\t\t%s", c.AdminEmail)
@@ -50,6 +52,7 @@ func newConfig() Config {
 		ServerHost: "localhost",
 		ServerPort: "7010",
 		AdminEmail: "webmaster@example.com",
+		UseCDN:     true,
 	}
 }
 
@@ -72,6 +75,7 @@ func setup(filename string) (*string, Config) {
 	config.SMTPPass = prompter.Ask("What is the password of the SMTP user?")
 	config.EmailSender = prompter.Ask("What address should be used to send the emails from?")
 	config.AdminEmail = prompter.AskDef("Who should be notified if something goes horribly wrong?", def.AdminEmail)
+	config.UseCDN = prompter.AskBoolDef("Should we serve third party javascript, css and fonts from CDN?", true)
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)
 
