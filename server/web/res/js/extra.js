@@ -47,12 +47,28 @@ function valid(selector) {
 
 function checkConnector() {
     var connector = $("#connector")
-    
+
     if (connector.length != 0) {
-        if (connector.val().includes("oracle")) {
+        if (connector.val().toLowerCase().includes("oracle")) {
             $("#dbname").prop('disabled', true);
+            $("#dbnamediv").attr('title', 'Not needed for Oracle. Think of the User field below as the "database", as it will also be the Oracle schema that will contain the tables and their data.').tooltip('show');
+            $("#userdiv").attr('title','');
+            $("#userdiv").tooltip('hide');
         } else {
             $("#dbname").prop('disabled', false);
+            $("#dbnamediv").attr('title', '');
+        }
+
+        if (connector.val().toLowerCase().includes("mssql") || connector.val().toLowerCase().includes("sql server")) {
+            $("#user").prop('disabled', true);
+            $("#password").prop('disabled', true);
+            $("#userdiv").attr('title', 'User and password not needed for SQL Server.').tooltip('show');
+            $("#dbnamediv").attr('title','');
+            $("#dbnamediv").tooltip('hide');
+        } else {
+            $("#user").prop('disabled', false);
+            $("#password").prop('disabled', false);
+            $("#userdiv").attr('title', '');
         }
     }
 }
