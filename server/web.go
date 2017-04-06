@@ -94,7 +94,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 					page.Ext62 = liferay.OracleJDBC(entry.DBAddress, entry.DBPort, entry.DBSID, entry.DBUser, entry.DBPass)
 					page.ExtDXP = page.Ext62
 				case "mssql":
-					page.Ext62 = liferay.MSSQLJDBC(entry.DBAddress, entry.DBPort, entry.DBName, "clouddb", "password")
+					page.Ext62 = liferay.MSSQLJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
 					page.ExtDXP = page.Ext62
 				}
 			}

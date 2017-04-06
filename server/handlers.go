@@ -160,6 +160,11 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if conn.DBVendor == "mssql" {
+		dbuser = "clouddb"
+		dbpass = "password"
+	}
+
 	ID := getID()
 	if dbname == "" && dbuser != "" {
 		dbname = dbuser
