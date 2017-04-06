@@ -84,7 +84,7 @@ func main() {
 
 	err = db.connect(config)
 	if err != nil {
-		log.Fatal("database connection failed:", err.Error())
+		log.Fatalf("database connection failed: %s", err.Error())
 	}
 	defer db.close()
 

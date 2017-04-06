@@ -41,9 +41,48 @@ func (db *mysql) connect(c Config) error {
 		return fmt.Errorf("couldn't connect to the database: %s", err.Error())
 	}
 
-	_, err = db.conn.Exec("CREATE TABLE IF NOT EXISTS `databases` ( `id` INT NOT NULL AUTO_INCREMENT, `dbname` VARCHAR(255) NULL, `dbuser` VARCHAR(255) NULL, `dbpass` VARCHAR(255) NULL, `dbsid` VARCHAR(45) NULL, `dumpfile` LONGTEXT NULL, `createDate` DATETIME NULL, `expiryDate` DATETIME NULL, `creator` VARCHAR(255) NULL, `connectorName` VARCHAR(255) NULL, `dbAddress` VARCHAR(255) NULL, `dbPort` VARCHAR(45) NULL, `dbvendor` VARCHAR(255) NULL, `status` INT,  PRIMARY KEY (`id`));")
+	err = db.initTables()
 	if err != nil {
-		return fmt.Errorf("executing create table query failed: %s", sutils.TrimNL(err.Error()))
+		return fmt.Errorf("initializing tables failed: %s", err.Error())
+	}
+
+	return nil
+}
+
+type dbUpdate struct {
+	Query   string
+	Comment string
+}
+
+func (db *mysql) initTables() error {
+	queries := []dbUpdate{
+		dbUpdate{
+			Query:   "CREATE TABLE `ddn`.`version` (`queryId` INT NOT NULL AUTO_INCREMENT, `query` LONGTEXT NULL, `comment` TEXT NULL, `date` DATETIME NULL, PRIMARY KEY (`queryId`));",
+			Comment: "Create the version table",
+		},
+		dbUpdate{
+			Query:   "CREATE TABLE IF NOT EXISTS `databases` ( `id` INT NOT NULL AUTO_INCREMENT, `dbname` VARCHAR(255) NULL, `dbuser` VARCHAR(255) NULL, `dbpass` VARCHAR(255) NULL, `dbsid` VARCHAR(45) NULL, `dumpfile` LONGTEXT NULL, `createDate` DATETIME NULL, `expiryDate` DATETIME NULL, `creator` VARCHAR(255) NULL, `connectorName` VARCHAR(255) NULL, `dbAddress` VARCHAR(255) NULL, `dbPort` VARCHAR(45) NULL, `dbvendor` VARCHAR(255) NULL, `status` INT,  PRIMARY KEY (`id`));",
+			Comment: "Create the databases table",
+		},
+	}
+
+	var (
+		err      error
+		startLoc int
+	)
+	db.conn.QueryRow("SELECT count(*) FROM `version`").Scan(&startLoc)
+
+	for _, q := range queries[startLoc:] {
+		log.Printf("Updating database %q", q.Comment)
+		_, err = db.conn.Exec(q.Query)
+		if err != nil {
+			return fmt.Errorf("executing query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
+		}
+
+		_, err = db.conn.Exec("INSERT INTO `version` (query, comment, date) VALUES (?, ?, NOW())", q.Query, q.Comment)
+		if err != nil {
+			return fmt.Errorf("updating version table with query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
+		}
 	}
 
 	return nil
