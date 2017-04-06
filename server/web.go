@@ -12,6 +12,7 @@ import (
 
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
+	UseCDN       bool
 	Connectors   *map[string]model.Connector
 	AnyOnline    bool
 	Title        string
@@ -31,6 +32,7 @@ type Page struct {
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 	page := Page{
+		UseCDN:     config.UseCDN,
 		Connectors: &registry,
 		Title:      getTitle(r.URL.Path),
 		Pages:      getPages(),
