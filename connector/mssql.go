@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"path/filepath"
+	"os"
 	"strconv"
 	"strings"
 
@@ -45,7 +45,7 @@ func (db *mssql) CreateDatabase(dbRequest model.DBRequest) error {
 
 func (db *mssql) DropDatabase(dbRequest model.DBRequest) error {
 
-	args := []string{"-b", "-U", conf.User, "-P", conf.Password, "-Q", fmt.Sprintf("DROP DATABASE %s", dbRequest.DatabaseName)}
+	args := []string{"-b", "-U", conf.User, "-P", conf.Password, "-v", fmt.Sprintf("DROP DATABASE %s", dbRequest.DatabaseName)}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -59,11 +59,16 @@ func (db *mssql) DropDatabase(dbRequest model.DBRequest) error {
 }
 
 func (db *mssql) ImportDatabase(dbRequest model.DBRequest) error {
+	curDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("Could not determine current exe directory.")
+	}
 
-	dumpDir, fileName := filepath.Split(dbRequest.DumpLocation)
-
-	// Start the import
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/import_dump.sql", dumpDir, fileName, dbRequest.Username, dbRequest.Password, conf.Tablespace}
+	args := []string{"-b",
+		"-U", conf.User,
+		"-P", conf.Password,
+		"-v", fmt.Sprintf("dumpFile=\"%s\"", dbRequest.DumpLocation), "targetDatabaseName=" + "\"" + dbRequest.DatabaseName + "\"",
+		"-i", "\"" + curDir + "sql\\mssql\\import_dump.sql" + "\""}
 
 	res := RunCommand(conf.Exec, args...)
 
