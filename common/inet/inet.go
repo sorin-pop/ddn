@@ -53,6 +53,10 @@ func AddrExists(url string) bool {
 		}
 	}()
 
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		url = "http://" + url
+	}
+
 	resp, err := http.Get(url)
 	if err != nil {
 		resp.Body.Close()
