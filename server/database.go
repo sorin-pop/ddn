@@ -64,6 +64,10 @@ func (db *mysql) initTables() error {
 			Query:   "CREATE TABLE IF NOT EXISTS `databases` ( `id` INT NOT NULL AUTO_INCREMENT, `dbname` VARCHAR(255) NULL, `dbuser` VARCHAR(255) NULL, `dbpass` VARCHAR(255) NULL, `dbsid` VARCHAR(45) NULL, `dumpfile` LONGTEXT NULL, `createDate` DATETIME NULL, `expiryDate` DATETIME NULL, `creator` VARCHAR(255) NULL, `connectorName` VARCHAR(255) NULL, `dbAddress` VARCHAR(255) NULL, `dbPort` VARCHAR(45) NULL, `dbvendor` VARCHAR(255) NULL, `status` INT,  PRIMARY KEY (`id`));",
 			Comment: "Create the databases table",
 		},
+		dbUpdate{
+			Query:   "ALTER TABLE `databases` ADD COLUMN `visibility` INT(11) NULL DEFAULT 0 AFTER `status`;",
+			Comment: "Add 'visibility' to databases, default 0",
+		},
 	}
 
 	var (
