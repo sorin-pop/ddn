@@ -57,7 +57,7 @@ type dbUpdate struct {
 func (db *mysql) initTables() error {
 	queries := []dbUpdate{
 		dbUpdate{
-			Query:   "CREATE TABLE `ddn`.`version` (`queryId` INT NOT NULL AUTO_INCREMENT, `query` LONGTEXT NULL, `comment` TEXT NULL, `date` DATETIME NULL, PRIMARY KEY (`queryId`));",
+			Query:   "CREATE TABLE `version` (`queryId` INT NOT NULL AUTO_INCREMENT, `query` LONGTEXT NULL, `comment` TEXT NULL, `date` DATETIME NULL, PRIMARY KEY (`queryId`));",
 			Comment: "Create the version table",
 		},
 		dbUpdate{
@@ -70,6 +70,7 @@ func (db *mysql) initTables() error {
 		err      error
 		startLoc int
 	)
+
 	db.conn.QueryRow("SELECT count(*) FROM `version`").Scan(&startLoc)
 
 	for _, q := range queries[startLoc:] {
