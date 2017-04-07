@@ -49,26 +49,26 @@ function checkConnector() {
     var connector = $("#connector")
 
     if (connector.length != 0) {
-        if (connector.val().toLowerCase().includes("oracle")) {
-            $("#dbname").prop('disabled', true);
-            $("#dbnamediv").attr('title', 'Not needed for Oracle. Think of the User field below as the "database", as it will also be the Oracle schema that will contain the tables and their data.').tooltip('show');
-            $("#userdiv").attr('title','');
-            $("#userdiv").tooltip('hide');
-        } else {
-            $("#dbname").prop('disabled', false);
-            $("#dbnamediv").attr('title', '');
-        }
+        $("#dbname").prop('disabled', false);
+        $("#user").prop('disabled', false);
+        $("#password").prop('disabled', false);
+        $("#dbnamediv").attr('title', '').attr('data-original-title', '').tooltip('hide');
+        $("#userdiv").attr('title', '').attr('data-original-title', '').tooltip('hide');
 
-        if (connector.val().toLowerCase().includes("mssql") || connector.val().toLowerCase().includes("sql server")) {
+        connectorVal = connector.val().toLowerCase();
+
+        if (connectorVal.includes("oracle")) {
+            msg = 'Not needed for Oracle. Think of the User field below as the "database", as it will also be the Oracle schema that will contain the tables and their data.';
+
+            $("#dbname").prop('disabled', true);
+            $("#dbnamediv").attr('title', msg).attr('data-original-title', msg).tooltip('hide');
+        } else if (connectorVal.includes("mssql") || connectorVal.includes("sql server")) {
+            msg = 'User and password not needed for SQL Server.'
+
             $("#user").prop('disabled', true);
             $("#password").prop('disabled', true);
-            $("#userdiv").attr('title', 'User and password not needed for SQL Server.').tooltip('show');
-            $("#dbnamediv").attr('title','');
-            $("#dbnamediv").tooltip('hide');
-        } else {
-            $("#user").prop('disabled', false);
-            $("#password").prop('disabled', false);
-            $("#userdiv").attr('title', '');
+            
+            $("#userdiv").attr('title', msg).attr('data-original-title', msg).tooltip('hide');
         }
     }
 }
