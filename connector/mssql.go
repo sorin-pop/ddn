@@ -45,7 +45,7 @@ func (db *mssql) CreateDatabase(dbRequest model.DBRequest) error {
 
 func (db *mssql) DropDatabase(dbRequest model.DBRequest) error {
 
-	args := []string{"-b", "-U", conf.User, "-P", conf.Password, "-v", fmt.Sprintf("DROP DATABASE %s", dbRequest.DatabaseName)}
+	args := []string{"-b", "-U", conf.User, "-P", conf.Password, "-Q", fmt.Sprintf("DROP DATABASE %s", dbRequest.DatabaseName)}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -64,11 +64,19 @@ func (db *mssql) ImportDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("Could not determine current exe directory.")
 	}
 
+	s := strings.Split(dbRequest.DumpLocation, ":")
+
+	driveLetter, dumpPath := s[0], s[1]
+
 	args := []string{"-b",
 		"-U", conf.User,
 		"-P", conf.Password,
-		"-v", fmt.Sprintf("dumpFile=\"%s\"", dbRequest.DumpLocation), "targetDatabaseName=" + "\"" + dbRequest.DatabaseName + "\"",
-		"-i", "\"" + curDir + "sql\\mssql\\import_dump.sql" + "\""}
+		//"-v", fmt.Sprintf("dumpFile = \"%s\"", dbRequest.DumpLocation),
+		//"-v", "dumpFile=" + dbRequest.DumpLocation,
+		"-v", "driveLetter=" + driveLetter,
+		"-v", "dumpPath=" + dumpPath,
+		"-v", "targetDatabaseName=" + dbRequest.DatabaseName,
+		"-i", curDir + "\\sql\\mssql\\import_dump.sql"}
 
 	res := RunCommand(conf.Exec, args...)
 
