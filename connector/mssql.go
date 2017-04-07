@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -15,15 +16,15 @@ type mssql struct {
 }
 
 func (db *mssql) Connect(c Config) error {
-	return nil
+	return fmt.Errorf("operation not supported: Connect")
 }
 
 func (db *mssql) Close() {
-	db.conn.Close()
+	// Not needed
 }
 
 func (db *mssql) Alive() error {
-	return nil
+	return fmt.Errorf("operation not supported: Alive")
 }
 
 func (db *mssql) CreateDatabase(dbRequest model.DBRequest) error {
@@ -34,10 +35,11 @@ func (db *mssql) CreateDatabase(dbRequest model.DBRequest) error {
 
 	if res.exitCode != 0 {
 		if strings.Contains(res.stderr, "already exists") {
-			return fmt.Errorf("Database %s already exists", dbRequest.Username)
+			return fmt.Errorf("database %q already exists", dbRequest.DatabaseName)
 		}
+		log.Printf("unable to create database:\n> stdout:\n%q\n> stderr:\n%q\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 
-		return fmt.Errorf("Unable to create database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		return fmt.Errorf("create database failed with exitcode '%d'", res.exitCode)
 	}
 
 	return nil
@@ -51,7 +53,9 @@ func (db *mssql) DropDatabase(dbRequest model.DBRequest) error {
 
 	if res.exitCode != 0 {
 		if !(strings.Contains(res.stderr, "it does not exist")) {
-			return fmt.Errorf("Unable to drop database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+			log.Printf("Unable to drop database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+
+			return fmt.Errorf("drop database failed with exitcode '%d'", res.exitCode)
 		}
 	}
 
@@ -61,18 +65,17 @@ func (db *mssql) DropDatabase(dbRequest model.DBRequest) error {
 func (db *mssql) ImportDatabase(dbRequest model.DBRequest) error {
 	curDir, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("Could not determine current exe directory.")
+		return fmt.Errorf("could not determine current directory")
 	}
 
 	s := strings.Split(dbRequest.DumpLocation, ":")
 
 	driveLetter, dumpPath := s[0], s[1]
 
-	args := []string{"-b",
+	args := []string{
+		"-b",
 		"-U", conf.User,
 		"-P", conf.Password,
-		//"-v", fmt.Sprintf("dumpFile = \"%s\"", dbRequest.DumpLocation),
-		//"-v", "dumpFile=" + dbRequest.DumpLocation,
 		"-v", "driveLetter=" + driveLetter,
 		"-v", "dumpPath=" + dumpPath,
 		"-v", "targetDatabaseName=" + dbRequest.DatabaseName,
@@ -81,14 +84,16 @@ func (db *mssql) ImportDatabase(dbRequest model.DBRequest) error {
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		return fmt.Errorf("Dump import seems to have failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		log.Printf("Dump import seems to have failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+
+		return fmt.Errorf("import failed with exitcode '%q'", res.exitCode)
 	}
 
 	return nil
 }
 
 func (db *mssql) ListDatabase() ([]string, error) {
-	return nil, nil
+	return nil, fmt.Errorf("operation not supported: ListDatabase")
 }
 
 func (db *mssql) Version() (string, error) {
@@ -99,7 +104,9 @@ func (db *mssql) Version() (string, error) {
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		return "", fmt.Errorf("Unable to get SQL Server version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		log.Printf("Unable to get SQL Server version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+
+		return "", fmt.Errorf("getting version failed with exitcode '%d'", res.exitCode)
 	}
 
 	return strings.TrimSpace(res.stdout), nil
