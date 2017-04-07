@@ -96,6 +96,11 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if conn.DBVendor == "mssql" {
+		dbuser = "clouddb"
+		dbpass = "password"
+	}
+
 	if dbname == "" && dbuser != "" {
 		dbname = dbuser
 	}
@@ -484,6 +489,9 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 			jdbcDXP = jdbc62x
 		case "oracle":
 			jdbc62x = liferay.OracleJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBSID, dbe.DBUser, dbe.DBPass)
+			jdbcDXP = jdbc62x
+		case "mssql":
+			jdbc62x = liferay.MSSQLJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
 			jdbcDXP = jdbc62x
 		}
 
