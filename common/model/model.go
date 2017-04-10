@@ -85,6 +85,7 @@ type DBEntry struct {
 	DBAddress     string
 	DBPort        string
 	Status        int
+	Public        int
 }
 
 // InProgress returns true if the DBEntry's status denotes that something's in progress.
