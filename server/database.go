@@ -146,7 +146,7 @@ func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 		return 0, fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s', %d)",
+	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `visibility`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s', %d, %d)",
 		dbentry.DBName,
 		dbentry.DBUser,
 		dbentry.DBPass,
@@ -158,6 +158,7 @@ func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 		dbentry.DBPort,
 		dbentry.DBVendor,
 		dbentry.Status,
+		dbentry.Public,
 	)
 
 	res, err := db.conn.Exec(query)

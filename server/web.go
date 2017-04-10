@@ -7,26 +7,29 @@ import (
 	"net/http"
 
 	"github.com/djavorszky/ddn/common/model"
+	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/liferay"
 )
 
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
-	UseCDN       bool
-	Connectors   *map[string]model.Connector
-	AnyOnline    bool
-	Title        string
-	Pages        map[string]string
-	ActivePage   string
-	Message      string
-	MessageType  string
-	User         string
-	HasUser      bool
-	HasEntry     bool
-	Databases    []model.DBEntry
-	HasDatabases bool
-	Ext62        liferay.JDBC
-	ExtDXP       liferay.JDBC
+	UseCDN           bool
+	Connectors       *map[string]model.Connector
+	AnyOnline        bool
+	Title            string
+	Pages            map[string]string
+	ActivePage       string
+	Message          string
+	MessageType      string
+	User             string
+	HasUser          bool
+	HasEntry         bool
+	PrivateDatabases []model.DBEntry
+	PublicDatabases  []model.DBEntry
+	HasPrivateDBs    bool
+	HasPublicDBs     bool
+	Ext62            liferay.JDBC
+	ExtDXP           liferay.JDBC
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
@@ -124,13 +127,24 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	if pages[0] == "home" {
 		pages = append(pages, "databases")
 
-		page.Databases, err = db.listWhere(clause{"creator", page.User})
+		privateDBs, err := db.listWhere(clause{"creator", page.User}, clause{"visibility", vis.Private})
 		if err != nil {
 			log.Printf("couldn't list databases: %s", err.Error())
 		}
 
-		if len(page.Databases) != 0 {
-			page.HasDatabases = true
+		if len(privateDBs) != 0 {
+			page.PrivateDatabases = privateDBs
+			page.HasPrivateDBs = true
+		}
+
+		publicDBs, err := db.listWhere(clause{"visibility", vis.Public})
+		if err != nil {
+			log.Printf("couldn't list databases: %s", err.Error())
+		}
+
+		if len(publicDBs) != 0 {
+			page.PublicDatabases = publicDBs
+			page.HasPublicDBs = true
 		}
 	}
 

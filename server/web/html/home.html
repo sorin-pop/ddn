@@ -30,7 +30,7 @@
     {{template "connectors.html" .}}
 </div>
 
-{{ if .HasDatabases }}
+{{ if or .HasPrivateDBs .HasPublicDBs }}
     {{template "databases.html" .}}
 {{end}}
 

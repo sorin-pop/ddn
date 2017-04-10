@@ -1,4 +1,6 @@
-<h3>Your databases</h3>
+{{ if .HasPrivateDBs }}
+
+<h3>Your private databases</h3>
 <div class="col-md-12">
     <table class="table table-hover table-bordered">
         <thead>
@@ -13,7 +15,7 @@
             </tr>
         </thead>
         <tbody>
-            {{range .Databases}}
+            {{range .PrivateDatabases}}
                 {{if .IsStatusOk}}
                     <tr class="table-success">
                 {{else if .InProgress}}
@@ -36,7 +38,7 @@
                     </div>
                     {{else}}
                     <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" ariéa-haspopup="true" aria-expanded="false">
                             Actions
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -53,3 +55,62 @@
         </tbody>
     </table>
 </div>
+{{end}}
+
+{{if .HasPublicDBs}}
+<h3>Public databases</h3>
+<div class="col-md-12">
+    <table class="table table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Database Name</th>
+                <th>Vendor</th>
+                <th>Connector</th>
+                <th>Created</th>
+                <th>Expires</th>
+                <th>Owner</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .PublicDatabases}}
+                {{if .IsStatusOk}}
+                    <tr class="table-success">
+                {{else if .InProgress}}
+                    <tr class="table-info">
+                {{else if .IsWarn}}
+                    <tr class="table-warning">
+                {{else}}
+                    <tr class="table-danger">
+                {{end}}
+                <td>{{.DBName}}</td>
+                <td>{{.DBVendor}}</td>
+                <td>{{.ConnectorName}}</td>
+                <td>{{.CreateDate.Format "January 02, 2006"}}</td>
+                <td>{{.ExpiryDate.Format "January 02, 2006"}}</td>
+                <td>{{.Creator}}</td>
+                <td>
+                    {{if .InProgress}}
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="{{.Progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{.Progress}}%"></div>
+                    </div>
+                    {{else}}
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" ariéa-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/extend/{{.ID}}">Extend Expiry</a>
+                            <a class="dropdown-item" href="/portalext/{{.ID}}">Portal-exts</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="/drop/{{.ID}}" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')">Drop Database</a>
+                        </div>
+                    </div>
+                    {{end}}
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

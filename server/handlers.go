@@ -15,6 +15,7 @@ import (
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
@@ -48,6 +49,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		dbname    = r.PostFormValue("dbname")
 		dbuser    = r.PostFormValue("user")
 		dbpass    = r.PostFormValue("password")
+		public    = r.PostFormValue("public")
 	)
 
 	session, err := store.Get(r, "user-session")
@@ -121,6 +123,10 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		Status:        status.Started,
 	}
 
+	if public == "on" {
+		entry.Public = vis.Public
+	}
+
 	dbID, err := db.persist(entry)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
@@ -151,6 +157,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		dbname    = r.PostFormValue("dbname")
 		dbuser    = r.PostFormValue("user")
 		dbpass    = r.PostFormValue("password")
+		public    = r.PostFormValue("public")
 	)
 
 	session, err := store.Get(r, "user-session")
@@ -194,6 +201,10 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		DBPort:        conn.DBPort,
 		DBVendor:      conn.DBVendor,
 		Status:        status.Success,
+	}
+
+	if public == "on" {
+		entry.Public = vis.Public
 	}
 
 	dbID, err := db.persist(entry)
