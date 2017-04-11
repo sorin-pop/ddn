@@ -1,7 +1,3 @@
-$(function () {
-})
-
-
 $(document).ready(function() {
     // Enable tooltips
     $(function () {
