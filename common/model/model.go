@@ -106,7 +106,7 @@ func (dbe DBEntry) IsClientErr() bool {
 
 // IsServerErr returns true if something went wrong on the server.
 func (dbe DBEntry) IsServerErr() bool {
-	return dbe.Status > 299
+	return dbe.Status > 299 && dbe.Status < 400
 }
 
 // IsErr returns true if something went wrong either on the server or with the client request.

@@ -69,7 +69,7 @@ func (db *mysql) initTables() error {
 			Comment: "Add 'visibility' to databases, default 0",
 		},
 		dbUpdate{
-			Query:   "ALTER TABLE `databases` ADD COLUMN `message` LONGTEXT NULL AFTER `status`;",
+			Query:   "ALTER TABLE `databases` ADD COLUMN `message` LONGTEXT DEFAULT '' AFTER `status`;",
 			Comment: "Add 'message' column",
 		},
 	}
@@ -150,7 +150,7 @@ func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 		return 0, fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s', %d, %s, %d)",
+	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s', %d, '%s', %d)",
 		dbentry.DBName,
 		dbentry.DBUser,
 		dbentry.DBPass,

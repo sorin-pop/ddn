@@ -1,8 +1,14 @@
+$(function () {
+})
+
+
 $(document).ready(function() {
     // Enable tooltips
     $(function () {
         $('[data-toggle="tooltip"]').tooltip()
+        $('[data-toggle="popover"]').popover()
     })
+
 
     checkConnector()
     
