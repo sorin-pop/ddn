@@ -328,7 +328,7 @@ func extend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumns(ID, updateClause{Column: "expiryDate", Value: "NOW() + INTERVAL 30 DAY", Literal: true}, updateClause{Column: "status", Value: status.Success, Literal: true})
+	db.updateColumns(ID, updateClause{Column: "expiryDate", Value: "NOW() + INTERVAL 30 DAY", Literal: true})
 
 	session, err := store.Get(r, "user-session")
 	if err != nil {
