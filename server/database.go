@@ -316,14 +316,35 @@ func (db *mysql) entryByID(ID int64) (model.DBEntry, error) {
 	return entry, nil
 }
 
-func (db *mysql) updateColumn(ID int, column string, value interface{}) error {
+type updateClause struct {
+	Column  string
+	Value   interface{}
+	Literal bool
+}
+
+func (db *mysql) updateColumns(ID int, clauses ...updateClause) error {
 	if err := db.Alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
+	var buf bytes.Buffer
 
-	q := fmt.Sprintf("UPDATE `databases` SET %s=%v WHERE id=%d", column, value, ID)
+	buf.WriteString("UPDATE `databases` SET id=id")
 
-	_, err := db.conn.Exec(q)
+	for _, clause := range clauses {
+		buf.WriteString(", ")
+		buf.WriteString(clause.Column)
+		buf.WriteString("=")
+
+		if clause.Literal {
+			buf.WriteString(fmt.Sprintf("%v", clause.Value))
+		} else {
+			buf.WriteString(fmt.Sprintf("%q", clause.Value))
+		}
+	}
+
+	buf.WriteString(fmt.Sprintf(" WHERE id=%d", ID))
+
+	_, err := db.conn.Exec(buf.String())
 	if err != nil {
 		return fmt.Errorf("failed to update: %s", err.Error())
 	}

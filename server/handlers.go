@@ -328,8 +328,7 @@ func extend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumn(ID, "expiryDate", "NOW() + INTERVAL 30 DAY")
-	db.updateColumn(ID, "status", status.Success)
+	db.updateColumns(ID, updateClause{Column: "expiryDate", Value: "NOW() + INTERVAL 30 DAY", Literal: true}, updateClause{Column: "status", Value: status.Success, Literal: true})
 
 	session, err := store.Get(r, "user-session")
 	if err != nil {
@@ -385,7 +384,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumn(ID, "status", status.PendingImmediateRemoval)
+	db.updateColumns(ID, updateClause{Column: "status", Value: status.PendingImmediateRemoval, Literal: true})
 
 	go dropAsync(conn, ID, dbe.DBName, dbe.DBUser)
 
@@ -455,7 +454,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumn(msg.ID, "status", msg.StatusID)
+	db.updateColumns(msg.ID, updateClause{Column: "status", Value: msg.StatusID, Literal: true})
 
 	dbe, err := db.entryByID(int64(msg.ID))
 	if err != nil {
@@ -483,6 +482,12 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 
 <p>We're sorry for the inconvenience caused.</p>
 <p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBVendor, dbe.DBName, msg.Message))
+
+		// Update dbentry as well
+		err = db.updateColumns(msg.ID, updateClause{Column: "message", Value: msg.Message, Literal: false})
+		if err != nil {
+			log.Printf("Couldn't update local db: %s", err.Error())
+		}
 	}
 
 	if dbe.Status == status.Success {
