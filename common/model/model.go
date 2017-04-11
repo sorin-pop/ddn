@@ -85,6 +85,7 @@ type DBEntry struct {
 	DBAddress     string
 	DBPort        string
 	Status        int
+	Message       string
 	Public        int
 }
 

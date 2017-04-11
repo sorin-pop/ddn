@@ -68,6 +68,10 @@ func (db *mysql) initTables() error {
 			Query:   "ALTER TABLE `databases` ADD COLUMN `visibility` INT(11) NULL DEFAULT 0 AFTER `status`;",
 			Comment: "Add 'visibility' to databases, default 0",
 		},
+		dbUpdate{
+			Query:   "ALTER TABLE `databases` ADD COLUMN `message` LONGTEXT NULL AFTER `status`;",
+			Comment: "Add 'message' column",
+		},
 	}
 
 	var (
