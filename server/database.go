@@ -150,7 +150,7 @@ func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 		return 0, fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `visibility`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s', %d, %d)",
+	query := fmt.Sprintf("INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES ('%s', '%s', '%s', '%s', '%s', NOW(), NOW() + INTERVAL 30 DAY, '%s', '%s', '%s','%s', '%s', %d, %s, %d)",
 		dbentry.DBName,
 		dbentry.DBUser,
 		dbentry.DBPass,
@@ -162,6 +162,7 @@ func (db *mysql) persist(dbentry model.DBEntry) (int64, error) {
 		dbentry.DBPort,
 		dbentry.DBVendor,
 		dbentry.Status,
+		dbentry.Message,
 		dbentry.Public,
 	)
 
@@ -186,7 +187,7 @@ func (db *mysql) list() ([]model.DBEntry, error) {
 
 	var entries []model.DBEntry
 
-	rows, err := db.conn.Query("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases`")
+	rows, err := db.conn.Query("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, message, status FROM `databases`")
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}
@@ -208,6 +209,7 @@ func (db *mysql) list() ([]model.DBEntry, error) {
 			&row.DBAddress,
 			&row.DBPort,
 			&row.DBVendor,
+			&row.Message,
 			&row.Status)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
@@ -236,7 +238,7 @@ func (db *mysql) listWhere(clauses ...clause) ([]model.DBEntry, error) {
 
 	var buf bytes.Buffer
 
-	buf.WriteString("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE 1=1")
+	buf.WriteString("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, message, status FROM `databases` WHERE 1=1")
 
 	for _, clause := range clauses {
 		buf.WriteString(" AND ")
@@ -272,6 +274,7 @@ func (db *mysql) listWhere(clauses ...clause) ([]model.DBEntry, error) {
 			&row.DBAddress,
 			&row.DBPort,
 			&row.DBVendor,
+			&row.Message,
 			&row.Status)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
@@ -295,7 +298,7 @@ func (db *mysql) entryByID(ID int64) (model.DBEntry, error) {
 
 	var entry model.DBEntry
 
-	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, status FROM `databases` WHERE id = ?", ID)
+	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, message, status FROM `databases` WHERE id = ?", ID)
 
 	row.Scan(
 		&entry.ID,
@@ -311,6 +314,7 @@ func (db *mysql) entryByID(ID int64) (model.DBEntry, error) {
 		&entry.DBAddress,
 		&entry.DBPort,
 		&entry.DBVendor,
+		&entry.Message,
 		&entry.Status)
 
 	return entry, nil
