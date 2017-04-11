@@ -13,6 +13,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 
+	"path/filepath"
+
 	"github.com/djavorszky/ddn/common/model"
 )
 
@@ -124,6 +126,18 @@ func main() {
 		log.Println("> Read from DB:\t", ver)
 
 		conf.Version = ver
+	}
+
+	// Check and create the 'dumps' folder
+	if _, err = os.Stat(filepath.Join(".", "dumps")); os.IsNotExist(err) {
+		err = os.Mkdir("dumps", os.ModePerm)
+		if err != nil {
+			log.Fatalf("Couldn't create dumps folder, please create it manually: %s", err.Error())
+		}
+
+		log.Println("Created 'dumps' folder")
+	} else {
+		log.Println("'dumps' folder already exists.")
 	}
 
 	err = registerConnector()
