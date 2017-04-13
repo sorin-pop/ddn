@@ -107,7 +107,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		dbname = dbuser
 	}
 
-	ensureHasValues(&dbname, &dbuser, &dbpass)
+	ensureValues(&dbname, &dbuser, &dbpass)
 
 	entry := model.DBEntry{
 		DBName:        dbname,
@@ -182,7 +182,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		dbname = dbuser
 	}
 
-	ensureHasValues(&dbname, &dbuser, &dbpass)
+	ensureValues(&dbname, &dbuser, &dbpass)
 
 	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
 	if err != nil {
@@ -214,17 +214,6 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 
 	session.Values["id"] = dbID
 	session.AddFlash(resp, "success")
-}
-
-func listConnectors(w http.ResponseWriter, r *http.Request) {
-	list := make(map[string]string, 10)
-	for _, con := range registry {
-		list[con.ShortName] = con.LongName
-	}
-
-	msg := inet.MapMessage{Status: status.Success, Message: list}
-
-	inet.SendResponse(w, http.StatusOK, msg)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
@@ -540,7 +529,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ensureHasValues(vals ...*string) {
+func ensureValues(vals ...*string) {
 	for _, v := range vals {
 		if *v == "" {
 			*v = sutils.RandName()
@@ -577,7 +566,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		DBName:        req.DatabaseName,
 		DBUser:        req.Username,
 		DBPass:        req.Password,
-		Creator:       req.Requester,
+		Creator:       req.RequesterEmail,
 		Dumpfile:      req.DumpLocation,
 		ConnectorName: req.ConnectorIdentifier,
 		Status:        status.Success,

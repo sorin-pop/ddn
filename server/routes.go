@@ -103,4 +103,22 @@ var routes = Routes{
 		"/portalext/{id:[0-9]+}",
 		portalext,
 	},
+	route{
+		"api/create",
+		"POST",
+		"/api/create",
+		apiCreate,
+	},
+	route{
+		"api/list",
+		"POST",
+		"/api/list",
+		apiList,
+	},
+	route{
+		"api/import",
+		"POST",
+		"/api/import",
+		apiImport,
+	},
 }
