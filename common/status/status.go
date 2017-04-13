@@ -41,7 +41,7 @@ func init() {
 	Labels[DropDatabaseFailed] = "Dropping database failed"
 
 	// Warnings
-	Labels[PendingImmediateRemoval] = "Pending immediate removal"
+	Labels[DropInProgress] = "Drop in progress"
 	Labels[RemovalScheduled] = "Removal scheduled"
 }
 
@@ -93,6 +93,6 @@ const (
 
 // Warnings are for issuing warnings.
 const (
-	RemovalScheduled        int = 400 // status.RemovalScheduled
-	PendingImmediateRemoval int = 401 // status.PendingImmediateRemoval
+	RemovalScheduled int = 400 // status.RemovalScheduled
+	DropInProgress   int = 401 // status.DropInProgress
 )
