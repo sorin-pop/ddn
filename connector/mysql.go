@@ -124,14 +124,6 @@ func (db *mysql) CreateDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("database '%s' already exists", dbRequest.DatabaseName)
 	}
 
-	exists, err = db.userExists(dbRequest.Username)
-	if err != nil {
-		return fmt.Errorf("checking if user exists failed: %s", err.Error())
-	}
-	if exists {
-		return fmt.Errorf("user '%s' already exists", dbRequest.Username)
-	}
-
 	// Begin transaction so that we can roll it back at any point something goes wrong.
 	tx, err := db.conn.Begin()
 	if err != nil {
@@ -145,10 +137,18 @@ func (db *mysql) CreateDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("executing create database query failed: %s", strip(err.Error()))
 	}
 
-	_, err = db.conn.Exec(fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", dbRequest.Username, dbRequest.Password))
+	exists, err = db.userExists(dbRequest.Username)
 	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("executing create user '%s' failed: %s", dbRequest.Username, strip(err.Error()))
+		return fmt.Errorf("checking if user exists failed: %s", err.Error())
+	}
+	if !exists {
+		db.conn.Exec(fmt.Sprintf("FLUSH PRIVILEGES"))
+
+		_, err = db.conn.Exec(fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", dbRequest.Username, dbRequest.Password))
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("executing create user '%s' failed: %s", dbRequest.Username, strip(err.Error()))
+		}
 	}
 
 	_, err = db.conn.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';", dbRequest.DatabaseName, dbRequest.Username, "%"))
