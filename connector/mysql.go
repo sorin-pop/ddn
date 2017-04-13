@@ -193,10 +193,23 @@ func (db *mysql) DropDatabase(dbRequest model.DBRequest) error {
 	}
 
 	if exists {
-		_, err = db.conn.Exec(fmt.Sprintf("DROP USER %s", dbRequest.Username))
+		// Silently try to revoke privileges. MySQL errors out if we're trying to revoke a privilege
+		// when there's no such privilege.
+		db.conn.Exec(fmt.Sprintf("REVOKE ALL PRIVILEGES ON %s.* FROM %q", dbRequest.DatabaseName, dbRequest.Username))
+
+		var count int
+		err = db.conn.QueryRow("select count(*) from mysql.db where user = ?", dbRequest.Username).Scan(&count)
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("dropping user '%s' failed: %s", dbRequest.Username, strip(err.Error()))
+			return fmt.Errorf("checking grant-count failed: %s", err.Error())
+		}
+
+		if count == 0 {
+			_, err = db.conn.Exec(fmt.Sprintf("DROP USER %s", dbRequest.Username))
+			if err != nil {
+				tx.Rollback()
+				return fmt.Errorf("dropping user '%s' failed: %s", dbRequest.Username, strip(err.Error()))
+			}
 		}
 	}
 
