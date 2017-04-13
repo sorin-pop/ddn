@@ -24,8 +24,7 @@ type DBRequest struct {
 // ClientRequest is used to represent a JSON call between a client and the server
 type ClientRequest struct {
 	ConnectorIdentifier string `json:"connector_identifier"`
-	Requester           string `json:"requester_email"`
-	PortalVersion       string `json:"portal_version"`
+	RequesterEmail      string `json:"requester_email"`
 	DBRequest
 }
 
@@ -71,22 +70,22 @@ type Connector struct {
 
 // DBEntry represents a row in the "databases" table.
 type DBEntry struct {
-	ID            int
-	DBVendor      string
-	DBName        string
-	DBUser        string
-	DBPass        string
-	DBSID         string
-	Dumpfile      string
-	CreateDate    time.Time
-	ExpiryDate    time.Time
-	Creator       string
-	ConnectorName string
-	DBAddress     string
-	DBPort        string
-	Status        int
-	Message       string
-	Public        int
+	ID            int       `json:"id"`
+	DBVendor      string    `json:"vendor"`
+	DBName        string    `json:"dbname"`
+	DBUser        string    `json:"dbuser"`
+	DBPass        string    `json:"dbpass"`
+	DBSID         string    `json:"sid"`
+	Dumpfile      string    `json:"dumplocation"`
+	CreateDate    time.Time `json:"createdate"`
+	ExpiryDate    time.Time `json:"expirydate"`
+	Creator       string    `json:"creator"`
+	ConnectorName string    `json:"connector"`
+	DBAddress     string    `json:"dbaddress"`
+	DBPort        string    `json:"dbport"`
+	Status        int       `json:"status"`
+	Message       string    `json:"message"`
+	Public        int       `json:"public"`
 }
 
 // InProgress returns true if the DBEntry's status denotes that something's in progress.
@@ -224,11 +223,11 @@ func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, erro
 	case status.Success, status.Accepted, status.Started, status.Created:
 		return respMsg.Message, nil
 	case status.MissingParameters:
-		return "", fmt.Errorf("Missing parameters from the request")
+		return "", fmt.Errorf("missing parameters from the request")
 	case status.InvalidJSON:
-		return "", fmt.Errorf("Invalid JSON request")
+		return "", fmt.Errorf("invalid JSON request")
 	case status.CreateDatabaseFailed, status.ListDatabaseFailed, status.DropDatabaseFailed:
-		return "", fmt.Errorf("Connector issue: %s", respMsg.Message)
+		return "", fmt.Errorf("connector issue: %s", respMsg.Message)
 	default:
 		return "", fmt.Errorf("executing action on endpoint %q failed: %s", endpoint, respMsg.Message)
 	}

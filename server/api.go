@@ -107,11 +107,3 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 
 	w.Write(resp)
 }
-
-func apiImport(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func listConnectors(w http.ResponseWriter, r *http.Request) {
-
-}

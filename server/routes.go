@@ -14,12 +14,6 @@ type Routes []route
 
 var routes = Routes{
 	route{
-		"listConnectors",
-		"GET",
-		"/list-connectors",
-		listConnectors,
-	},
-	route{
 		"register",
 		"POST",
 		"/register",
@@ -114,11 +108,5 @@ var routes = Routes{
 		"POST",
 		"/api/list",
 		apiList,
-	},
-	route{
-		"api/import",
-		"POST",
-		"/api/import",
-		apiImport,
 	},
 }
