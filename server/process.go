@@ -57,8 +57,6 @@ func maintain() {
 			// on the next check the expiry date will be in the past.
 			dayPlus := now.AddDate(0, 0, 1)
 			if dbe.ExpiryDate.Before(dayPlus) {
-				db.updateColumns(dbe.ID, updateClause{Column: "status", Value: status.PendingImmediateRemoval, Literal: true})
-
 				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in 1 day", dbe.DBName), fmt.Sprintf(`
 <h3>Database removal imminent</h3>
 				

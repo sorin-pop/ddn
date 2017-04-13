@@ -384,7 +384,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumns(ID, updateClause{Column: "status", Value: status.PendingImmediateRemoval, Literal: true})
+	db.updateColumns(ID, updateClause{Column: "status", Value: status.DropInProgress, Literal: true})
 
 	go dropAsync(conn, ID, dbe.DBName, dbe.DBUser)
 
@@ -394,6 +394,9 @@ func drop(w http.ResponseWriter, r *http.Request) {
 func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
 	_, err := conn.DropDatabase(ID, dbname, dbuser)
 	if err != nil {
+		db.updateColumns(ID,
+			updateClause{Column: "status", Value: status.DropDatabaseFailed, Literal: true},
+			updateClause{Column: "message", Value: err.Error()})
 		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
 		return
 	}
