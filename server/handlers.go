@@ -428,9 +428,9 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if dbe.Creator != user {
+	if dbe.Public == vis.Private && dbe.Creator != user {
 		log.Printf("User %q tried to get portalext of db created by %q.", user, dbe.Creator)
-		session.AddFlash("Failed dropping database: You can only drop databases you created.", "fail")
+		session.AddFlash("Failed fetching portal-ext: You can only fetch the portal-ext of public databases or ones that you created.", "fail")
 		return
 	}
 

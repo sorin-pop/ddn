@@ -298,7 +298,7 @@ func (db *mysql) entryByID(ID int64) (model.DBEntry, error) {
 
 	var entry model.DBEntry
 
-	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, message, status FROM `databases` WHERE id = ?", ID)
+	row := db.conn.QueryRow("SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName, dbAddress, dbPort, dbVendor, message, status, visibility FROM `databases` WHERE id = ?", ID)
 
 	row.Scan(
 		&entry.ID,
@@ -315,7 +315,8 @@ func (db *mysql) entryByID(ID int64) (model.DBEntry, error) {
 		&entry.DBPort,
 		&entry.DBVendor,
 		&entry.Message,
-		&entry.Status)
+		&entry.Status,
+		&entry.Public)
 
 	return entry, nil
 }
