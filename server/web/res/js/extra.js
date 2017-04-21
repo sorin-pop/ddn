@@ -15,7 +15,6 @@ $(document).ready(function() {
     $("#user").keyup(function() {
         checkInputs()
     })
-
 })
 
 $(document).on('change', '#connector', function() {
