@@ -23,6 +23,7 @@ type Config struct {
 	EmailSender string `toml:"email.sender"`
 	AdminEmail  string `toml:"admin.email"`
 	UseCDN      bool   `toml:"use.cdn"`
+	MountLoc    string `toml:"mount.loc"`
 }
 
 // Print prints the configuration to the log.
@@ -35,6 +36,10 @@ func (c Config) Print() {
 	log.Printf("Server Host:\t\t%s", c.ServerHost)
 	log.Printf("Server Port:\t\t%s", c.ServerPort)
 	log.Printf("Using CDN:\t\t\t%t", c.UseCDN)
+
+	if c.MountLoc != "" {
+		log.Printf("Mounted folder:\t\t%s", c.MountLoc)
+	}
 
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
 		log.Printf("Admin email:\t\t%s", c.AdminEmail)
@@ -76,6 +81,7 @@ func setup(filename string) (*string, Config) {
 	config.EmailSender = prompter.Ask("What address should be used to send the emails from?")
 	config.AdminEmail = prompter.AskDef("Who should be notified if something goes horribly wrong?", def.AdminEmail)
 	config.UseCDN = prompter.AskBoolDef("Should we serve third party javascript, css and fonts from CDN?", true)
+	config.MountLoc = prompter.Ask("If you want to mount a folder for browsing dumps, please specify now")
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)
 

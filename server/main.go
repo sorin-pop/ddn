@@ -80,6 +80,13 @@ func main() {
 
 	config.Print()
 
+	if config.MountLoc != "" {
+		if _, err = os.Stat(config.MountLoc); os.IsNotExist(err) {
+			log.Printf("Mounted folder does not exist, unsetting it")
+			config.MountLoc = ""
+		}
+	}
+
 	db = new(mysql)
 
 	err = db.connect(config)
