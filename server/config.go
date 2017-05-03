@@ -37,10 +37,6 @@ func (c Config) Print() {
 	log.Printf("Server Port:\t\t%s", c.ServerPort)
 	log.Printf("Using CDN:\t\t\t%t", c.UseCDN)
 
-	if c.MountLoc != "" {
-		log.Printf("Mounted folder:\t\t%s", c.MountLoc)
-	}
-
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
 		log.Printf("Admin email:\t\t%s", c.AdminEmail)
 		log.Printf("Server configured to send emails.")

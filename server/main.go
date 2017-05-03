@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/djavorszky/ddn/server/brwsr"
 )
 
 var (
@@ -79,6 +80,17 @@ func main() {
 	log.Println("Starting with properties:")
 
 	config.Print()
+
+	if config.MountLoc != "" {
+		err = brwsr.Mount(config.MountLoc)
+		if err != nil {
+			log.Printf("Couldn't mount folder: %s", err.Error())
+
+			config.MountLoc = ""
+		} else {
+			log.Printf("Mounted folder %q", config.MountLoc)
+		}
+	}
 
 	if config.MountLoc != "" {
 		if _, err = os.Stat(config.MountLoc); os.IsNotExist(err) {
