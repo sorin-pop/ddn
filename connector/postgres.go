@@ -27,7 +27,7 @@ func (db *postgres) Connect(c Config) error {
 		return fmt.Errorf("missing parameters. Need-Got: {user: %s}, {password: %s}, {dbAddress: %s}, {dbPort: %s}", c.User, c.Password, c.LocalDBAddr, c.LocalDBPort)
 	}
 
-	datasource := fmt.Sprintf("postgres://%s:%s@%s:%s", c.User, c.Password, c.LocalDBAddr, c.LocalDBPort)
+	datasource := fmt.Sprintf("postgres://%s:%s@%s:%s?sslmode=disable", c.User, c.Password, c.LocalDBAddr, c.LocalDBPort)
 	db.conn, err = sql.Open("postgres", datasource)
 	if err != nil {
 		return fmt.Errorf("creating connection pool failed: %s", err.Error())
