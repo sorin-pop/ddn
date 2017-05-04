@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"strings"
+
 	"github.com/djavorszky/ddn/common/model"
 	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/ddn/server/brwsr"
@@ -34,6 +36,7 @@ type Page struct {
 	ExtDXP           liferay.JDBC
 	FileList         brwsr.FileList
 	HasMountedFolder bool
+	DumpLoc          string
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
@@ -140,6 +143,12 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		page.FileList = files
 	}
 
+	if pages[0] == "srvimport" {
+		dumploc := r.URL.Query().Get("dump")
+
+		page.DumpLoc = dumploc
+	}
+
 	if pages[0] == "home" {
 		pages = append(pages, "databases")
 
@@ -193,7 +202,22 @@ func buildTemplate(pages ...string) (*template.Template, error) {
 }
 
 func getTitle(page string) string {
-	return getPages()[page]
+	title, ok := getPages()[page]
+	if ok {
+		return title
+	}
+
+	if strings.HasPrefix(page, "/browse") {
+		return "Server Browser"
+	}
+
+	switch page {
+	case "/fileimport":
+		return "Import Database"
+	default:
+		return "Unknown"
+	}
+
 }
 
 func getPages() map[string]string {
@@ -202,6 +226,5 @@ func getPages() map[string]string {
 	pages["/"] = "Home"
 	pages["/createdb"] = "Create database"
 	pages["/importdb"] = "Import database"
-
 	return pages
 }

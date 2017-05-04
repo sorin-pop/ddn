@@ -133,6 +133,22 @@ func (e Entry) FriendlySize() string {
 	return fmt.Sprintf("%.2f Tb", float64(e.Size)/tb)
 }
 
+// Importable returns whether a file is importable or not.
+func (e Entry) Importable() bool {
+	ext := filepath.Ext(e.Name)
+
+	switch ext {
+	// dump endings
+	case ".sql", ".dmp", ".dpdmp", ".bak":
+		return true
+	// supported archive settings
+	case ".zip", ".tar", ".gz":
+		return true
+	}
+
+	return false
+}
+
 func fullPath(relPath string) string {
 	return filepath.Join(root, relPath)
 }

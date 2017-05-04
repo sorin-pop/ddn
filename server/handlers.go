@@ -46,6 +46,10 @@ func fileimport(w http.ResponseWriter, r *http.Request) {
 	loadPage(w, r, "fileimport")
 }
 
+func srvimport(w http.ResponseWriter, r *http.Request) {
+	loadPage(w, r, "srvimport")
+}
+
 func browseroot(w http.ResponseWriter, r *http.Request) {
 	loadPage(w, r, "browse")
 }

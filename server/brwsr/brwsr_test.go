@@ -178,7 +178,36 @@ func TestFriendlySize(t *testing.T) {
 			t.Errorf("FriendlySize with %f is %q, should be %q", test.size, entry.FriendlySize(), test.want)
 		}
 	}
+}
 
+func TestImportable(t *testing.T) {
+	var tests = []struct {
+		name string
+		want bool
+	}{
+		{"test", false},
+		{"test.exe", false},
+		{"test.sh", false},
+		{"test.bat", false},
+
+		{"test.sql", true},
+		{"test.dmp", true},
+		{"test.dpdmp", true},
+		{"test.bak", true},
+
+		{"test.zip", true},
+		{"test.tar", true},
+		{"test.gz", true},
+		{"test.tar.gz", true},
+	}
+
+	for _, test := range tests {
+		entry := Entry{Name: test.name}
+
+		if entry.Importable() != test.want {
+			t.Errorf("Importable() returned %t when expecting %t for name %q", entry.Importable(), test.want, entry.Name)
+		}
+	}
 }
 
 func TestFullPath(t *testing.T) {

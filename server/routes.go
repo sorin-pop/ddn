@@ -74,6 +74,12 @@ var routes = Routes{
 		fileimport,
 	},
 	route{
+		"srvimport",
+		"GET",
+		"/srvimport",
+		srvimport,
+	},
+	route{
 		"browse",
 		"GET",
 		"/browse/{loc:[0-9a-zA-Z-_/ ]+}",
