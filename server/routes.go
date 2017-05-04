@@ -62,6 +62,12 @@ var routes = Routes{
 		importAction,
 	},
 	route{
+		"prepimport",
+		"POST",
+		"/prepimport",
+		prepImportAction,
+	},
+	route{
 		"importdb",
 		"GET",
 		"/importdb",

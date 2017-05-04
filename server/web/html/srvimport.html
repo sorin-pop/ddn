@@ -2,7 +2,7 @@
 <div class="col md-8">
     {{if .AnyOnline}}
         <h3>Import database</h3>
-        <form method="POST" enctype="multipart/form-data" action="/import">
+        <form method="POST" enctype="multipart/form-data" action="/prepimport">
             <div class="form-group row">
                 <label for="connector" class="col-sm-3 col-form-label">Database</label>
                 <div class="col-sm-9">
@@ -15,10 +15,11 @@
                     </select>
                 </div>
             </div>
+            <input type="hidden" id="dbdump" name="dbdump" value="{{.DumpLoc}}">
             <div class="form-group row">
                 <label for="dbname" class="col-sm-3 col-form-label">Dumpfile</label>
                 <div class="col-sm-9">
-                    <input type="text" class="form-control" id="dbdump" name="dbdump" value="{{.DumpLoc}}" disabled>
+                    <input type="text" class="form-control" id="importloc" name="importloc" value="{{.DumpLoc}}" disabled>
                 </div>
             </div>
             <div class="form-group row">

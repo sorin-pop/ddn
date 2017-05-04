@@ -19,6 +19,8 @@ import (
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
+	"path/filepath"
+
 	"github.com/djavorszky/liferay"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -56,6 +58,153 @@ func browseroot(w http.ResponseWriter, r *http.Request) {
 
 func browse(w http.ResponseWriter, r *http.Request) {
 	loadPage(w, r, "browse")
+}
+
+func prepImportAction(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
+
+	var (
+		connector = r.PostFormValue("connector")
+		dbname    = r.PostFormValue("dbname")
+		dbuser    = r.PostFormValue("user")
+		dbpass    = r.PostFormValue("password")
+		dumpfile  = r.PostFormValue("dbdump")
+		public    = r.PostFormValue("public")
+	)
+
+	dbID, err := doPrepImport(getUser(r), connector, dumpfile, dbname, dbuser, dbpass, public)
+	if err != nil {
+		session.AddFlash(fmt.Sprintf("Failed preparing import: %s", err.Error()), "fail")
+		return
+	}
+
+	go doImport(dbID, dumpfile)
+
+	session.AddFlash("Started the import process...")
+}
+
+func doImport(dbID int64, dumpfile string) {
+	dbe, err := db.entryByID(dbID)
+	if err != nil {
+		log.Printf("Failed getting entry by ID: %s", err.Error())
+		db.updateColumns(
+			int(dbID),
+			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
+			updateClause{Column: "message", Value: "Server error: " + err.Error()})
+		return
+	}
+
+	db.updateColumns(int(dbID), updateClause{Column: "status", Value: status.InProgress, Literal: true})
+
+	url, err := copyFile(dumpfile)
+	if err != nil {
+		log.Printf("Failed copying file: %s", err.Error())
+		db.updateColumns(
+			int(dbID),
+			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
+			updateClause{Column: "message", Value: "Server error: " + err.Error()})
+		return
+	}
+
+	db.updateColumns(
+		int(dbID),
+		updateClause{Column: "dumpfile", Value: url})
+
+	conn, ok := registry[dbe.ConnectorName]
+	if !ok {
+		db.updateColumns(
+			int(dbID),
+			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
+			updateClause{Column: "message", Value: "Server error: connector went offline."})
+		return
+	}
+
+	_, err = conn.ImportDatabase(int(dbID), dbe.DBName, dbe.DBUser, dbe.DBPass, url)
+	if err != nil {
+		db.updateColumns(
+			int(dbID),
+			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
+			updateClause{Column: "message", Value: "Server error: " + err.Error()})
+		os.Remove("./web/dumps/" + dumpfile)
+		return
+	}
+
+}
+
+func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public string) (int64, error) {
+	conn, ok := registry[connector]
+	if !ok {
+		return 0, fmt.Errorf("connector went offline")
+	}
+
+	if conn.DBVendor == "mssql" {
+		dbuser = "clouddb"
+		dbpass = "password"
+	}
+
+	if dbname == "" && dbuser != "" {
+		dbname = dbuser
+	}
+
+	ensureValues(&dbname, &dbuser, &dbpass)
+
+	entry := model.DBEntry{
+		DBName:        dbname,
+		DBUser:        dbuser,
+		DBPass:        dbpass,
+		DBSID:         conn.DBSID,
+		ConnectorName: connector,
+		Creator:       creator,
+		DBAddress:     conn.DBAddr,
+		DBPort:        conn.DBPort,
+		DBVendor:      conn.DBVendor,
+		Status:        status.Started,
+	}
+
+	if public == "on" {
+		entry.Public = vis.Public
+	}
+
+	dbID, err := db.persist(entry)
+	if err != nil {
+		return 0, fmt.Errorf("failed persisting database locally: %s", err.Error())
+	}
+
+	return dbID, nil
+}
+
+func copyFile(dump string) (string, error) {
+	filename := filepath.Base(dump)
+
+	src, err := os.OpenFile(filepath.Join(config.MountLoc, dump), os.O_RDONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed opening source file: %s", err.Error())
+
+	}
+	defer src.Close()
+
+	dst, err := os.OpenFile("./web/dumps/"+filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed creating file: %s", err.Error())
+
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return "", fmt.Errorf("failed copying file: %s", err.Error())
+
+	}
+
+	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
+
+	return url, nil
 }
 
 func importAction(w http.ResponseWriter, r *http.Request) {
