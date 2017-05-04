@@ -62,18 +62,38 @@ func TestList(t *testing.T) {
 		t.Errorf("List('') returned error: %s", err.Error())
 	}
 
-	if len(list) != 2 {
-		t.Errorf("Lenght of List('') should be 2, is %d", len(list))
+	if len(list.Entries) != 2 {
+		t.Errorf("Lenght of List('') should be 2, is %d", len(list.Entries))
 	}
 
-	for _, item := range list {
+	if !list.OnRoot {
+		t.Errorf("Should report being on root, isn't.")
+	}
+
+	if list.Path != "" {
+		t.Errorf("Path does not match. Expect %q, Actual %q", "", list.Path)
+	}
+
+	if list.Parent != "" {
+		t.Errorf("Parent should be empty, is %q instead", list.Parent)
+	}
+
+	for _, item := range list.Entries {
 		if item.Folder {
 			if item.Name != testFolder {
 				t.Errorf("Folder should be %q, is %q instead", testFolder, item.Name)
 			}
+
+			if item.Path != testFolder {
+				t.Errorf("Path should be %q, is %q instead", testFolder, item.Path)
+			}
 		} else {
 			if item.Name != testFileName {
 				t.Errorf("File name should be %q, is %q instead", testFileName, item.Name)
+			}
+
+			if item.Path != testFileName {
+				t.Errorf("Path should be %q, is %q instead", testFileName, item.Path)
 			}
 		}
 	}
@@ -83,11 +103,19 @@ func TestList(t *testing.T) {
 		t.Errorf("List(%q) returned error: %s", testFolder, err.Error())
 	}
 
-	if len(list) != 1 {
-		t.Errorf("Length of List('') should be 1, is %d", len(list))
+	if len(list.Entries) != 1 {
+		t.Errorf("Length of List(%q) should be 1, is %d", testFolder, len(list.Entries))
 	}
 
-	for _, item := range list {
+	if list.OnRoot {
+		t.Errorf("Should report being on root, isn't.")
+	}
+
+	if list.Path != testFolder {
+		t.Errorf("Path does not match. Expect %q, Actual %q", testFolder, list.Path)
+	}
+
+	for _, item := range list.Entries {
 		if !item.Folder {
 			t.Errorf("%q should've been a folder, is a file instead", item.Name)
 		}
@@ -95,6 +123,32 @@ func TestList(t *testing.T) {
 		if item.Name != testFolderInFolder {
 			t.Errorf("Folder name should be %q, is %q instead", testFolderInFolder, item.Name)
 		}
+
+		if item.Path != filepath.Join(testFolder, testFolderInFolder) {
+			t.Errorf("Path should be %q, is %q instead", filepath.Join(testFolder, testFolderInFolder), item.Path)
+		}
+	}
+
+	loc := filepath.Join(testFolder, testFolderInFolder)
+	list, err = List(loc)
+	if err != nil {
+		t.Errorf("List(%q) returned error: %s", loc, err.Error())
+	}
+
+	if len(list.Entries) != 0 {
+		t.Errorf("Length of List(%q) should be 0, is %d", loc, len(list.Entries))
+	}
+
+	if list.OnRoot {
+		t.Errorf("Should report NOT being on root, is.")
+	}
+
+	if list.Path != loc {
+		t.Errorf("Path does not match. Expect %q, Actual %q", testFolder, list.Path)
+	}
+
+	if list.Parent != testFolder {
+		t.Errorf("Parent should be %q, is %q instead (path: %q)", testFolder, list.Parent, list.Path)
 	}
 }
 

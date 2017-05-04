@@ -35,7 +35,23 @@ func createdb(w http.ResponseWriter, r *http.Request) {
 }
 
 func importdb(w http.ResponseWriter, r *http.Request) {
-	loadPage(w, r, "importdb")
+	if config.MountLoc != "" {
+		loadPage(w, r, "importchooser")
+	} else {
+		loadPage(w, r, "fileimport")
+	}
+}
+
+func fileimport(w http.ResponseWriter, r *http.Request) {
+	loadPage(w, r, "fileimport")
+}
+
+func browseroot(w http.ResponseWriter, r *http.Request) {
+	loadPage(w, r, "browse")
+}
+
+func browse(w http.ResponseWriter, r *http.Request) {
+	loadPage(w, r, "browse")
 }
 
 func importAction(w http.ResponseWriter, r *http.Request) {

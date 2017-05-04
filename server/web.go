@@ -8,7 +8,9 @@ import (
 
 	"github.com/djavorszky/ddn/common/model"
 	vis "github.com/djavorszky/ddn/common/visibility"
+	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/liferay"
+	"github.com/gorilla/mux"
 )
 
 // Page is a struct holding the data to be displayed on the welcome page.
@@ -30,16 +32,19 @@ type Page struct {
 	HasPublicDBs     bool
 	Ext62            liferay.JDBC
 	ExtDXP           liferay.JDBC
+	FileList         brwsr.FileList
+	HasMountedFolder bool
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 	page := Page{
-		UseCDN:     config.UseCDN,
-		Connectors: &registry,
-		Title:      getTitle(r.URL.Path),
-		Pages:      getPages(),
-		ActivePage: r.URL.Path,
+		UseCDN:           config.UseCDN,
+		Connectors:       &registry,
+		Title:            getTitle(r.URL.Path),
+		Pages:            getPages(),
+		ActivePage:       r.URL.Path,
+		HasMountedFolder: config.MountLoc != "",
 	}
 
 	for _, conn := range registry {
@@ -123,6 +128,17 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		}
 	*/
 	session.Save(r, w)
+
+	if pages[0] == "browse" && page.HasMountedFolder {
+		loc := mux.Vars(r)["loc"]
+
+		files, err := brwsr.List(loc)
+		if err != nil {
+			session.AddFlash("Failed listing folder", "fail")
+		}
+
+		page.FileList = files
+	}
 
 	if pages[0] == "home" {
 		pages = append(pages, "databases")

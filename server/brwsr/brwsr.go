@@ -17,9 +17,18 @@ const (
 	tb = 1 << 40
 )
 
+// FileList contains the list of files in a folder and bool to decide whether it's on root or not.
+type FileList struct {
+	OnRoot  bool
+	Path    string
+	Parent  string
+	Entries []Entry
+}
+
 // Entry corresponds to an item on the path - can be either a file or a folder
 type Entry struct {
 	Name   string
+	Path   string
 	Size   int64
 	Folder bool
 }
@@ -54,21 +63,28 @@ func Mount(path string) error {
 }
 
 // List returns the entries in a given path relative to the root path
-func List(relPath string) ([]Entry, error) {
+func List(relPath string) (FileList, error) {
+	var flist FileList
+
 	if strings.HasPrefix(relPath, "..") {
-		return nil, fmt.Errorf("relpath starting with '..'")
+		return flist, fmt.Errorf("relpath starting with '..'")
 	}
 
 	list, err := ioutil.ReadDir(fullPath(relPath))
 	if err != nil {
-		return nil, fmt.Errorf("failed reading dir: %s", err.Error())
+		return flist, fmt.Errorf("failed reading dir: %s", err.Error())
 	}
 
 	var res []Entry
 
 	for _, item := range list {
+		if strings.HasPrefix(item.Name(), ".") {
+			continue
+		}
+
 		entry := Entry{
 			Name:   item.Name(),
+			Path:   filepath.Join(relPath, item.Name()),
 			Size:   item.Size(),
 			Folder: item.IsDir(),
 		}
@@ -76,7 +92,24 @@ func List(relPath string) ([]Entry, error) {
 		res = append(res, entry)
 	}
 
-	return res, nil
+	flist.Path = relPath
+	flist.Entries = res
+
+	switch relPath {
+	case "", ".", "/":
+		flist.OnRoot = true
+	default:
+		flist.OnRoot = false
+
+		if strings.Contains(relPath, "/") {
+			flist.Parent = relPath[0:strings.LastIndex(relPath, "/")]
+		} else {
+			flist.Parent = ""
+		}
+
+	}
+
+	return flist, nil
 }
 
 //FriendlySize returns the size of the file in a friendly way

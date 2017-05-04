@@ -68,6 +68,24 @@ var routes = Routes{
 		importdb,
 	},
 	route{
+		"fileimport",
+		"GET",
+		"/fileimport",
+		fileimport,
+	},
+	route{
+		"browse",
+		"GET",
+		"/browse/{loc:[0-9a-zA-Z-_/ ]+}",
+		browse,
+	},
+	route{
+		"browse",
+		"GET",
+		"/browse",
+		browseroot,
+	},
+	route{
 		"login",
 		"POST",
 		"/login",
