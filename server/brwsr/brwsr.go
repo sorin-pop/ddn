@@ -10,9 +10,17 @@ import (
 
 var root string
 
+const (
+	kb = 1 << 10
+	mb = 1 << 20
+	gb = 1 << 30
+	tb = 1 << 40
+)
+
 // Entry corresponds to an item on the path - can be either a file or a folder
 type Entry struct {
 	Name   string
+	Size   int64
 	Folder bool
 }
 
@@ -61,6 +69,7 @@ func List(relPath string) ([]Entry, error) {
 	for _, item := range list {
 		entry := Entry{
 			Name:   item.Name(),
+			Size:   item.Size(),
 			Folder: item.IsDir(),
 		}
 
@@ -68,6 +77,27 @@ func List(relPath string) ([]Entry, error) {
 	}
 
 	return res, nil
+}
+
+//FriendlySize returns the size of the file in a friendly way
+func (e Entry) FriendlySize() string {
+	if e.Size < kb {
+		return fmt.Sprintf("%d B", e.Size)
+	}
+
+	if e.Size < mb {
+		return fmt.Sprintf("%.2f Kb", float64(e.Size)/kb)
+	}
+
+	if e.Size < gb {
+		return fmt.Sprintf("%.2f Mb", float64(e.Size)/mb)
+	}
+
+	if e.Size < tb {
+		return fmt.Sprintf("%.2f Gb", float64(e.Size)/gb)
+	}
+
+	return fmt.Sprintf("%.2f Tb", float64(e.Size)/tb)
 }
 
 func fullPath(relPath string) string {

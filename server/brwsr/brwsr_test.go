@@ -96,6 +96,34 @@ func TestList(t *testing.T) {
 			t.Errorf("Folder name should be %q, is %q instead", testFolderInFolder, item.Name)
 		}
 	}
+}
+
+func TestFriendlySize(t *testing.T) {
+	var tests = []struct {
+		size float64
+		want string
+	}{
+		{12, "12 B"},
+		{12 * kb, "12.00 Kb"},
+		{12 * mb, "12.00 Mb"},
+		{12 * gb, "12.00 Gb"},
+		{12 * tb, "12.00 Tb"},
+
+		{1.15 * kb, "1.15 Kb"},
+		{1.32 * mb, "1.32 Mb"},
+		{8.3 * gb, "8.30 Gb"},
+		{10.9 * tb, "10.90 Tb"},
+	}
+
+	var entry Entry
+
+	for _, test := range tests {
+		entry.Size = int64(test.size)
+
+		if entry.FriendlySize() != test.want {
+			t.Errorf("FriendlySize with %f is %q, should be %q", test.size, entry.FriendlySize(), test.want)
+		}
+	}
 
 }
 
