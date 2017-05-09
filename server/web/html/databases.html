@@ -72,11 +72,11 @@
         <thead>
             <tr>
                 <th>Database Name</th>
-                <th>Vendor</th>
                 <th>Connector</th>
                 <th>Created</th>
                 <th>Expires</th>
                 <th>Owner</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -92,11 +92,15 @@
                     <tr class="table-danger">
                 {{end}}
                 <td>{{.DBName}}</td>
-                <td>{{.DBVendor}}</td>
                 <td>{{.ConnectorName}}</td>
                 <td>{{.CreateDate.Format "January 02, 2006"}}</td>
                 <td>{{.ExpiryDate.Format "January 02, 2006"}}</td>
                 <td>{{.Creator}}</td>
+                <td>{{.StatusLabel}}
+                    {{if .IsErr}}
+                        (<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-placement="bottom" title="Failed" data-content="{{.Message}}">Why?</a>)
+                    {{end}}
+                </td>
                 <td>
                     {{if .InProgress}}
                     <div class="progress">
