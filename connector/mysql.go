@@ -110,10 +110,19 @@ func (db *mysql) ListDatabase() ([]string, error) {
 // CreateDatabase creates a Database along with a user, to which all privileges
 // are granted on the created database. Fails if database or user already exists.
 func (db *mysql) CreateDatabase(dbRequest model.DBRequest) error {
-
 	err := db.Alive()
 	if err != nil {
 		return fmt.Errorf("alive check failed: %s", err.Error())
+	}
+
+	switch dbRequest.DatabaseName {
+	case "information_schema", "performance_schema", "mysql", "nbinfo", "sys":
+		return fmt.Errorf("trying to create system databases not allowed")
+	}
+
+	switch dbRequest.Username {
+	case "root", conf.User:
+		return fmt.Errorf("trying to create root user not allowed")
 	}
 
 	exists, err := db.dbExists(dbRequest.DatabaseName)
@@ -172,6 +181,16 @@ func (db *mysql) DropDatabase(dbRequest model.DBRequest) error {
 	err := db.Alive()
 	if err != nil {
 		return fmt.Errorf("alive check failed: %s", err.Error())
+	}
+
+	switch dbRequest.DatabaseName {
+	case "information_schema", "performance_schema", "mysql", "nbinfo", "sys":
+		return fmt.Errorf("dropping system databases not allowed")
+	}
+
+	switch dbRequest.Username {
+	case "root", conf.User:
+		return fmt.Errorf("dropping root user not allowed")
 	}
 
 	tx, err := db.conn.Begin()
