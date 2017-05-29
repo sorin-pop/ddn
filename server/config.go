@@ -9,21 +9,21 @@ import (
 
 // Config to hold the database server and ddn server configuration
 type Config struct {
-	DBAddress   string `toml:"db.address"`
-	DBPort      string `toml:"db.port"`
-	DBUser      string `toml:"db.user.name"`
-	DBPass      string `toml:"db.user.password"`
-	DBName      string `toml:"db.name"`
-	ServerHost  string `toml:"server.host"`
-	ServerPort  string `toml:"server.port"`
-	SMTPAddr    string `toml:"smtp.host"`
-	SMTPPort    int    `toml:"smtp.port"`
-	SMTPUser    string `toml:"smtp.user"`
-	SMTPPass    string `toml:"smtp.password"`
-	EmailSender string `toml:"email.sender"`
-	AdminEmail  string `toml:"admin.email"`
-	UseCDN      bool   `toml:"use.cdn"`
-	MountLoc    string `toml:"mount.loc"`
+	DBAddress   string   `toml:"db.address"`
+	DBPort      string   `toml:"db.port"`
+	DBUser      string   `toml:"db.user.name"`
+	DBPass      string   `toml:"db.user.password"`
+	DBName      string   `toml:"db.name"`
+	ServerHost  string   `toml:"server.host"`
+	ServerPort  string   `toml:"server.port"`
+	SMTPAddr    string   `toml:"smtp.host"`
+	SMTPPort    int      `toml:"smtp.port"`
+	SMTPUser    string   `toml:"smtp.user"`
+	SMTPPass    string   `toml:"smtp.password"`
+	EmailSender string   `toml:"email.sender"`
+	AdminEmail  []string `toml:"admin.email"`
+	UseCDN      bool     `toml:"use.cdn"`
+	MountLoc    string   `toml:"mount.loc"`
 }
 
 // Print prints the configuration to the log.
@@ -52,7 +52,7 @@ func newConfig() Config {
 		DBName:     "ddn",
 		ServerHost: "localhost",
 		ServerPort: "7010",
-		AdminEmail: "webmaster@example.com",
+		AdminEmail: []string{"webmaster@example.com"},
 		UseCDN:     true,
 	}
 }
@@ -75,7 +75,7 @@ func setup(filename string) (*string, Config) {
 	config.SMTPUser = prompter.Ask("Who is the SMTP user?")
 	config.SMTPPass = prompter.Ask("What is the password of the SMTP user?")
 	config.EmailSender = prompter.Ask("What address should be used to send the emails from?")
-	config.AdminEmail = prompter.AskDef("Who should be notified if something goes horribly wrong?", def.AdminEmail)
+	config.AdminEmail[0] = prompter.AskDef("Who should be notified if something goes horribly wrong?", def.AdminEmail[0])
 	config.UseCDN = prompter.AskBoolDef("Should we serve third party javascript, css and fonts from CDN?", true)
 	config.MountLoc = prompter.Ask("If you want to mount a folder for browsing dumps, please specify now")
 

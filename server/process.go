@@ -101,8 +101,10 @@ func checkConnectors() {
 
 				registry[name] = conn
 
-				sendMail(config.AdminEmail, "[Cloud DB] Connector disappeared without trace",
-					fmt.Sprintf("Connector %q at %q no longer exists.", name, addr))
+				for _, addr := range config.AdminEmail {
+					sendMail(addr, "[Cloud DB] Connector disappeared without trace",
+						fmt.Sprintf("Connector %q at %q no longer exists.", name, addr))
+				}
 
 				continue
 			}

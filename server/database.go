@@ -133,8 +133,10 @@ func (db *mysql) Alive() error {
 
 	_, err := db.conn.Exec("select * from `databases` WHERE 1 = 0")
 	if err != nil {
-		if !panicked && config.AdminEmail != "" {
-			sendMail(config.AdminEmail, "[Cloud DB] Local database down", fmt.Sprintf("<p>Something wrong:</p>%s", err.Error()))
+		if !panicked && len(config.AdminEmail) != 0 {
+			for _, addr := range config.AdminEmail {
+				sendMail(addr, "[Cloud DB] Local database down", fmt.Sprintf("<p>Something wrong:</p>%s", err.Error()))
+			}
 			panicked = true
 		}
 
@@ -142,7 +144,9 @@ func (db *mysql) Alive() error {
 	}
 
 	if panicked {
-		sendMail(config.AdminEmail, "[Cloud DB] Local database back online", "Yay")
+		for _, addr := range config.AdminEmail {
+			sendMail(addr, "[Cloud DB] Local database back online", "Yay")
+		}
 		panicked = false
 	}
 

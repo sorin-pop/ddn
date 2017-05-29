@@ -23,8 +23,10 @@ var (
 func main() {
 	defer func() {
 		if p := recover(); p != nil {
-			if config.AdminEmail != "" {
-				sendMail(config.AdminEmail, "[FATAL] Cloud DB server paniced", fmt.Sprintf("%v", p))
+			if len(config.AdminEmail) != 0 {
+				for _, addr := range config.AdminEmail {
+					sendMail(addr, "[FATAL] Cloud DB server paniced", fmt.Sprintf("%v", p))
+				}
 			}
 		}
 	}()
@@ -122,7 +124,9 @@ func main() {
 
 	http.ListenAndServe(port, Router())
 
-	if config.AdminEmail != "" {
-		sendMail(config.AdminEmail, "[Cloud DB] Server went down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
+	if len(config.AdminEmail) != 0 {
+		for _, addr := range config.AdminEmail {
+			sendMail(addr, "[Cloud DB] Server went down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
+		}
 	}
 }
