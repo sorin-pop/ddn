@@ -43,7 +43,7 @@ func maintain() {
 				db.delete(int64(dbe.ID))
 
 				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
-<h3>Database removal scheduled</h3>
+<h3>Database dropped</h3>
 				
 <p>This is to inform you that the database %q has been dropped.</p>
 <p>Thank you for using <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBName))
