@@ -38,6 +38,8 @@ func DownloadFile(dest, url string) (string, error) {
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
+		os.Remove(filepath)
+
 		return "", fmt.Errorf("downloading file failed: %s", err.Error())
 	}
 
