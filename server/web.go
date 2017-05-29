@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/djavorszky/ddn/common/model"
-	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/ddn/server/brwsr"
+	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/liferay"
 	"github.com/gorilla/mux"
 )
@@ -28,8 +28,8 @@ type Page struct {
 	User             string
 	HasUser          bool
 	HasEntry         bool
-	PrivateDatabases []model.DBEntry
-	PublicDatabases  []model.DBEntry
+	PrivateDatabases []database.Entry
+	PublicDatabases  []database.Entry
 	HasPrivateDBs    bool
 	HasPublicDBs     bool
 	Ext62            liferay.JDBC
@@ -85,11 +85,11 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		page.Message = flashes[0].(string)
 		page.MessageType = "success"
 
-		id := session.Values["id"].(int64)
+		id := session.Values["id"].(int)
 
 		if id != 0 {
 			page.HasEntry = true
-			entry, err := db.entryByID(id)
+			entry, err := database.FetchByID(id)
 			if err != nil {
 				log.Printf("Failed querying for database: %s", err.Error())
 				session.AddFlash("Failed querying database", "fail")
@@ -124,7 +124,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		// DEBUG:
 		if !page.HasEntry {
 			page.HasEntry = true
-			entry := db.entryByID(1)
+			entry := database.FetchByID(1)
 
 			page.ExtDXP = portalExt(entry, true)
 			page.Ext62 = portalExt(entry, false)
@@ -152,7 +152,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	if pages[0] == "home" {
 		pages = append(pages, "databases")
 
-		privateDBs, err := db.listWhere(clause{"creator", page.User}, clause{"visibility", vis.Private})
+		privateDBs, err := database.FetchByCreator(page.User)
 		if err != nil {
 			log.Printf("couldn't list databases: %s", err.Error())
 		}
@@ -162,7 +162,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 			page.HasPrivateDBs = true
 		}
 
-		publicDBs, err := db.listWhere(clause{"visibility", vis.Public})
+		publicDBs, err := database.FetchPublic()
 		if err != nil {
 			log.Printf("couldn't list databases: %s", err.Error())
 		}

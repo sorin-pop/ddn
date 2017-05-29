@@ -9,6 +9,7 @@ import (
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/ddn/server/database"
 )
 
 // maintain runs each day and checks the databases about when they will expire.
@@ -23,7 +24,7 @@ func maintain() {
 	ticker := time.NewTicker(24 * time.Hour)
 
 	for range ticker.C {
-		dbs, err := db.list()
+		dbs, err := database.FetchAll()
 		if err != nil {
 			log.Printf("Failed listing databases: %s", err.Error())
 		}
@@ -40,7 +41,7 @@ func maintain() {
 				}
 
 				conn.DropDatabase(getID(), dbe.DBName, dbe.DBUser)
-				db.delete(int64(dbe.ID))
+				database.Delete(dbe)
 
 				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
 <h3>Database dropped</h3>
@@ -74,7 +75,9 @@ func maintain() {
 			// if expires within a week:
 			weekPlus := now.AddDate(0, 0, 7)
 			if dbe.ExpiryDate.Before(weekPlus) {
-				db.updateColumns(dbe.ID, updateClause{Column: "status", Value: status.RemovalScheduled, Literal: true})
+				dbe.Status = status.RemovalScheduled
+
+				database.Update(&dbe)
 
 				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in one week", dbe.DBName), fmt.Sprintf(`
 <h3>Database removal scheduled</h3>

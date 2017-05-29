@@ -16,6 +16,7 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
 	vis "github.com/djavorszky/ddn/common/visibility"
+	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
@@ -84,60 +85,61 @@ func prepImportAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go doImport(dbID, dumpfile)
+	go doImport(int(dbID), dumpfile)
 
 	session.AddFlash("Started the import process...")
 }
 
-func doImport(dbID int64, dumpfile string) {
-	dbe, err := db.entryByID(dbID)
+func doImport(dbID int, dumpfile string) {
+	dbe, err := database.FetchByID(dbID)
 	if err != nil {
 		log.Printf("Failed getting entry by ID: %s", err.Error())
-		db.updateColumns(
-			int(dbID),
-			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
-			updateClause{Column: "message", Value: "Server error: " + err.Error()})
+		dbe.Status = status.ImportFailed
+		dbe.Message = "Server error: " + err.Error()
+
+		database.Update(&dbe)
+
 		return
 	}
 
-	db.updateColumns(int(dbID), updateClause{Column: "status", Value: status.InProgress, Literal: true})
+	dbe.Status = status.InProgress
+	database.Update(&dbe)
 
 	url, err := copyFile(dumpfile)
 	if err != nil {
 		log.Printf("Failed copying file: %s", err.Error())
-		db.updateColumns(
-			int(dbID),
-			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
-			updateClause{Column: "message", Value: "Server error: " + err.Error()})
+		dbe.Status = status.ImportFailed
+		dbe.Message = "Server error: " + err.Error()
+
+		database.Update(&dbe)
 		return
 	}
 
-	db.updateColumns(
-		int(dbID),
-		updateClause{Column: "dumpfile", Value: url})
+	dbe.Dumpfile = url
+	database.Update(&dbe)
 
 	conn, ok := registry[dbe.ConnectorName]
 	if !ok {
-		db.updateColumns(
-			int(dbID),
-			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
-			updateClause{Column: "message", Value: "Server error: connector went offline."})
+		dbe.Status = status.ImportFailed
+		dbe.Message = "Server error: connector went offline."
+
+		database.Update(&dbe)
 		return
 	}
 
 	_, err = conn.ImportDatabase(int(dbID), dbe.DBName, dbe.DBUser, dbe.DBPass, url)
 	if err != nil {
-		db.updateColumns(
-			int(dbID),
-			updateClause{Column: "status", Value: status.ImportFailed, Literal: true},
-			updateClause{Column: "message", Value: "Server error: " + err.Error()})
+		dbe.Status = status.ImportFailed
+		dbe.Message = "Server error: " + err.Error()
+
+		database.Update(&dbe)
 		os.Remove("./web/dumps/" + dumpfile)
 		return
 	}
 
 }
 
-func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public string) (int64, error) {
+func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public string) (int, error) {
 	conn, ok := registry[connector]
 	if !ok {
 		return 0, fmt.Errorf("connector went offline")
@@ -154,7 +156,7 @@ func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public s
 
 	ensureValues(&dbname, &dbuser, &dbpass)
 
-	entry := model.DBEntry{
+	entry := database.Entry{
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
@@ -171,12 +173,12 @@ func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public s
 		entry.Public = vis.Public
 	}
 
-	dbID, err := db.persist(entry)
+	err := database.Insert(&entry)
 	if err != nil {
 		return 0, fmt.Errorf("failed persisting database locally: %s", err.Error())
 	}
 
-	return dbID, nil
+	return entry.ID, nil
 }
 
 func copyFile(dump string) (string, error) {
@@ -278,7 +280,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	ensureValues(&dbname, &dbuser, &dbpass)
 
-	entry := model.DBEntry{
+	entry := database.Entry{
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
@@ -296,7 +298,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		entry.Public = vis.Public
 	}
 
-	dbID, err := db.persist(entry)
+	err = database.Insert(&entry)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
 		session.AddFlash(fmt.Sprintf("failed persisting database locally: %s", err.Error()))
@@ -304,11 +306,11 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := conn.ImportDatabase(int(dbID), dbname, dbuser, dbpass, url)
+	resp, err := conn.ImportDatabase(entry.ID, dbname, dbuser, dbpass, url)
 	if err != nil {
 		session.AddFlash(err.Error(), "fail")
 
-		db.delete(dbID)
+		database.Delete(entry)
 		os.Remove("./web/dumps/" + filename)
 		return
 	}
@@ -359,7 +361,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry := model.DBEntry{
+	entry := database.Entry{
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
@@ -376,12 +378,12 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		entry.Public = vis.Public
 	}
 
-	dbID, err := db.persist(entry)
+	err = database.Insert(&entry)
 	if err != nil {
-		log.Printf("Error: %s", err.Error())
+		log.Printf("Failed adding entry: %s", err.Error())
 	}
 
-	session.Values["id"] = dbID
+	session.Values["id"] = entry.ID
 	session.AddFlash(resp, "success")
 }
 
@@ -486,11 +488,19 @@ func extend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumns(
-		ID,
-		updateClause{Column: "expiryDate", Value: "NOW() + INTERVAL 30 DAY", Literal: true},
-		updateClause{Column: "status", Value: status.Success, Literal: true},
-	)
+	dbe, err := database.FetchByID(ID)
+	if err != nil {
+		http.Error(w, "Failed fetching entry: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	dbe.ExpiryDate = time.Now().AddDate(0, 0, 30)
+
+	err = database.Update(&dbe)
+	if err != nil {
+		http.Error(w, "Failed updating entry: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	session, err := store.Get(r, "user-session")
 	if err != nil {
@@ -526,7 +536,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe, err := db.entryByID(int64(ID))
+	dbe, err := database.FetchByID(ID)
 	if err != nil {
 		log.Printf("Failed querying for database: %s", err.Error())
 		session.AddFlash("Failed querying database", "fail")
@@ -546,7 +556,9 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumns(ID, updateClause{Column: "status", Value: status.DropInProgress, Literal: true})
+	dbe.Status = status.DropInProgress
+
+	database.Update(&dbe)
 
 	go dropAsync(conn, ID, dbe.DBName, dbe.DBUser)
 
@@ -554,16 +566,24 @@ func drop(w http.ResponseWriter, r *http.Request) {
 }
 
 func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
-	_, err := conn.DropDatabase(ID, dbname, dbuser)
+	dbe, err := database.FetchByID(ID)
 	if err != nil {
-		db.updateColumns(ID,
-			updateClause{Column: "status", Value: status.DropDatabaseFailed, Literal: true},
-			updateClause{Column: "message", Value: err.Error()})
 		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
 		return
 	}
 
-	db.delete(int64(ID))
+	_, err = conn.DropDatabase(ID, dbname, dbuser)
+	if err != nil {
+		dbe.Status = status.DropDatabaseFailed
+		dbe.Message = err.Error()
+
+		database.Update(&dbe)
+
+		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
+		return
+	}
+
+	database.Delete(dbe)
 }
 
 func portalext(w http.ResponseWriter, r *http.Request) {
@@ -590,7 +610,7 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe, err := db.entryByID(int64(ID))
+	dbe, err := database.FetchByID(ID)
 	if err != nil {
 		log.Printf("Failed querying for database: %s", err.Error())
 		session.AddFlash("Failed querying database", "fail")
@@ -603,7 +623,7 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session.Values["id"] = int64(ID)
+	session.Values["id"] = ID
 	session.AddFlash("Portal-exts are as follows", "success")
 }
 
@@ -619,13 +639,15 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.updateColumns(msg.ID, updateClause{Column: "status", Value: msg.StatusID, Literal: true})
-
-	dbe, err := db.entryByID(int64(msg.ID))
+	dbe, err := database.FetchByID(msg.ID)
 	if err != nil {
 		log.Printf("Failed querying for database: %s", err.Error())
 		return
 	}
+
+	dbe.Status = msg.StatusID
+
+	database.Update(&dbe)
 
 	// Delete the dumpfile once import is started or if an error has occurred.
 	if dbe.Status == status.ImportInProgress || dbe.IsErr() {
@@ -649,7 +671,9 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 <p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBVendor, dbe.DBName, msg.Message))
 
 		// Update dbentry as well
-		err = db.updateColumns(msg.ID, updateClause{Column: "message", Value: msg.Message, Literal: false})
+		dbe.Message = msg.Message
+
+		err = database.Update(&dbe)
 		if err != nil {
 			log.Printf("Couldn't update local db: %s", err.Error())
 		}
@@ -735,7 +759,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		return model.Connector{}, fmt.Errorf("creating database failed: %s", msg.Message)
 	}
 
-	dbentry := model.DBEntry{
+	dbentry := database.Entry{
 		DBName:        req.DatabaseName,
 		DBUser:        req.Username,
 		DBPass:        req.Password,
@@ -745,7 +769,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		Status:        status.Success,
 	}
 
-	db.persist(dbentry)
+	database.Insert(&dbentry)
 
 	return con, nil
 }

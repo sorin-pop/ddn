@@ -10,6 +10,7 @@ import (
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/sutils"
 )
 
@@ -72,7 +73,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe := model.DBEntry{
+	dbe := database.Entry{
 		DBName:        req.DatabaseName,
 		DBUser:        req.Username,
 		DBPass:        req.Password,
@@ -87,7 +88,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		Status:        status.Success,
 	}
 
-	_, err = db.persist(dbe)
+	err = database.Insert(&dbe)
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
 			Status:  status.CreateDatabaseFailed,

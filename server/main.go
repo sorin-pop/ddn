@@ -13,10 +13,10 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
+	"github.com/djavorszky/ddn/server/database"
 )
 
 var (
-	db     *mysql
 	config Config
 )
 
@@ -25,7 +25,7 @@ func main() {
 		if p := recover(); p != nil {
 			if len(config.AdminEmail) != 0 {
 				for _, addr := range config.AdminEmail {
-					sendMail(addr, "[FATAL] Cloud DB server paniced", fmt.Sprintf("%v", p))
+					sendMail(addr, "[FATAL] Cloud DB server panicked", fmt.Sprintf("%v", p))
 				}
 			}
 		}
@@ -101,13 +101,11 @@ func main() {
 		}
 	}
 
-	db = new(mysql)
-
-	err = db.connect(config)
+	err = database.ConnectAndPrepare(config.DBAddress, config.DBPort, config.DBUser, config.DBPass, config.DBName)
 	if err != nil {
-		log.Fatalf("database connection failed: %s", err.Error())
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.close()
+	defer database.Close()
 
 	log.Println("Database connection established")
 
@@ -122,7 +120,7 @@ func main() {
 
 	port := fmt.Sprintf(":%s", config.ServerPort)
 
-	http.ListenAndServe(port, Router())
+	log.Println(http.ListenAndServe(port, Router()))
 
 	if len(config.AdminEmail) != 0 {
 		for _, addr := range config.AdminEmail {
