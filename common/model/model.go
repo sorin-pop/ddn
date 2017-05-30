@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/status"
@@ -66,91 +65,6 @@ type Connector struct {
 	Address       string
 	Token         string
 	Up            bool
-}
-
-// DBEntry represents a row in the "databases" table.
-type DBEntry struct {
-	ID            int       `json:"id"`
-	DBVendor      string    `json:"vendor"`
-	DBName        string    `json:"dbname"`
-	DBUser        string    `json:"dbuser"`
-	DBPass        string    `json:"dbpass"`
-	DBSID         string    `json:"sid"`
-	Dumpfile      string    `json:"dumplocation"`
-	CreateDate    time.Time `json:"createdate"`
-	ExpiryDate    time.Time `json:"expirydate"`
-	Creator       string    `json:"creator"`
-	ConnectorName string    `json:"connector"`
-	DBAddress     string    `json:"dbaddress"`
-	DBPort        string    `json:"dbport"`
-	Status        int       `json:"status"`
-	Message       string    `json:"message"`
-	Public        int       `json:"public"`
-}
-
-// InProgress returns true if the DBEntry's status denotes that something's in progress.
-func (dbe DBEntry) InProgress() bool {
-	return dbe.Status < 100
-}
-
-// IsStatusOk returns true if the DBEntry's status is OK.
-func (dbe DBEntry) IsStatusOk() bool {
-	return dbe.Status > 99 && dbe.Status < 200
-}
-
-// IsClientErr returns true if something went wrong with the client request.
-func (dbe DBEntry) IsClientErr() bool {
-	return dbe.Status > 199 && dbe.Status < 300
-}
-
-// IsServerErr returns true if something went wrong on the server.
-func (dbe DBEntry) IsServerErr() bool {
-	return dbe.Status > 299 && dbe.Status < 400
-}
-
-// IsErr returns true if something went wrong either on the server or with the client request.
-func (dbe DBEntry) IsErr() bool {
-	return dbe.IsServerErr() || dbe.IsClientErr()
-}
-
-// IsWarn returns true if something went wrong either on the server or with the client request.
-func (dbe DBEntry) IsWarn() bool {
-	return dbe.Status > 399
-}
-
-// StatusLabel returns the string representation of the status
-func (dbe DBEntry) StatusLabel() string {
-	label, ok := status.Labels[dbe.Status]
-	if !ok {
-		return "Unknown"
-	}
-
-	return label
-}
-
-// Progress returns the progress as 0 <= progress <= 100 of its current import.
-// If error, returns 0; If success, returns 100;
-func (dbe DBEntry) Progress() int {
-	if dbe.IsClientErr() || dbe.IsServerErr() {
-		return 0
-	}
-
-	if dbe.IsStatusOk() {
-		return 100
-	}
-
-	switch dbe.Status {
-	case status.DownloadInProgress:
-		return 0
-	case status.ExtractingArchive:
-		return 25
-	case status.ValidatingDump:
-		return 50
-	case status.ImportInProgress:
-		return 75
-	default:
-		return 0
-	}
 }
 
 // CreateDatabase sends a request to the connector to create a database.
