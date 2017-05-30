@@ -14,6 +14,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/mail"
 )
 
 var (
@@ -25,7 +26,7 @@ func main() {
 		if p := recover(); p != nil {
 			if len(config.AdminEmail) != 0 {
 				for _, addr := range config.AdminEmail {
-					sendMail(addr, "[FATAL] Cloud DB server panicked", fmt.Sprintf("%v", p))
+					mail.Send(addr, "[FATAL] Cloud DB server panicked", fmt.Sprintf("%v", p))
 				}
 			}
 		}
@@ -112,6 +113,20 @@ func main() {
 	initRegistry()
 	log.Println("Registry initialized")
 
+	if config.SMTPAddr != "" {
+		if config.SMTPUser != "" {
+			err = mail.Init(config.SMTPAddr, config.SMTPPort, config.SMTPUser, config.SMTPPass, config.EmailSender)
+		} else {
+			err = mail.InitNoAuth(config.SMTPAddr, config.SMTPPort, config.EmailSender)
+		}
+
+		if err != nil {
+			log.Printf("Mail failed to initialize: %v", err)
+		} else {
+			log.Printf("Mail initialized")
+		}
+	}
+
 	// Start maintenance goroutine
 	go maintain()
 
@@ -124,7 +139,7 @@ func main() {
 
 	if len(config.AdminEmail) != 0 {
 		for _, addr := range config.AdminEmail {
-			sendMail(addr, "[Cloud DB] Server went down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
+			mail.Send(addr, "[Cloud DB] Server went down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
 		}
 	}
 }

@@ -5,11 +5,10 @@ import (
 	"log"
 	"time"
 
-	gomail "gopkg.in/gomail.v2"
-
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/mail"
 )
 
 // maintain runs each day and checks the databases about when they will expire.
@@ -43,7 +42,7 @@ func maintain() {
 				conn.DropDatabase(getID(), dbe.DBName, dbe.DBUser)
 				database.Delete(dbe)
 
-				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
+				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
 <h3>Database dropped</h3>
 				
 <p>This is to inform you that the database %q has been dropped.</p>
@@ -58,7 +57,7 @@ func maintain() {
 			// on the next check the expiry date will be in the past.
 			dayPlus := now.AddDate(0, 0, 1)
 			if dbe.ExpiryDate.Before(dayPlus) {
-				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in 1 day", dbe.DBName), fmt.Sprintf(`
+				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in 1 day", dbe.DBName), fmt.Sprintf(`
 <h3>Database removal imminent</h3>
 				
 <p>This is to inform you that the database %q will be removed in one day.</p>
@@ -79,7 +78,7 @@ func maintain() {
 
 				database.Update(&dbe)
 
-				sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in one week", dbe.DBName), fmt.Sprintf(`
+				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in one week", dbe.DBName), fmt.Sprintf(`
 <h3>Database removal scheduled</h3>
 				
 <p>This is to inform you that the database %q will be removed in 7 days.</p>
@@ -105,7 +104,7 @@ func checkConnectors() {
 				registry[name] = conn
 
 				for _, addr := range config.AdminEmail {
-					sendMail(addr, "[Cloud DB] Connector disappeared without trace",
+					mail.Send(addr, "[Cloud DB] Connector disappeared without trace",
 						fmt.Sprintf("Connector %q at %q no longer exists.", name, addr))
 				}
 
@@ -119,37 +118,4 @@ func checkConnectors() {
 			}
 		}
 	}
-}
-
-// sendMail sends an email to "to" with subject "subj" and body "body".
-// It only returns with an error if something went wrong in this process.
-//
-// If the server is not configured to send an email (e.g. address, port or EmailSender
-// is empty, it silently returns)
-func sendMail(to, subj, body string) error {
-	if config.SMTPAddr == "" || config.SMTPPort == 0 || config.EmailSender == "" {
-		log.Println("Returning because not configured to send email.")
-		return nil
-	}
-
-	m := gomail.NewMessage()
-
-	m.SetHeader("From", config.EmailSender)
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", subj)
-
-	m.SetBody("text/html", body)
-
-	dialer := gomail.Dialer{
-		Host:     config.SMTPAddr,
-		Port:     config.SMTPPort,
-		Username: config.SMTPUser,
-		Password: config.SMTPPass,
-	}
-
-	if err := dialer.DialAndSend(m); err != nil {
-		return fmt.Errorf("failed to send email: %s", err.Error())
-	}
-
-	return nil
 }

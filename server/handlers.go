@@ -17,6 +17,7 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/mail"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
@@ -662,7 +663,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dbe.IsErr() {
-		sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q failed", dbe.DBName), fmt.Sprintf(`<h3>Import database failed</h3>
+		mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q failed", dbe.DBName), fmt.Sprintf(`<h3>Import database failed</h3>
 		
 <p>Your request to import a(n) %q database named %q has failed with the following message:</p>
 <p>%q</p>
@@ -700,7 +701,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 			jdbcDXP = jdbc62x
 		}
 
-		sendMail(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q succeeded", dbe.DBName), fmt.Sprintf(`<h3>Import database successful</h3>
+		mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q succeeded", dbe.DBName), fmt.Sprintf(`<h3>Import database successful</h3>
 		
 <p>The %s import that you started completed successfully.</p>
 <p>Below you can find the portal-exts, should you need them:</p>
