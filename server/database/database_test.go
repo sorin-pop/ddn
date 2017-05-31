@@ -394,18 +394,20 @@ func compareDBEntries(first, second Entry) error {
 		return fmt.Errorf("Dumpfile mismatch. First: %q vs Second: %q", first.Dumpfile, second.Dumpfile)
 	}
 
-	// Format to time.ANSIC - there's a timezone mismatch between Go and MySQL - with this, we overcome
-	// that issue.
-	fFirstCreateDate := first.CreateDate.Round(time.Second).Format(time.ANSIC)
-	fSecondCreateDate := second.CreateDate.Round(time.Second).Format(time.ANSIC)
-	if fFirstCreateDate != fSecondCreateDate {
-		return fmt.Errorf("CreateDate mismatch. First: %q vs Second: %q", fFirstCreateDate, fSecondCreateDate)
+	roundedFirstCreate := first.CreateDate.Round(time.Second)
+	roundedSecondCreate := second.CreateDate.Round(time.Second)
+
+	delta := roundedFirstCreate.Sub(roundedSecondCreate)
+	if delta < -1 || delta > 1 {
+		return fmt.Errorf("CreateDate mismatch. First: %q vs Second: %q", roundedFirstCreate.Format(time.ANSIC), roundedSecondCreate.Format(time.ANSIC))
 	}
 
-	fFirstExpiryDate := first.ExpiryDate.Round(time.Second).Format(time.ANSIC)
-	fSecondExpiryDate := second.ExpiryDate.Round(time.Second).Format(time.ANSIC)
-	if fFirstExpiryDate != fSecondExpiryDate {
-		return fmt.Errorf("ExpiryDate mismatch. First: %q vs Second: %q", fFirstExpiryDate, fSecondExpiryDate)
+	roundedFirstExpiry := first.ExpiryDate.Round(time.Second)
+	roundedSecondExpiry := second.ExpiryDate.Round(time.Second)
+
+	delta = roundedFirstExpiry.Sub(roundedSecondExpiry)
+	if delta < -1 || delta > 1 {
+		return fmt.Errorf("ExpiryDate mismatch. First: %q vs Second: %q", roundedFirstExpiry.Format(time.ANSIC), roundedSecondExpiry.Format(time.ANSIC))
 	}
 
 	if first.Creator != second.Creator {
