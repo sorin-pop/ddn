@@ -335,7 +335,6 @@ func TestFetchAll(t *testing.T) {
 
 func TestReadRow(t *testing.T) {
 	err := Insert(&testEntry)
-	fmt.Println(testEntry.ID)
 	if err != nil {
 		t.Errorf("Failed adding a entry: %s", err.Error())
 	}
@@ -394,20 +393,14 @@ func compareDBEntries(first, second Entry) error {
 		return fmt.Errorf("Dumpfile mismatch. First: %q vs Second: %q", first.Dumpfile, second.Dumpfile)
 	}
 
-	roundedFirstCreate := first.CreateDate.Round(time.Second)
-	roundedSecondCreate := second.CreateDate.Round(time.Second)
-
-	delta := roundedFirstCreate.Sub(roundedSecondCreate)
-	if delta < -1 || delta > 1 {
-		return fmt.Errorf("CreateDate mismatch. First: %q vs Second: %q", roundedFirstCreate.Format(time.ANSIC), roundedSecondCreate.Format(time.ANSIC))
+	delta := first.CreateDate.Sub(second.CreateDate)
+	if delta < -1*time.Second || delta > 1*time.Second {
+		return fmt.Errorf("CreateDate mismatch. First: %q vs Second: %q", first.CreateDate.Round(time.Second).Format(time.ANSIC), second.CreateDate.Round(time.Second).Format(time.ANSIC))
 	}
 
-	roundedFirstExpiry := first.ExpiryDate.Round(time.Second)
-	roundedSecondExpiry := second.ExpiryDate.Round(time.Second)
-
-	delta = roundedFirstExpiry.Sub(roundedSecondExpiry)
-	if delta < -1 || delta > 1 {
-		return fmt.Errorf("ExpiryDate mismatch. First: %q vs Second: %q", roundedFirstExpiry.Format(time.ANSIC), roundedSecondExpiry.Format(time.ANSIC))
+	delta = first.ExpiryDate.Sub(second.ExpiryDate)
+	if delta < -1*time.Second || delta > 1*time.Second {
+		return fmt.Errorf("ExpiryDate mismatch. First: %q vs Second: %q", first.ExpiryDate.Round(time.Second).Format(time.ANSIC), second.ExpiryDate.Round(time.Second).Format(time.ANSIC))
 	}
 
 	if first.Creator != second.Creator {
