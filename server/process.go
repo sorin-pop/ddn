@@ -9,6 +9,7 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/mail"
+	"github.com/djavorszky/ddn/server/registry"
 )
 
 // maintain runs each day and checks the databases about when they will expire.
@@ -33,13 +34,13 @@ func maintain() {
 
 			// if expired
 			if dbe.ExpiryDate.Before(now) {
-				conn, ok := registry[dbe.ConnectorName]
+				conn, ok := registry.Get(dbe.ConnectorName)
 				if !ok {
 					log.Printf("Wanted to drop database %q but its connector %q is offline", dbe.DBName, dbe.ConnectorName)
 					continue
 				}
 
-				conn.DropDatabase(getID(), dbe.DBName, dbe.DBUser)
+				conn.DropDatabase(registry.ID(), dbe.DBName, dbe.DBUser)
 				database.Delete(dbe)
 
 				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
@@ -95,17 +96,17 @@ func checkConnectors() {
 	ticker := time.NewTicker(30 * time.Second)
 
 	for range ticker.C {
-		for name, conn := range registry {
+		for _, conn := range registry.List() {
 			addr := fmt.Sprintf("%s:%s/heartbeat", conn.Address, conn.ConnectorPort)
 
 			if !inet.AddrExists(addr) && conn.Up {
 				conn.Up = false
 
-				registry[name] = conn
+				registry.Store(conn)
 
 				for _, addr := range config.AdminEmail {
 					mail.Send(addr, "[Cloud DB] Connector disappeared without trace",
-						fmt.Sprintf("Connector %q at %q no longer exists.", name, addr))
+						fmt.Sprintf("Connector %q at %q no longer exists.", conn.ShortName, addr))
 				}
 
 				continue
@@ -114,7 +115,7 @@ func checkConnectors() {
 			if !conn.Up && inet.AddrExists(addr) {
 				conn.Up = true
 
-				registry[name] = conn
+				registry.Store(conn)
 			}
 		}
 	}

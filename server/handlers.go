@@ -18,6 +18,7 @@ import (
 	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/mail"
+	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
 
@@ -119,7 +120,7 @@ func doImport(dbID int, dumpfile string) {
 	dbe.Dumpfile = url
 	database.Update(&dbe)
 
-	conn, ok := registry[dbe.ConnectorName]
+	conn, ok := registry.Get(dbe.ConnectorName)
 	if !ok {
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: connector went offline."
@@ -141,7 +142,7 @@ func doImport(dbID int, dumpfile string) {
 }
 
 func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public string) (int, error) {
-	conn, ok := registry[connector]
+	conn, ok := registry.Get(connector)
 	if !ok {
 		return 0, fmt.Errorf("connector went offline")
 	}
@@ -263,7 +264,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
 
-	conn, ok := registry[connector]
+	conn, ok := registry.Get(connector)
 	if !ok {
 		session.AddFlash(fmt.Sprintf("Failed importing database, connector %s went offline", connector), "fail")
 		os.Remove("./web/dumps/" + filename)
@@ -338,7 +339,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Save(r, w)
 
-	conn, ok := registry[connector]
+	conn, ok := registry.Get(connector)
 	if !ok {
 		session.AddFlash(fmt.Sprintf("Failed creating database, connector %s went offline", connector), "fail")
 		return
@@ -349,7 +350,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		dbpass = "password"
 	}
 
-	ID := getID()
+	ID := registry.ID()
 	if dbname == "" && dbuser != "" {
 		dbname = dbuser
 	}
@@ -399,7 +400,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ddnc := model.Connector{
-		ID:            getID(),
+		ID:            registry.ID(),
 		DBVendor:      req.DBVendor,
 		DBPort:        req.DBPort,
 		DBAddr:        req.DBAddr,
@@ -413,11 +414,9 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Up:            true,
 	}
 
-	registry[req.ShortName] = ddnc
+	registry.Store(ddnc)
 
 	log.Printf("Registered: %v", req.ConnectorName)
-
-	log.Printf("%+v", ddnc)
 
 	conAddr := fmt.Sprintf("%s:%s", ddnc.Address, ddnc.ConnectorPort)
 
@@ -428,17 +427,17 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func unregister(w http.ResponseWriter, r *http.Request) {
-	var con model.Connector
+	var conn model.Connector
 
-	err := json.NewDecoder(r.Body).Decode(&con)
+	err := json.NewDecoder(r.Body).Decode(&conn)
 	if err != nil {
 		log.Printf("Could not jsonify message: %s", err.Error())
 		return
 	}
 
-	delete(registry, con.ShortName)
+	registry.Remove(conn.ShortName)
 
-	log.Printf("Unregistered: %s", con.Identifier)
+	log.Printf("Unregistered: %s", conn.Identifier)
 }
 
 func alive(w http.ResponseWriter, r *http.Request) {
@@ -550,7 +549,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, ok := registry[dbe.ConnectorName]
+	conn, ok := registry.Get(dbe.ConnectorName)
 	if !ok {
 		log.Printf("Connector %q is offline, can't drop database with id '%d'", dbe.ConnectorName, ID)
 		session.AddFlash("Unable to drop database: Connector is down.", "fail")
@@ -736,7 +735,7 @@ func ensureValues(vals ...*string) {
 }
 
 func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
-	con, ok := registry[req.ConnectorIdentifier]
+	con, ok := registry.Get(req.ConnectorIdentifier)
 	if !ok {
 		return model.Connector{}, fmt.Errorf("requested identifier %q not in registry", req.ConnectorIdentifier)
 	}

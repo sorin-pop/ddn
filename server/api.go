@@ -11,13 +11,14 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/sutils"
 )
 
 // apiList will list all available connectors in a JSON format.
 func apiList(w http.ResponseWriter, r *http.Request) {
 	list := make(map[string]string, 10)
-	for _, con := range registry {
+	for _, con := range registry.List() {
 		list[con.ShortName] = con.LongName
 	}
 
@@ -52,7 +53,9 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		conn model.Connector
 		ok   bool
 	)
-	if conn, ok = registry[req.ConnectorIdentifier]; !ok {
+
+	conn, ok = registry.Get(req.ConnectorIdentifier)
+	if !ok {
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
 			Status:  status.MissingParameters,
 			Message: fmt.Sprintf("Connector '%s' not found in registry", req.ConnectorIdentifier)})
@@ -60,7 +63,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.ID == 0 {
-		req.ID = getID()
+		req.ID = registry.ID()
 	}
 
 	ensureValues(&req.DatabaseName, &req.Username, &req.Password)
