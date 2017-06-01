@@ -44,7 +44,7 @@ func FetchByCreator(creator string) ([]Entry, error) {
 
 	var entries []Entry
 
-	rows, err := conn.Query("SELECT * FROM `databases` WHERE creator = ?", creator)
+	rows, err := conn.Query("SELECT * FROM `databases` WHERE creator = ? ORDER BY id DESC", creator)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}
@@ -168,7 +168,7 @@ func FetchPublic() ([]Entry, error) {
 
 	var entries []Entry
 
-	rows, err := conn.Query("SELECT * FROM `databases` WHERE visibility = 1")
+	rows, err := conn.Query("SELECT * FROM `databases` WHERE visibility = 1 ORDER BY id DESC")
 	if err != nil {
 		return nil, fmt.Errorf("failed running query: %v", err)
 	}
@@ -193,7 +193,7 @@ func FetchAll() ([]Entry, error) {
 
 	var entries []Entry
 
-	rows, err := conn.Query("SELECT * FROM `databases`")
+	rows, err := conn.Query("SELECT * FROM `databases` ORDER BY id DESC")
 	if err != nil {
 		return nil, fmt.Errorf("failed running query: %v", err)
 	}
