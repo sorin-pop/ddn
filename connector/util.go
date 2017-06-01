@@ -83,7 +83,7 @@ func textsOccur(file *os.File, t ...[]string) (map[int]bool, error) {
 
 	for _, strslice := range t {
 		for _, str := range strslice {
-			lines, err := sutils.FindWith(strings.HasPrefix, file, str)
+			lines, err := sutils.FindWith(strings.Contains, file, str)
 			if err != nil {
 				return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
 			}
@@ -110,10 +110,12 @@ func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
 
 	writer := bufio.NewWriter(tmpFile)
 
-	curLine := 1
+	curLine := 0
 	reader := bufio.NewReader(file)
 
 	for {
+		curLine++
+
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
@@ -128,7 +130,6 @@ func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
 		}
 
 		writer.WriteString(line)
-		curLine++
 	}
 
 	err = writer.Flush()

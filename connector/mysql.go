@@ -334,9 +334,9 @@ func (db *mysql) validateDump(path string) (string, error) {
 	var (
 		lines map[int]bool
 
-		create = []string{"create database", "CREATE DATABASE"}
-		use    = []string{"use ", "USE "}
-		drop   = []string{"drop database", "DROP DATABASE"}
+		create  = []string{"create database", "CREATE DATABASE"}
+		drop    = []string{"drop database", "DROP DATABASE"}
+		definer = []string{"50013 DEFINER=", "50013 definer="}
 	)
 
 	file, err := os.Open(path)
@@ -345,7 +345,7 @@ func (db *mysql) validateDump(path string) (string, error) {
 	}
 	defer file.Close()
 
-	lines, err = textsOccur(file, create, use, drop)
+	lines, err = textsOccur(file, create, drop, definer)
 	if err != nil {
 		return path, err
 	}
