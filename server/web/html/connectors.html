@@ -5,11 +5,11 @@
             <h4 class="card-title">Active connectors</h4>
         </div>
         <ul class="list-group list-group-flush">
-        {{range $n, $v := .Connectors}}
-            {{if $v.Up}}
-            <li class="list-group-item"><i class="fa fa-check fa-fw up" aria-hidden="true" data-toggle="tooltip" data-placement="left" title="Connector is up!"> </i>{{$n}} ({{$v.LongName}})</li>
+        {{range .Connectors}}
+            {{if .Up}}
+            <li class="list-group-item"><i class="fa fa-check fa-fw up" aria-hidden="true" data-toggle="tooltip" data-placement="left" title="Connector is up!"> </i>{{.ShortName}} ({{.LongName}})</li>
             {{else}}
-            <li class="list-group-item"><i class="fa fa-exclamation-triangle fa-fw down" aria-hidden="true" data-toggle="tooltip" data-placement="left" title="Connector seems to be down."> </i>  {{$n}} ({{$v.LongName}})</li>
+            <li class="list-group-item"><i class="fa fa-exclamation-triangle fa-fw down" aria-hidden="true" data-toggle="tooltip" data-placement="left" title="Connector seems to be down."> </i>  {{.ShortName}} ({{.LongName}})</li>
             {{end}}
         {{end}}
         </ul>

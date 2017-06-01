@@ -11,6 +11,7 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/liferay"
 	"github.com/gorilla/mux"
 )
@@ -18,7 +19,7 @@ import (
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
 	UseCDN           bool
-	Connectors       *map[string]model.Connector
+	Connectors       []model.Connector
 	AnyOnline        bool
 	Title            string
 	Pages            map[string]string
@@ -43,14 +44,14 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 	page := Page{
 		UseCDN:           config.UseCDN,
-		Connectors:       &registry,
+		Connectors:       registry.List(),
 		Title:            getTitle(r.URL.Path),
 		Pages:            getPages(),
 		ActivePage:       r.URL.Path,
 		HasMountedFolder: config.MountLoc != "",
 	}
 
-	for _, conn := range registry {
+	for _, conn := range registry.List() {
 		if conn.Up {
 			page.AnyOnline = true
 			break

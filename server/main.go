@@ -110,9 +110,6 @@ func main() {
 
 	log.Println("Database connection established")
 
-	initRegistry()
-	log.Println("Registry initialized")
-
 	if config.SMTPAddr != "" {
 		if config.SMTPUser != "" {
 			err = mail.Init(config.SMTPAddr, config.SMTPPort, config.SMTPUser, config.SMTPPass, config.EmailSender)
