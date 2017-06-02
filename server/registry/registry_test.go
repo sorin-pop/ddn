@@ -3,6 +3,8 @@ package registry
 import (
 	"testing"
 
+	"sort"
+
 	"github.com/djavorszky/ddn/common/model"
 )
 
@@ -139,4 +141,19 @@ func TestID(t *testing.T) {
 			t.Errorf("ID() = '%d', should be '%d'", id, i)
 		}
 	}
+}
+
+func TestSort(t *testing.T) {
+	var list = []model.Connector{c3, c2, c1}
+
+	if list[0].ShortName < list[1].ShortName && list[1].ShortName < list[2].ShortName {
+		t.Errorf("List is sorted to begin with")
+	}
+
+	sort.Sort(ByName(list))
+
+	if list[0].ShortName > list[1].ShortName || list[1].ShortName > list[2].ShortName {
+		t.Errorf("List have not been sorted")
+	}
+
 }
