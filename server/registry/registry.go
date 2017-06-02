@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"sort"
 	"sync"
 
 	"github.com/djavorszky/ddn/common/model"
@@ -54,6 +55,8 @@ func List() []model.Connector {
 	}
 	rw.RUnlock()
 
+	sort.Sort(ByName(conns))
+
 	return conns
 }
 
@@ -78,3 +81,11 @@ func inc() int {
 		ids <- curID
 	}
 }
+
+// ByName implements sort.Interface for []model.Connector based on
+// the ShortName field
+type ByName []model.Connector
+
+func (a ByName) Len() int           { return len(a) }
+func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByName) Less(i, j int) bool { return a[i].ShortName < a[j].ShortName }
