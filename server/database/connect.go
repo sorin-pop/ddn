@@ -31,6 +31,10 @@ var queries = []dbUpdate{
 		Query:   "ALTER TABLE `databases` ADD COLUMN `message` LONGTEXT AFTER `status`;",
 		Comment: "Add 'message' column",
 	},
+	dbUpdate{
+		Query:   "UPDATE `databases` SET `message` = '' WHERE `message` IS NULL;",
+		Comment: "Update 'message' columns to empty where null",
+	},
 }
 
 // ConnectAndPrepare establishes a database connection and initializes the tables, if needed
