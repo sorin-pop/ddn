@@ -1,0 +1,25 @@
+{
+  "name": "ddn-ui",
+  "version": "1.3.1",
+  "description": "DDN stands for Distributed Database Network and is a currently ongoing project. It consists of two parts: A central server and a list of connectors running on servers on which we want to provide a database server.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djavorszky/ddn.git"
+  },
+  "author": "djavorszky",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/djavorszky/ddn/issues"
+  },
+  "homepage": "https://github.com/djavorszky/ddn#readme",
+  "dependencies": {
+    "bootstrap": "^4.0.0-alpha.6",
+    "datatables.net": "^1.10.15",
+    "datatables.net-bs": "^1.10.15",
+    "font-awesome": "^4.7.0"
+  }
+}
