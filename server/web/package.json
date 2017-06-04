@@ -19,8 +19,8 @@
   "homepage": "https://github.com/djavorszky/ddn#readme",
   "dependencies": {
     "bootstrap": "^4.0.0-alpha.6",
-    "datatables.net": "^1.10.15",
-    "datatables.net-bs": "^1.10.15",
-    "font-awesome": "^4.7.0"
+    "datatables.net": "latest",
+    "datatables.net-bs": "latest",
+    "font-awesome": "latest"
   }
 }
