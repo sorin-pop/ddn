@@ -61,7 +61,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	userCookie, err := r.Cookie("user")
 	if err != nil || userCookie.Value == "" {
 		// if there's an err, it can only happen if there is no cookie.
-		toLoad := []string{"base", "head", "nav", "login"}
+		toLoad := []string{"base", "nav", "login"}
 		tmpl, err := buildTemplate(toLoad...)
 		if err != nil {
 			panic(err)
@@ -174,7 +174,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		}
 	}
 
-	toLoad := []string{"base", "head", "nav", "connectors", "properties"}
+	toLoad := []string{"base", "nav", "connectors", "properties"}
 	toLoad = append(toLoad, pages...)
 
 	tmpl, err := buildTemplate(toLoad...)
