@@ -21,6 +21,8 @@ var (
 	config Config
 )
 
+const version = "1.3.1"
+
 func main() {
 	defer func() {
 		if p := recover(); p != nil {

@@ -18,7 +18,7 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 )
 
-const version = "1.0.0"
+const version = "1.3.1"
 
 var (
 	conf       Config
