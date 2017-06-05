@@ -22,7 +22,6 @@ type Config struct {
 	SMTPPass    string   `toml:"smtp.password"`
 	EmailSender string   `toml:"email.sender"`
 	AdminEmail  []string `toml:"admin.email"`
-	UseCDN      bool     `toml:"use.cdn"`
 	MountLoc    string   `toml:"mount.loc"`
 }
 
@@ -35,7 +34,6 @@ func (c Config) Print() {
 	log.Printf("Database Name:\t\t%s", c.DBName)
 	log.Printf("Server Host:\t\t%s", c.ServerHost)
 	log.Printf("Server Port:\t\t%s", c.ServerPort)
-	log.Printf("Using CDN:\t\t\t%t", c.UseCDN)
 
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
 		log.Printf("Admin email:\t\t%s", c.AdminEmail)
@@ -53,7 +51,6 @@ func newConfig() Config {
 		ServerHost: "localhost",
 		ServerPort: "7010",
 		AdminEmail: []string{"webmaster@example.com"},
-		UseCDN:     true,
 	}
 }
 
@@ -76,7 +73,6 @@ func setup(filename string) (*string, Config) {
 	config.SMTPPass = prompter.Ask("What is the password of the SMTP user?")
 	config.EmailSender = prompter.Ask("What address should be used to send the emails from?")
 	config.AdminEmail[0] = prompter.AskDef("Who should be notified if something goes horribly wrong?", def.AdminEmail[0])
-	config.UseCDN = prompter.AskBoolDef("Should we serve third party javascript, css and fonts from CDN?", true)
 	config.MountLoc = prompter.Ask("If you want to mount a folder for browsing dumps, please specify now")
 
 	fname := prompter.AskDef("What should we name the configuration file?", filename)

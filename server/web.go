@@ -43,7 +43,6 @@ type Page struct {
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 	page := Page{
-		UseCDN:           config.UseCDN,
 		Connectors:       registry.List(),
 		Title:            getTitle(r.URL.Path),
 		Pages:            getPages(),
