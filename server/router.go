@@ -32,5 +32,9 @@ func Router() *mux.Router {
 	res := http.StripPrefix("/res/", http.FileServer(http.Dir("./web/res")))
 	router.PathPrefix("/res/").Handler(res)
 
+	// Serve node_modules folder as well
+	nodeModules := http.StripPrefix("/node_modules/", http.FileServer(http.Dir("./web/node_modules")))
+	router.PathPrefix("/node_modules/").Handler(nodeModules)
+
 	return router
 }

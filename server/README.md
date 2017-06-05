@@ -1,10 +1,25 @@
 # Distributed Database Network Server
 
+Description
+-----------
+
 The Distributed Database Network server, or `ddns` for short, is the central server for the whole ddn network. It is an API server with JSON API capabilities with a web UI planned once the API part is released.
 
 The main task of the server is to keep track of all the registered `connectors` (see [Distributed Database Network Connector](https://github.com/djavorszky/ddnc)), as well as to provide an endpoint for all end users to call.
 
 Keeping track of the `connectors` will be done in a local MySQL database. Once a `connector` comes online, it will register itself with the server and provide periodic updates that it is still alive. If the connector goes down, the updates will cease - In this case, the `server` marks the connector as down and removes it from the registry.
+
+Installation
+------------
+
+The required frontend dependencies can be installed with running the following command inside the "web" folder:
+
+    npm install
+
+If you want to update these dependencies, just run `npm update` inside the "web" folder
+
+Documentation
+-------------
 
 For first release, the following API endpoints are defined:
 ## List connectors
