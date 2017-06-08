@@ -1,13 +1,13 @@
 $(document).ready(function() {
     // Enable tooltips
-    $(function () {
+    $(function() {
         $('[data-toggle="tooltip"]').tooltip()
         $('[data-toggle="popover"]').popover()
     })
 
 
     checkConnector()
-    
+
     $("#dbname").keyup(function() {
         checkInputs()
     });
@@ -68,8 +68,14 @@ function checkConnector() {
 
             $("#user").prop('disabled', true);
             $("#password").prop('disabled', true);
-            
+
             $("#userdiv").attr('title', msg).attr('data-original-title', msg).tooltip('hide');
         }
     }
 }
+
+$(document).ready( function () {
+    $('#private_dbs, #public_dbs').DataTable({
+        stateSave: true
+    });
+} );

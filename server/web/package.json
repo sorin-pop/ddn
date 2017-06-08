@@ -11,13 +11,16 @@
     "url": "git+https://github.com/djavorszky/ddn.git"
   },
   "author": "djavorszky",
+  "contributors": "balcsida",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/djavorszky/ddn/issues"
   },
-  "homepage": "https://github.com/djavorszky/ddn#readme",
+  "homepage": "https://github.com/djavorszky/ddn",
   "dependencies": {
     "bootstrap": "^4.0.0-alpha.6",
-    "font-awesome": "^4.7.0"
+    "datatables.net": "latest",
+    "datatables.net-bs4": "latest",
+    "font-awesome": "latest"
   }
 }

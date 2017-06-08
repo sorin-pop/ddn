@@ -2,7 +2,7 @@
 
 <h3>Your private databases</h3>
 <div class="col-md-12">
-    <table class="table table-hover table-bordered">
+    <table id="private_dbs" class="table table-hover table-bordered">
         <thead>
             <tr>
                 <th>Database Name</th>
@@ -11,7 +11,7 @@
                 <th>Created</th>
                 <th>Expires</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th data-orderable="false">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -68,7 +68,7 @@
 {{if .HasPublicDBs}}
 <h3>Public databases</h3>
 <div class="col-md-12">
-    <table class="table table-hover table-bordered">
+    <table id="public_dbs" class="table table-hover table-bordered">
         <thead>
             <tr>
                 <th>Database Name</th>
