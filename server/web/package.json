@@ -20,7 +20,7 @@
   "dependencies": {
     "bootstrap": "^4.0.0-alpha.6",
     "datatables.net": "latest",
-    "datatables.net-bs": "latest",
+    "datatables.net-bs4": "latest",
     "font-awesome": "latest"
   }
 }
