@@ -33,7 +33,7 @@ func FetchByID(ID int) (Entry, error) {
 	return res, nil
 }
 
-// FetchByCreator returns entries that were created by the
+// FetchByCreator returns public entries that were created by the
 // specified user, an empty list if it's not the user does
 // not have any entries, or an error if something went
 // wrong
@@ -44,7 +44,7 @@ func FetchByCreator(creator string) ([]Entry, error) {
 
 	var entries []Entry
 
-	rows, err := conn.Query("SELECT * FROM `databases` WHERE creator = ? ORDER BY id DESC", creator)
+	rows, err := conn.Query("SELECT * FROM `databases` WHERE creator = ? AND visibility = 0 ORDER BY id DESC", creator)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}
