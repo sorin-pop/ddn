@@ -336,7 +336,7 @@ func (db *mysql) validateDump(path string) (string, error) {
 
 		create  = []string{"create database", "CREATE DATABASE"}
 		drop    = []string{"drop database", "DROP DATABASE"}
-		definer = []string{"50013 DEFINER=", "50013 definer="}
+		definer = []string{"/*!50013 DEFINER=", "/*!50013 definer="}
 	)
 
 	file, err := os.Open(path)
