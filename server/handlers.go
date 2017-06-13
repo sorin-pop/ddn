@@ -501,6 +501,7 @@ func extend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dbe.ExpiryDate = time.Now().AddDate(0, 0, 30)
+	dbe.Status = status.Success
 
 	err = database.Update(&dbe)
 	if err != nil {
