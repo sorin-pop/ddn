@@ -93,8 +93,8 @@
                 {{end}}
                 <td>{{.DBName}}</td>
                 <td>{{.ConnectorName}}</td>
-                <td>{{.CreateDate.Format "January 02, 2006"}}</td>
-                <td>{{.ExpiryDate.Format "January 02, 2006"}}</td>
+                <td data-order="{{.CreateDate.Unix}}">{{.CreateDate.Format "January 02, 2006"}}</td>
+                <td data-order="{{.ExpiryDate.Unix}}">{{.ExpiryDate.Format "January 02, 2006"}}</td>
                 <td>{{.Creator}}</td>
                 <td>{{.StatusLabel}}
                     {{if .IsErr}}
