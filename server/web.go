@@ -85,7 +85,10 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		page.Message = flashes[0].(string)
 		page.MessageType = "success"
 
-		id := session.Values["id"].(int)
+		id, ok := session.Values["id"].(int)
+		if !ok {
+			session.Values["id"] = 0
+		}
 
 		if id != 0 {
 			page.HasEntry = true
