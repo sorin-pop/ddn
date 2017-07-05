@@ -78,7 +78,7 @@ func (entry Entry) Progress() int {
 	}
 
 	switch entry.Status {
-	case status.DownloadInProgress:
+	case status.DownloadInProgress, status.CopyInProgress:
 		return 0
 	case status.ExtractingArchive:
 		return 25

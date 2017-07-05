@@ -104,7 +104,7 @@ func doImport(dbID int, dumpfile string) {
 		return
 	}
 
-	dbe.Status = status.InProgress
+	dbe.Status = status.CopyInProgress
 	database.Update(&dbe)
 
 	url, err := copyFile(dumpfile)

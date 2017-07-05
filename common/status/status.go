@@ -15,6 +15,7 @@ func init() {
 	Labels[ExtractingArchive] = "Extracting Archive"
 	Labels[ValidatingDump] = "Validating Dump"
 	Labels[ImportInProgress] = "Importing"
+	Labels[CopyInProgress] = "Copying"
 
 	// Success
 	Labels[Success] = "Completed"
@@ -57,6 +58,7 @@ const (
 	ExtractingArchive  int = 4 // status.ExtractingArchive
 	ValidatingDump     int = 5 // status.ValidatingDump
 	ImportInProgress   int = 6 // status.ImportInProgress
+	CopyInProgress     int = 7 // status.CopyInProgress
 )
 
 // Success statuses are used to convey a successful result.
