@@ -137,7 +137,7 @@ func (e Entry) FriendlySize() string {
 func (e Entry) Importable() bool {
 	ext := filepath.Ext(e.Name)
 
-	switch ext {
+	switch strings.ToLower(ext) {
 	// dump endings
 	case ".sql", ".dmp", ".dpdmp", ".bak":
 		return true
