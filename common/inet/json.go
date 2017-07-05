@@ -65,6 +65,22 @@ func (msg MapMessage) Compose() []byte {
 	return b
 }
 
+// StructMessage is a message for structs
+type StructMessage struct {
+	Status  int
+	Message interface{}
+}
+
+// Compose jsonifies the
+func (msg StructMessage) Compose() []byte {
+	b, err := json.Marshal(msg.Message)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return b
+}
+
 // ErrorResponse composes a Message with an 500 response code. It should be used
 // for situations where something went wrong on the server's side.
 func ErrorResponse() Message {
