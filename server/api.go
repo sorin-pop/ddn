@@ -13,6 +13,7 @@ import (
 	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/sutils"
+	"github.com/gorilla/mux"
 )
 
 // apiList will list all available connectors in a JSON format.
@@ -110,4 +111,23 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 	inet.WriteHeader(w, http.StatusOK)
 
 	w.Write(resp)
+}
+
+// apiConnectorByName returns a connector by its shortname
+func apiConnectorByName(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	shortname := vars["shortname"]
+
+	conn, ok := registry.Get(shortname)
+	if !ok {
+		msg := inet.Message{Status: http.StatusServiceUnavailable, Message: "ERR_CONNECTOR_NOT_FOUND"}
+
+		inet.SendResponse(w, http.StatusServiceUnavailable, msg)
+		return
+	}
+
+	msg := inet.StructMessage{Status: http.StatusOK, Message: conn}
+
+	inet.SendResponse(w, http.StatusOK, msg)
 }

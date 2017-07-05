@@ -139,4 +139,10 @@ var routes = Routes{
 		"/api/list",
 		apiList,
 	},
+	route{
+		"api/connector/byName",
+		"GET",
+		"/api/connectors/{shortname:[a-zA-Z0-9-_]+}",
+		apiConnectorByName,
+	},
 }
