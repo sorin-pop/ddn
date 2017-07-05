@@ -679,6 +679,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 
 		// Update dbentry as well
 		dbe.Message = msg.Message
+		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
 		err = database.Update(&dbe)
 		if err != nil {
