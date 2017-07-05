@@ -55,9 +55,10 @@ func newConfig() Config {
 }
 
 func setup(filename string) (*string, Config) {
-	var config Config
-
 	def := newConfig()
+
+	var config Config
+	config.AdminEmail = def.AdminEmail
 
 	config.DBPort = prompter.AskDef("What is the database port?", def.DBPort)
 	config.DBAddress = prompter.AskDef("What is the database address?", def.DBAddress)
