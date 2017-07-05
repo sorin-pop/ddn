@@ -145,4 +145,10 @@ var routes = Routes{
 		"/api/connectors/{shortname:[a-zA-Z0-9-_]+}",
 		apiConnectorByName,
 	},
+	route{
+		"safe2restart",
+		"GET",
+		"/api/safe2restart",
+		apiSafe2Restart,
+	},
 }

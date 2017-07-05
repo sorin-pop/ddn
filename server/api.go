@@ -131,3 +131,50 @@ func apiConnectorByName(w http.ResponseWriter, r *http.Request) {
 
 	inet.SendResponse(w, http.StatusOK, msg)
 }
+
+func apiSafe2Restart(w http.ResponseWriter, r *http.Request) {
+	imports := make(map[string]int)
+
+	// Check if server and connectors are restartable
+	entries, err := database.FetchAll()
+	if err != nil {
+		msg := inet.Message{Status: http.StatusInternalServerError, Message: "ERR_QUERY_FAILED"}
+
+		inet.SendResponse(w, http.StatusInternalServerError, msg)
+		return
+	}
+
+	for _, entry := range entries {
+		if entry.InProgress() {
+			imports[entry.ConnectorName]++
+		}
+	}
+
+	result := inet.MapMessage{Status: http.StatusOK, Message: make(map[string]string)}
+
+	conns := registry.List()
+
+	if len(imports) == 0 {
+		result.Message["server"] = "yes"
+
+		for _, c := range conns {
+			result.Message[c.ShortName] = "yes"
+		}
+
+		inet.SendResponse(w, http.StatusOK, result)
+		return
+	}
+
+	result.Message["server"] = "no"
+
+	for _, c := range conns {
+		if imports[c.ShortName] == 0 {
+			result.Message[c.ShortName] = "yes"
+			continue
+		}
+
+		result.Message[c.ShortName] = fmt.Sprintf("No, %d imports running", imports[c.ShortName])
+	}
+
+	inet.SendResponse(w, http.StatusOK, result)
+}
