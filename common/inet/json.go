@@ -71,7 +71,7 @@ type StructMessage struct {
 	Message interface{}
 }
 
-// Compose jsonifies the
+// Compose creates a JSON formatted byte slice from the StructMessage
 func (msg StructMessage) Compose() []byte {
 	b, err := json.Marshal(msg.Message)
 	if err != nil {
