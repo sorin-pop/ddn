@@ -10,29 +10,22 @@ import (
 
 // Config to hold the database server and connector information
 type Config struct {
-	Vendor  string `toml:"db.vendor"`
-	Version string `toml:"db.version"`
-	Exec    string `toml:"db.executable"`
-
-	User     string `toml:"db.user.name"`
-	Password string `toml:"db.user.password"`
-
-	SID        string `toml:"db.oracle.sid"`
-	Tablespace string `toml:"db.oracle.tablespace"`
-
-	LocalDBAddr string `toml:"db.local.address"`
-	LocalDBPort string `toml:"db.local.port"`
-
-	ConnectorDBHost string `toml:"db.remote.address"`
-	ConnectorDBPort string `toml:"db.remote.port"`
-
-	ConnectorAddr string `toml:"connector.remote.address"`
-	ConnectorPort string `toml:"connector.remote.port"`
-
-	ShortName     string `toml:"connector.name.short"`
-	ConnectorName string `toml:"connector.name.long"`
-
-	MasterAddress string `toml:"master.address"`
+	Vendor          string `toml:"db-vendor"`
+	Version         string `toml:"db-version"`
+	Exec            string `toml:"db-executable"`
+	User            string `toml:"db-username"`
+	Password        string `toml:"db-userpass"`
+	SID             string `toml:"oracle-sid"`
+	Tablespace      string `toml:"oracle-tablespace"`
+	LocalDBAddr     string `toml:"db-local-addr"`
+	LocalDBPort     string `toml:"db-local-port"`
+	ConnectorDBHost string `toml:"db-remote-addr"`
+	ConnectorDBPort string `toml:"db-remote-port"`
+	ConnectorAddr   string `toml:"connector-addr"`
+	ConnectorPort   string `toml:"connector-port"`
+	ShortName       string `toml:"connector-shortname"`
+	ConnectorName   string `toml:"connector-longname"`
+	MasterAddress   string `toml:"server-address"`
 }
 
 // Print prints the Config object to the log.

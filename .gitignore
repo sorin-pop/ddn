@@ -27,6 +27,7 @@ _testmain.go
 *.conf
 
 !srv.conf
+!con.conf
 
 connector/connector*
 server/server*
