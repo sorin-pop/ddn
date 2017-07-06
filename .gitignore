@@ -26,7 +26,8 @@ _testmain.go
 *.properties
 *.conf
 
-ddnc
+!srv.conf
+
 connector/connector*
 server/server*
 server/web/dumps/*
