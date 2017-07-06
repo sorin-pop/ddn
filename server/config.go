@@ -9,20 +9,20 @@ import (
 
 // Config to hold the database server and ddn server configuration
 type Config struct {
-	DBAddress   string   `toml:"db.address"`
-	DBPort      string   `toml:"db.port"`
-	DBUser      string   `toml:"db.user.name"`
-	DBPass      string   `toml:"db.user.password"`
-	DBName      string   `toml:"db.name"`
-	ServerHost  string   `toml:"server.host"`
-	ServerPort  string   `toml:"server.port"`
-	SMTPAddr    string   `toml:"smtp.host"`
-	SMTPPort    int      `toml:"smtp.port"`
-	SMTPUser    string   `toml:"smtp.user"`
-	SMTPPass    string   `toml:"smtp.password"`
-	EmailSender string   `toml:"email.sender"`
-	AdminEmail  []string `toml:"admin.email"`
-	MountLoc    string   `toml:"mount.loc"`
+	DBAddress   string   `toml:"db-addr"`
+	DBPort      string   `toml:"db-port"`
+	DBUser      string   `toml:"db-username"`
+	DBPass      string   `toml:"db-userpass"`
+	DBName      string   `toml:"db-name"`
+	ServerHost  string   `toml:"server-host"`
+	ServerPort  string   `toml:"server-port"`
+	SMTPAddr    string   `toml:"smtp-host"`
+	SMTPPort    int      `toml:"smtp-port"`
+	SMTPUser    string   `toml:"smtp-user"`
+	SMTPPass    string   `toml:"smtp-password"`
+	EmailSender string   `toml:"email-sender"`
+	AdminEmail  []string `toml:"admin-emails"`
+	MountLoc    string   `toml:"mount-loc"`
 }
 
 // Print prints the configuration to the log.
