@@ -98,7 +98,7 @@
                 <td>{{.Creator}}</td>
                 <td>{{.StatusLabel}}
                     {{if .IsErr}}
-                        (<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-placement="bottom" title="Failed" data-content="{{.Message}}">Why?</a>)
+                        (<a tabindex="0" role="button" data-toggle="popover" data-placement="top" title="Failed" data-content="{{.Message}}">Why?</a>)
                     {{end}}
                 </td>
                 <td>
