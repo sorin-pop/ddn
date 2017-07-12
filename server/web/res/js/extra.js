@@ -75,7 +75,8 @@ function checkConnector() {
 }
 
 $(document).ready( function () {
-    $('#private_dbs, #public_dbs').DataTable({
-        stateSave: true
+    $('.table').DataTable({
+        stateSave: true,
+        paging: false
     });
-} );
+});
