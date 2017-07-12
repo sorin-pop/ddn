@@ -62,7 +62,7 @@ function checkConnector() {
             msg = 'Not needed for Oracle. Think of the User field below as the "database", as it will also be the Oracle schema that will contain the tables and their data.';
 
             $("#dbname").prop('disabled', true);
-            $("#dbnamediv").attr('title', msg).attr('data-original-title', msg).tooltip('hide');
+            $("#dbnamediv").attr('data-original-title', msg).tooltip('hide');
         } else if (connectorVal.includes("mssql") || connectorVal.includes("sql server")) {
             msg = 'User and password not needed for SQL Server.'
 
