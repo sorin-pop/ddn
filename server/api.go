@@ -67,6 +67,10 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		req.ID = registry.ID()
 	}
 
+	if req.DatabaseName == "" && req.Username != "" {
+		req.DatabaseName = req.Username
+	}
+
 	ensureValues(&req.DatabaseName, &req.Username, &req.Password)
 
 	_, err = conn.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
