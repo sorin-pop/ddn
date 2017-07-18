@@ -215,7 +215,7 @@ func getTitle(page string) string {
 	}
 
 	switch page {
-	case "/fileimport":
+	case "/fileimport", "/srvimport":
 		return "Import Database"
 	default:
 		return "Unknown"
@@ -229,5 +229,6 @@ func getPages() map[string]string {
 	pages["/"] = "Home"
 	pages["/createdb"] = "Create database"
 	pages["/importdb"] = "Import database"
+
 	return pages
 }
