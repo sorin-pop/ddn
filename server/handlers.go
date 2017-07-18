@@ -89,7 +89,7 @@ func prepImportAction(w http.ResponseWriter, r *http.Request) {
 
 	go doImport(int(dbID), dumpfile)
 
-	session.AddFlash("Started the import process...", "success")
+	session.AddFlash("Started the import process...", "msg")
 }
 
 func doImport(dbID int, dumpfile string) {
