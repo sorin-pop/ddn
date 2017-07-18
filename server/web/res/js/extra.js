@@ -19,6 +19,8 @@ $(document).ready(function() {
 
 $(document).on('change', '#connector', function() {
     checkConnector()
+
+    $("#submit").prop("disabled", false)
 });
 
 function checkInputs() {
