@@ -106,7 +106,7 @@ func checkConnectors() {
 
 				for _, addr := range config.AdminEmail {
 					mail.Send(addr, "[Cloud DB] Connector disappeared without trace",
-						fmt.Sprintf("Connector %q at %q no longer exists.", conn.ShortName, addr))
+						fmt.Sprintf("Connector %q at %q no longer exists.", conn.ShortName, conn.Address))
 				}
 
 				continue
