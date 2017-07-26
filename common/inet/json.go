@@ -19,8 +19,8 @@ type JSONMessage interface {
 
 // Message is a struct to hold a simple status-message type response
 type Message struct {
-	Status  int
-	Message string
+	Status  int    `json:"status"`
+	Message string `json:"message"`
 }
 
 // Compose creates a JSON formatted byte slice from the Message
@@ -35,8 +35,8 @@ func (msg Message) Compose() []byte {
 
 // ListMessage is a struct to hold a status-list of strings type response
 type ListMessage struct {
-	Status  int
-	Message []string
+	Status  int      `json:"status"`
+	Message []string `json:"message"`
 }
 
 // Compose creates a JSON formatted byte slice from the ListMessage
@@ -51,8 +51,8 @@ func (msg ListMessage) Compose() []byte {
 
 // MapMessage is a struct to hold a status and a key+value type response
 type MapMessage struct {
-	Status  int
-	Message map[string]string
+	Status  int               `json:"status"`
+	Message map[string]string `json:"message"`
 }
 
 // Compose creates a JSON formatted byte slice from the Message
@@ -67,8 +67,8 @@ func (msg MapMessage) Compose() []byte {
 
 // StructMessage is a message for structs
 type StructMessage struct {
-	Status  int
-	Message interface{}
+	Status  int         `json:"status"`
+	Message interface{} `json:"message"`
 }
 
 // Compose creates a JSON formatted byte slice from the StructMessage
