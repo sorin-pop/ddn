@@ -33,7 +33,7 @@ func (db *oracle) CreateDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_schema.sql", dbRequest.Username, dbRequest.Password, conf.Tablespace}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DatafileDir}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -70,7 +70,7 @@ func (db *oracle) ImportDatabase(dbRequest model.DBRequest) error {
 	dumpDir, fileName := filepath.Split(dbRequest.DumpLocation)
 
 	// Start the import
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/import_dump.sql", dumpDir, fileName, dbRequest.Username, dbRequest.Password, conf.Tablespace}
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/import_dump.sql", dumpDir, fileName, dbRequest.Username, dbRequest.Password, conf.DatafileDir}
 
 	res := RunCommand(conf.Exec, args...)
 

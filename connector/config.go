@@ -16,7 +16,7 @@ type Config struct {
 	User            string `toml:"db-username"`
 	Password        string `toml:"db-userpass"`
 	SID             string `toml:"oracle-sid"`
-	Tablespace      string `toml:"oracle-tablespace"`
+	DatafileDir      string `toml:"oracle-datafiles-path"`
 	LocalDBAddr     string `toml:"db-local-addr"`
 	LocalDBPort     string `toml:"db-local-port"`
 	ConnectorDBHost string `toml:"db-remote-addr"`
@@ -39,7 +39,7 @@ func (c Config) Print() {
 
 	if conf.Vendor == "oracle" {
 		log.Printf("SID:\t\t%s", conf.SID)
-		log.Printf("Tablespace:\t\t%s", conf.Tablespace)
+		log.Printf("DatafileDir:\t\t%s", conf.DatafileDir)
 	}
 
 	log.Printf("Local DB addr:\t%s\n", conf.LocalDBAddr)
@@ -124,7 +124,7 @@ func NewConfig(vendor string) Config {
 			User:            "system",
 			Password:        "password",
 			SID:             "orcl",
-			Tablespace:      "USERS",
+			DatafileDir:      "",
 			MasterAddress:   "http://localhost:7010",
 		}
 		switch runtime.GOOS {
@@ -166,7 +166,7 @@ func generateInteractive(filename string) (string, Config) {
 	if vendor == "oracle" {
 		config.Exec = prompter.AskDef("Where is the sqlplus executable?", def.Exec)
 		config.SID = prompter.AskDef("What is the SID?", def.SID)
-		config.Tablespace = prompter.AskDef("What is the default tablespace?", def.Tablespace)
+		config.DatafileDir = prompter.AskDef("Which is the directory where the datafiles are stored?(put a file delimiter at the end of the path)", def.DatafileDir)
 	} else if vendor == "mysql" {
 		config.Exec = prompter.AskDef("Where is the mysql executable?", def.Exec)
 	} else if vendor == "postgres" {
