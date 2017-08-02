@@ -330,7 +330,7 @@ func strip(test string) string {
 	return strings.TrimSuffix(test, "\n")
 }
 
-func (db *mysql) validateDump(path string) (string, error) {
+func (db *mysql) ValidateDump(path string) (string, error) {
 	var (
 		lines map[int]bool
 

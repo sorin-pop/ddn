@@ -110,3 +110,7 @@ func (db *oracle) RequiredFields(dbreq model.DBRequest, reqType int) []string {
 
 	return req
 }
+
+func (db *oracle) ValidateDump(path string) (string, error) {
+	return path, nil
+}

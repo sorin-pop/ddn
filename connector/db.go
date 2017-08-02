@@ -49,6 +49,10 @@ type Database interface {
 	// RequiredFields returns the fields that are required to be present in an API call, specific
 	// to the database vendor
 	RequiredFields(dbRequest model.DBRequest, reqType int) []string
+
+	// ValidateDump validates a dumpfile at the given path. Returns another path as a string or
+	// an error if something went wrong
+	ValidateDump(path string) (string, error)
 }
 
 // VendorSupported returns an error if the specified vendor is not supported.

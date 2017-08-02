@@ -259,6 +259,10 @@ func (db *postgres) RequiredFields(dbreq model.DBRequest, reqType int) []string 
 	return req
 }
 
+func (db *postgres) ValidateDump(path string) (string, error) {
+	return path, nil
+}
+
 func (db *postgres) dbExists(database string) (bool, error) {
 	var count int
 

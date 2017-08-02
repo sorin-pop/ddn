@@ -124,3 +124,7 @@ func (db *mssql) RequiredFields(dbreq model.DBRequest, reqType int) []string {
 
 	return req
 }
+
+func (db *mssql) ValidateDump(path string) (string, error) {
+	return path, nil
+}

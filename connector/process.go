@@ -79,17 +79,15 @@ func startImport(dbreq model.DBRequest) {
 		path = files[0]
 	}
 
-	if mdb, ok := db.(*mysql); ok {
-		ch <- notif.Y{StatusCode: status.ValidatingDump, Msg: "Validating dump"}
-		path, err = mdb.validateDump(path)
+	ch <- notif.Y{StatusCode: status.ValidatingDump, Msg: "Validating dump"}
+	path, err = db.ValidateDump(path)
 
-		if err != nil {
-			db.DropDatabase(dbreq)
-			log.Printf("database validation failed: %s", err.Error())
+	if err != nil {
+		db.DropDatabase(dbreq)
+		log.Printf("database validation failed: %s", err.Error())
 
-			ch <- notif.Y{StatusCode: status.ValidationFailed, Msg: "Validating dump failed: " + err.Error()}
-			return
-		}
+		ch <- notif.Y{StatusCode: status.ValidationFailed, Msg: "Validating dump failed: " + err.Error()}
+		return
 	}
 
 	if !strings.Contains(path, "dumps") {
