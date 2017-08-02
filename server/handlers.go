@@ -98,6 +98,7 @@ func doImport(dbID int, dumpfile string) {
 		log.Printf("Failed getting entry by ID: %s", err.Error())
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: " + err.Error()
+		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
 		database.Update(&dbe)
 
@@ -112,6 +113,7 @@ func doImport(dbID int, dumpfile string) {
 		log.Printf("Failed copying file: %s", err.Error())
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: " + err.Error()
+		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
 		database.Update(&dbe)
 		return
@@ -124,6 +126,7 @@ func doImport(dbID int, dumpfile string) {
 	if !ok {
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: connector went offline."
+		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
 		database.Update(&dbe)
 		return
@@ -133,6 +136,7 @@ func doImport(dbID int, dumpfile string) {
 	if err != nil {
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: " + err.Error()
+		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
 		database.Update(&dbe)
 		os.Remove("./web/dumps/" + dumpfile)
