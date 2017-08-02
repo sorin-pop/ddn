@@ -200,6 +200,11 @@ func (db *postgres) DropDatabase(dbRequest model.DBRequest) error {
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
 func (db *postgres) ImportDatabase(dbreq model.DBRequest) error {
+	err := db.CreateDatabase(dbreq)
+	if err != nil {
+		return fmt.Errorf("could not create database: %v", err)
+	}
+
 	userArg := fmt.Sprintf("-U%s", dbreq.Username)
 
 	cmd := exec.Command(conf.Exec, userArg, dbreq.DatabaseName)
