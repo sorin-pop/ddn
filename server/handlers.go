@@ -661,11 +661,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		loc := strings.LastIndex(dbe.Dumpfile, "/")
 
 		file := fmt.Sprintf("./web/dumps/%s", dbe.Dumpfile[loc+1:])
-
-		err = os.Remove(file)
-		if err != nil {
-			log.Printf("Failed to remove dumpfile %s: %s", file, err.Error())
-		}
+		os.Remove(file)
 	}
 
 	if dbe.IsErr() {
