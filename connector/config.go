@@ -16,7 +16,7 @@ type Config struct {
 	User            string `toml:"db-username"`
 	Password        string `toml:"db-userpass"`
 	SID             string `toml:"oracle-sid"`
-	DatafileDir      string `toml:"oracle-datafiles-path"`
+	DatafileDir     string `toml:"oracle-datafiles-path"`
 	LocalDBAddr     string `toml:"db-local-addr"`
 	LocalDBPort     string `toml:"db-local-port"`
 	ConnectorDBHost string `toml:"db-remote-addr"`
@@ -124,7 +124,7 @@ func NewConfig(vendor string) Config {
 			User:            "system",
 			Password:        "password",
 			SID:             "orcl",
-			DatafileDir:      "",
+			DatafileDir:     "",
 			MasterAddress:   "http://localhost:7010",
 		}
 		switch runtime.GOOS {
