@@ -68,7 +68,7 @@ func maintain() {
 				continue
 			}
 
-			if dbe.Status == status.RemovalScheduled {
+			if dbe.Status == status.RemovalScheduled || dbe.Status == status.ImportFailed {
 				continue
 			}
 
