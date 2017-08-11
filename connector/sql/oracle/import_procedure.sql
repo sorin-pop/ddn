@@ -1,11 +1,11 @@
+-- Prerequisites. The below are needed for the procedure to compile successfully
 -- conn sys as sysdba
 -- grant select on dba_datapump_jobs to system;
 -- grant create any directory to system;
 -- grant create external job to system;
--- the above are needed in order for the procedure to compile successfully
 
--- HOW TO USE
--- connect to sqlplus as SYSTEM and run run_import.sql
+WHENEVER OSERROR EXIT FAILURE
+WHENEVER SQLERROR EXIT SQL.SQLCODE
 
 CREATE OR REPLACE PROCEDURE import_dump(dump_dir IN OUT varchar2, fn IN varchar2, ts IN OUT varchar2, ts_pwd IN varchar2, datafile_dir IN varchar2) AUTHID CURRENT_USER AS
 jn    varchar2(256);
@@ -440,4 +440,22 @@ EXCEPTION
 
 END import_dump;
 /
-show errors;
+SHOW ERRORS
+
+DECLARE
+  l_num_errors INTEGER;
+BEGIN
+  SELECT COUNT(*)
+    INTO l_num_errors
+    FROM user_errors
+   WHERE name = 'IMPORT_DUMP';
+
+ IF( l_num_errors > 0 )
+ THEN
+   EXECUTE IMMEDIATE 'DROP PROCEDURE IMPORT_DUMP';
+   raise_application_error( -20001, 'IMPORT_DUMP stored procedure body could not be compiled, therefore it was dropped! Please correct the errors in sql/oracle/import_procedure.sql and start the connector again.' );
+ END IF;
+END;
+/
+
+EXIT

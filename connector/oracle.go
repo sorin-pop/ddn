@@ -114,3 +114,19 @@ func (db *oracle) RequiredFields(dbreq model.DBRequest, reqType int) []string {
 func (db *oracle) ValidateDump(path string) (string, error) {
 	return path, nil
 }
+
+func (db *oracle) RefreshImportStoredProcedure() error {
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/import_procedure.sql"}
+
+	res := RunCommand(conf.Exec, args...)
+
+	if res.exitCode != 0 {
+		missingGrantsMessage := fmt.Sprintf("\nMissing grants from SYS perhaps?\n")
+		missingGrantsMessage = fmt.Sprintf("%sgrant select on dba_datapump_jobs to %s;\n", missingGrantsMessage, conf.User)
+		missingGrantsMessage = fmt.Sprintf("%sgrant create any directory to %s;\n", missingGrantsMessage, conf.User)
+		missingGrantsMessage = fmt.Sprintf("%sgrant create external job to %s;\n", missingGrantsMessage, conf.User)
+		return fmt.Errorf("Creating import procedure failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d\n%s", res.stdout, res.stderr, res.exitCode, missingGrantsMessage)
+	}
+
+	return nil
+}
