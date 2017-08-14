@@ -33,3 +33,5 @@ connector/connector*
 server/server*
 server/web/dumps/*
 node_modules
+
+out
