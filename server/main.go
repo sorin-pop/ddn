@@ -105,7 +105,7 @@ func main() {
 		}
 	}
 
-	db = mysql.DB{
+	db = &mysql.DB{
 		Address:  config.DBAddress,
 		Port:     config.DBPort,
 		User:     config.DBUser,

@@ -90,7 +90,7 @@ func setup() error {
 	}
 
 	mainDS := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", testUser, testPass, testAddr, testPort, testName)
-	err = connect(mainDS)
+	err = mys.connect(mainDS)
 	if err != nil {
 		return fmt.Errorf("failed initializing main connection")
 	}
@@ -108,7 +108,7 @@ func teardown() error {
 	}
 
 	testConn.Close()
-	conn.Close()
+	mys.Close()
 
 	return nil
 }
@@ -143,7 +143,7 @@ func TestInitTables(t *testing.T) {
 		t.Errorf("Databases table already exists before test even ran.")
 	}
 
-	err = initTables()
+	err = mys.initTables()
 	if err != nil {
 		t.Errorf("Failed initializing tables: %s", err.Error())
 	}
@@ -324,7 +324,7 @@ func TestFetchPublic(t *testing.T) {
 func TestFetchAll(t *testing.T) {
 	var count int
 
-	conn.QueryRow("SELECT count(*) FROM `databases`").Scan(&count)
+	mys.conn.QueryRow("SELECT count(*) FROM `databases`").Scan(&count)
 
 	entries, err := mys.FetchAll()
 	if err != nil {

@@ -13,42 +13,35 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var (
-	dbname   string
-	panicked bool
-	conn     *sql.DB
-)
-
 // DB implements the BackendConnection
 type DB struct {
 	Address, Port, User, Pass, Database string
+	conn                                *sql.DB
 }
 
 // ConnectAndPrepare establishes a database connection and initializes the tables, if needed
-func (mys DB) ConnectAndPrepare() error {
-	var err error
-
+func (mys *DB) ConnectAndPrepare() error {
 	datasource := fmt.Sprintf("%s:%s@tcp(%s:%s)/", mys.User, mys.Pass, mys.Address, mys.Port)
-	err = connect(datasource)
+	err := mys.connect(datasource)
 	if err != nil {
 		return fmt.Errorf("couldn't connect to the database: %s", err.Error())
 	}
 
-	_, err = conn.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s CHARSET utf8;", mys.Database))
+	_, err = mys.conn.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s CHARSET utf8;", mys.Database))
 	if err != nil {
 		return fmt.Errorf("executing create database query failed: %s", sutils.TrimNL(err.Error()))
 	}
 
-	conn.Close()
+	mys.Close()
 
 	datasource = datasource + mys.Database
 
-	err = connect(datasource)
+	err = mys.connect(datasource)
 	if err != nil {
 		return fmt.Errorf("couldn't connect to the database: %s", err.Error())
 	}
 
-	err = initTables()
+	err = mys.initTables()
 	if err != nil {
 		return fmt.Errorf("initializing tables failed: %s", err.Error())
 	}
@@ -57,18 +50,18 @@ func (mys DB) ConnectAndPrepare() error {
 }
 
 // Close closes the database connection
-func (DB) Close() error {
-	return conn.Close()
+func (mys *DB) Close() error {
+	return mys.conn.Close()
 }
 
 // FetchByID returns the entry associated with that ID, or
 // an error if it does not exist
-func (mys DB) FetchByID(ID int) (data.Row, error) {
+func (mys *DB) FetchByID(ID int) (data.Row, error) {
 	if err := mys.alive(); err != nil {
 		return data.Row{}, fmt.Errorf("database down: %s", err.Error())
 	}
 
-	row := conn.QueryRow("SELECT * FROM `databases` WHERE id = ?", ID)
+	row := mys.conn.QueryRow("SELECT * FROM `databases` WHERE id = ?", ID)
 	res, err := mys.readRow(row)
 	if err != nil {
 		return data.Row{}, fmt.Errorf("failed reading result: %v", err)
@@ -81,14 +74,14 @@ func (mys DB) FetchByID(ID int) (data.Row, error) {
 // specified user, an empty list if it's not the user does
 // not have any entries, or an error if something went
 // wrong
-func (mys DB) FetchByCreator(creator string) ([]data.Row, error) {
+func (mys *DB) FetchByCreator(creator string) ([]data.Row, error) {
 	if err := mys.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
 	}
 
 	var entries []data.Row
 
-	rows, err := conn.Query("SELECT * FROM `databases` WHERE creator = ? AND visibility = 0 ORDER BY id DESC", creator)
+	rows, err := mys.conn.Query("SELECT * FROM `databases` WHERE creator = ? AND visibility = 0 ORDER BY id DESC", creator)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}
@@ -111,14 +104,14 @@ func (mys DB) FetchByCreator(creator string) ([]data.Row, error) {
 }
 
 // FetchPublic returns all entries that have "Public" set to true
-func (mys DB) FetchPublic() ([]data.Row, error) {
+func (mys *DB) FetchPublic() ([]data.Row, error) {
 	if err := mys.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
 	}
 
 	var entries []data.Row
 
-	rows, err := conn.Query("SELECT * FROM `databases` WHERE visibility = 1 ORDER BY id DESC")
+	rows, err := mys.conn.Query("SELECT * FROM `databases` WHERE visibility = 1 ORDER BY id DESC")
 	if err != nil {
 		return nil, fmt.Errorf("failed running query: %v", err)
 	}
@@ -136,14 +129,14 @@ func (mys DB) FetchPublic() ([]data.Row, error) {
 }
 
 // FetchAll returns all entries.
-func (mys DB) FetchAll() ([]data.Row, error) {
+func (mys *DB) FetchAll() ([]data.Row, error) {
 	if err := mys.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
 	}
 
 	var entries []data.Row
 
-	rows, err := conn.Query("SELECT * FROM `databases` ORDER BY id DESC")
+	rows, err := mys.conn.Query("SELECT * FROM `databases` ORDER BY id DESC")
 	if err != nil {
 		return nil, fmt.Errorf("failed running query: %v", err)
 	}
@@ -161,14 +154,14 @@ func (mys DB) FetchAll() ([]data.Row, error) {
 }
 
 // Insert adds an entry to the database, returning its ID
-func (mys DB) Insert(entry *data.Row) error {
+func (mys *DB) Insert(entry *data.Row) error {
 	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
 	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?)"
 
-	res, err := conn.Exec(query,
+	res, err := mys.conn.Exec(query,
 		entry.DBName,
 		entry.DBUser,
 		entry.DBPass,
@@ -200,14 +193,14 @@ func (mys DB) Insert(entry *data.Row) error {
 }
 
 // Update updates an already existing entry
-func (mys DB) Update(entry *data.Row) error {
+func (mys *DB) Update(entry *data.Row) error {
 	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
 	var count int
 
-	err := conn.QueryRow("SELECT count(*) FROM `databases` WHERE id = ?", entry.ID).Scan(&count)
+	err := mys.conn.QueryRow("SELECT count(*) FROM `databases` WHERE id = ?", entry.ID).Scan(&count)
 	if err != nil {
 		return fmt.Errorf("failed existence check: %v", err)
 	}
@@ -218,7 +211,7 @@ func (mys DB) Update(entry *data.Row) error {
 
 	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `connectorName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
 
-	_, err = conn.Exec(query,
+	_, err = mys.conn.Exec(query,
 		entry.DBName,
 		entry.DBUser,
 		entry.DBPass,
@@ -244,17 +237,17 @@ func (mys DB) Update(entry *data.Row) error {
 }
 
 // Delete removes the entry from the database
-func (mys DB) Delete(entry data.Row) error {
+func (mys *DB) Delete(entry data.Row) error {
 	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
-	_, err := conn.Exec("DELETE FROM `databases` WHERE id = ?", entry.ID)
+	_, err := mys.conn.Exec("DELETE FROM `databases` WHERE id = ?", entry.ID)
 
 	return err
 }
 
-func (mys DB) readRow(result *sql.Row) (data.Row, error) {
+func (mys *DB) readRow(result *sql.Row) (data.Row, error) {
 	var row data.Row
 
 	err := result.Scan(
@@ -281,7 +274,7 @@ func (mys DB) readRow(result *sql.Row) (data.Row, error) {
 	return row, nil
 }
 
-func (mys DB) readRows(rows *sql.Rows) (data.Row, error) {
+func (mys *DB) readRows(rows *sql.Rows) (data.Row, error) {
 	var row data.Row
 
 	err := rows.Scan(
@@ -309,14 +302,14 @@ func (mys DB) readRows(rows *sql.Rows) (data.Row, error) {
 }
 
 // Alive checks whether the connection is alive. Returns error if not.
-func (mys DB) alive() error {
+func (mys *DB) alive() error {
 	defer func() {
 		if p := recover(); p != nil {
 			log.Println("Panic Attack! Database seems to be down.")
 		}
 	}()
 
-	_, err := conn.Exec("select * from `databases` WHERE 1 = 0")
+	_, err := mys.conn.Exec("select * from `databases` WHERE 1 = 0")
 	if err != nil {
 		return fmt.Errorf("executing stayalive query failed: %s", sutils.TrimNL(err.Error()))
 	}
@@ -352,39 +345,38 @@ var queries = []dbUpdate{
 	},
 }
 
-func connect(datasource string) error {
-	var err error
-
-	conn, err = sql.Open("mysql", datasource+"?parseTime=true")
+func (mys *DB) connect(datasource string) error {
+	db, err := sql.Open("mysql", datasource+"?parseTime=true")
 	if err != nil {
 		return fmt.Errorf("creating connection pool failed: %s", err.Error())
 	}
 
-	err = conn.Ping()
+	err = db.Ping()
 	if err != nil {
-		conn.Close()
+		db.Close()
 		return fmt.Errorf("database ping failed: %s", sutils.TrimNL(err.Error()))
 	}
+	mys.conn = db
 
 	return nil
 }
 
-func initTables() error {
+func (mys *DB) initTables() error {
 	var (
 		err      error
 		startLoc int
 	)
 
-	conn.QueryRow("SELECT count(*) FROM `version`").Scan(&startLoc)
+	mys.conn.QueryRow("SELECT count(*) FROM `version`").Scan(&startLoc)
 
 	for _, q := range queries[startLoc:] {
 		log.Printf("Updating database %q", q.Comment)
-		_, err = conn.Exec(q.Query)
+		_, err = mys.conn.Exec(q.Query)
 		if err != nil {
 			return fmt.Errorf("executing query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
 		}
 
-		_, err = conn.Exec("INSERT INTO `version` (query, comment, date) VALUES (?, ?, ?)", q.Query, q.Comment, time.Now())
+		_, err = mys.conn.Exec("INSERT INTO `version` (query, comment, date) VALUES (?, ?, ?)", q.Query, q.Comment, time.Now())
 		if err != nil {
 			return fmt.Errorf("updating version table with query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
 		}
