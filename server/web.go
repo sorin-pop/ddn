@@ -11,6 +11,7 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/liferay"
 	"github.com/gorilla/mux"
@@ -29,8 +30,8 @@ type Page struct {
 	User             string
 	HasUser          bool
 	HasEntry         bool
-	PrivateDatabases []database.Entry
-	PublicDatabases  []database.Entry
+	PrivateDatabases []data.Row
+	PublicDatabases  []data.Row
 	HasPrivateDBs    bool
 	HasPublicDBs     bool
 	Ext62            liferay.JDBC

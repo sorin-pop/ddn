@@ -1,4 +1,4 @@
-package database
+package mysql
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/sutils"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -25,7 +26,7 @@ var (
 
 	gmt, _ = time.LoadLocation("GMT")
 
-	testEntry = Entry{
+	testEntry = data.Row{
 		ID:            1,
 		DBName:        "testDB",
 		DBUser:        "testUser",
@@ -246,7 +247,7 @@ func TestUpdate(t *testing.T) {
 	Insert(&testEntry)
 
 	// We're updating by ID - this should updated the row for "testEntry"
-	updatedEntry := Entry{
+	updatedEntry := data.Row{
 		ID:            testEntry.ID,
 		DBName:        "updatedtestDB",
 		DBUser:        "updatedtestUser",
@@ -364,7 +365,7 @@ func TestReadRow(t *testing.T) {
 	testEntry.ID++
 }
 
-func compareDBEntries(first, second Entry) error {
+func compareDBEntries(first, second data.Row) error {
 	if first.ID != second.ID {
 		return fmt.Errorf("ID mismatch. First: '%d' vs Second: '%d'", first.ID, second.ID)
 	}

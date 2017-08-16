@@ -11,6 +11,7 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/sutils"
 	"github.com/gorilla/mux"
@@ -81,7 +82,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe := database.Entry{
+	dbe := data.Row{
 		DBName:        req.DatabaseName,
 		DBUser:        req.Username,
 		DBPass:        req.Password,

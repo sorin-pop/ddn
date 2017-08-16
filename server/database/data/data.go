@@ -1,4 +1,4 @@
-package database
+package data
 
 import (
 	"time"
@@ -6,8 +6,8 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 )
 
-// Entry represents a row in the database
-type Entry struct {
+// Row represents a row in the database
+type Row struct {
 	ID            int       `json:"id"`
 	DBVendor      string    `json:"vendor"`
 	DBName        string    `json:"dbname"`
@@ -27,38 +27,38 @@ type Entry struct {
 }
 
 // InProgress returns true if the DBEntry's status denotes that something's in progress.
-func (entry Entry) InProgress() bool {
-	return entry.Status < 100
+func (row Row) InProgress() bool {
+	return row.Status < 100
 }
 
 // IsStatusOk returns true if the DBEntry's status is OK.
-func (entry Entry) IsStatusOk() bool {
-	return entry.Status > 99 && entry.Status < 200
+func (row Row) IsStatusOk() bool {
+	return row.Status > 99 && row.Status < 200
 }
 
 // IsClientErr returns true if something went wrong with the client request.
-func (entry Entry) IsClientErr() bool {
-	return entry.Status > 199 && entry.Status < 300
+func (row Row) IsClientErr() bool {
+	return row.Status > 199 && row.Status < 300
 }
 
 // IsServerErr returns true if something went wrong on the server.
-func (entry Entry) IsServerErr() bool {
-	return entry.Status > 299 && entry.Status < 400
+func (row Row) IsServerErr() bool {
+	return row.Status > 299 && row.Status < 400
 }
 
 // IsErr returns true if something went wrong either on the server or with the client request.
-func (entry Entry) IsErr() bool {
-	return entry.IsServerErr() || entry.IsClientErr()
+func (row Row) IsErr() bool {
+	return row.IsServerErr() || row.IsClientErr()
 }
 
 // IsWarn returns true if something went wrong either on the server or with the client request.
-func (entry Entry) IsWarn() bool {
-	return entry.Status > 399
+func (row Row) IsWarn() bool {
+	return row.Status > 399
 }
 
 // StatusLabel returns the string representation of the status
-func (entry Entry) StatusLabel() string {
-	label, ok := status.Labels[entry.Status]
+func (row Row) StatusLabel() string {
+	label, ok := status.Labels[row.Status]
 	if !ok {
 		return "Unknown"
 	}
@@ -68,16 +68,16 @@ func (entry Entry) StatusLabel() string {
 
 // Progress returns the progress as 0 <= progress <= 100 of its current import.
 // If error, returns 0; If success, returns 100;
-func (entry Entry) Progress() int {
-	if entry.IsClientErr() || entry.IsServerErr() {
+func (row Row) Progress() int {
+	if row.IsClientErr() || row.IsServerErr() {
 		return 0
 	}
 
-	if entry.IsStatusOk() {
+	if row.IsStatusOk() {
 		return 100
 	}
 
-	switch entry.Status {
+	switch row.Status {
 	case status.DownloadInProgress, status.CopyInProgress:
 		return 0
 	case status.ExtractingArchive:

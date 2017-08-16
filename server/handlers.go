@@ -17,6 +17,7 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/mail"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/notif"
@@ -162,7 +163,7 @@ func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public s
 
 	ensureValues(&dbname, &dbuser, &dbpass)
 
-	entry := database.Entry{
+	entry := data.Row{
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
@@ -288,7 +289,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	ensureValues(&dbname, &dbuser, &dbpass)
 
-	entry := database.Entry{
+	entry := data.Row{
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
@@ -371,7 +372,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry := database.Entry{
+	entry := data.Row{
 		DBName:        dbname,
 		DBUser:        dbuser,
 		DBPass:        dbpass,
@@ -767,7 +768,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		return model.Connector{}, fmt.Errorf("creating database failed: %s", msg.Message)
 	}
 
-	dbentry := database.Entry{
+	dbentry := data.Row{
 		DBName:        req.DatabaseName,
 		DBUser:        req.Username,
 		DBPass:        req.Password,
