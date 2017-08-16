@@ -140,6 +140,15 @@ func main() {
 		log.Println("'dumps' folder already exists.")
 	}
 
+	// For Oracle, create or replace the stored procedure that executes the import, by running the sql/oracle/import_procedure.sql file
+	if odb, ok := db.(*oracle); ok {
+		log.Println("Creating or replacing the import_dump stored procedure.")
+		err := odb.RefreshImportStoredProcedure()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	err = registerConnector()
 	if err != nil {
 		log.Printf("could not register connector: %s", err.Error())
