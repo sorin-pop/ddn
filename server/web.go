@@ -10,7 +10,6 @@ import (
 
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/brwsr"
-	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/liferay"
@@ -93,7 +92,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 		if id != 0 {
 			page.HasEntry = true
-			entry, err := database.FetchByID(id)
+			entry, err := db.FetchByID(id)
 			if err != nil {
 				log.Printf("Failed querying for database: %s", err.Error())
 				session.AddFlash("Failed querying database", "fail")
@@ -128,7 +127,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		// DEBUG:
 		if !page.HasEntry {
 			page.HasEntry = true
-			entry := database.FetchByID(1)
+			entry := db.FetchByID(1)
 
 			page.ExtDXP = portalExt(entry, true)
 			page.Ext62 = portalExt(entry, false)
@@ -156,7 +155,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	if pages[0] == "home" {
 		pages = append(pages, "databases")
 
-		privateDBs, err := database.FetchByCreator(page.User)
+		privateDBs, err := db.FetchByCreator(page.User)
 		if err != nil {
 			log.Printf("couldn't list databases: %s", err.Error())
 		}
@@ -166,7 +165,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 			page.HasPrivateDBs = true
 		}
 
-		publicDBs, err := database.FetchPublic()
+		publicDBs, err := db.FetchPublic()
 		if err != nil {
 			log.Printf("couldn't list databases: %s", err.Error())
 		}

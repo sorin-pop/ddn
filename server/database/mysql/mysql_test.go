@@ -24,6 +24,8 @@ const (
 var (
 	testConn *sql.DB
 
+	mys DB
+
 	gmt, _ = time.LoadLocation("GMT")
 
 	testEntry = data.Row{
@@ -187,9 +189,9 @@ func TestInitTables(t *testing.T) {
 }
 
 func TestFetchByID(t *testing.T) {
-	Insert(&testEntry)
+	mys.Insert(&testEntry)
 
-	res, err := FetchByID(testEntry.ID)
+	res, err := mys.FetchByID(testEntry.ID)
 	if err != nil {
 		t.Errorf("FetchById(%d) failed with error: %v", testEntry.ID, err)
 	}
@@ -204,10 +206,10 @@ func TestFetchByCreator(t *testing.T) {
 
 	testEntry.Creator = creator
 
-	Insert(&testEntry)
-	Insert(&testEntry)
+	mys.Insert(&testEntry)
+	mys.Insert(&testEntry)
 
-	results, err := FetchByCreator(creator)
+	results, err := mys.FetchByCreator(creator)
 	if err != nil {
 		t.Errorf("failed to fetch by creator: %v", err)
 	}
@@ -224,16 +226,16 @@ func TestFetchByCreator(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
-	err := Insert(&testEntry)
+	err := mys.Insert(&testEntry)
 	if err != nil {
-		t.Errorf("Insert(testEntry) failed with error: %v", err)
+		t.Errorf("mys.Insert(testEntry) failed with error: %v", err)
 	}
 
 	if testEntry.ID == 0 {
-		t.Errorf("Insert(testEntry) resulted in id of 0")
+		t.Errorf("mys.Insert(testEntry) resulted in id of 0")
 	}
 
-	result, err := FetchByID(testEntry.ID)
+	result, err := mys.FetchByID(testEntry.ID)
 	if err != nil {
 		t.Errorf("FetchById(%d) resulted in error: %v", testEntry.ID, err)
 	}
@@ -244,7 +246,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	Insert(&testEntry)
+	mys.Insert(&testEntry)
 
 	// We're updating by ID - this should updated the row for "testEntry"
 	updatedEntry := data.Row{
@@ -265,12 +267,12 @@ func TestUpdate(t *testing.T) {
 		Status:        200,
 	}
 
-	err := Update(&updatedEntry)
+	err := mys.Update(&updatedEntry)
 	if err != nil {
 		t.Errorf("Update(updatedEntry) failed: %v", err)
 	}
 
-	readEntry, _ := FetchByID(testEntry.ID)
+	readEntry, _ := mys.FetchByID(testEntry.ID)
 
 	if err := compareDBEntries(updatedEntry, readEntry); err != nil {
 		t.Errorf("Updated and read entreis not the same: %v", err)
@@ -278,21 +280,21 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	Insert(&testEntry)
+	mys.Insert(&testEntry)
 
-	err := Delete(testEntry)
+	err := mys.Delete(testEntry)
 	if err != nil {
 		t.Errorf("Delete failed: %v", err)
 	}
 
-	_, err = FetchByID(testEntry.ID)
+	_, err = mys.FetchByID(testEntry.ID)
 	if err == nil {
 		t.Errorf("Row not deleted")
 	}
 }
 
 func TestFetchPublic(t *testing.T) {
-	res, err := FetchPublic()
+	res, err := mys.FetchPublic()
 	if err != nil {
 		t.Errorf("FetchPublic() error: %v", err)
 	}
@@ -303,9 +305,9 @@ func TestFetchPublic(t *testing.T) {
 
 	testEntry.Public = 1
 
-	Insert(&testEntry)
+	mys.Insert(&testEntry)
 
-	res, err = FetchPublic()
+	res, err = mys.FetchPublic()
 	if err != nil {
 		t.Errorf("FetchPublic() error: %v", err)
 	}
@@ -324,7 +326,7 @@ func TestFetchAll(t *testing.T) {
 
 	conn.QueryRow("SELECT count(*) FROM `databases`").Scan(&count)
 
-	entries, err := FetchAll()
+	entries, err := mys.FetchAll()
 	if err != nil {
 		t.Errorf("FetchAll() encountered error: %v", err)
 	}
@@ -335,7 +337,7 @@ func TestFetchAll(t *testing.T) {
 }
 
 func TestReadRow(t *testing.T) {
-	err := Insert(&testEntry)
+	err := mys.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Failed adding a entry: %s", err.Error())
 	}
@@ -346,7 +348,7 @@ func TestReadRow(t *testing.T) {
 	}
 
 	for rows.Next() {
-		row, err := readRows(rows)
+		row, err := mys.readRows(rows)
 		if err != nil {
 			t.Errorf("Failed reading row from rows: %s", err.Error())
 		}

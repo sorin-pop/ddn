@@ -16,7 +16,6 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
 	vis "github.com/djavorszky/ddn/common/visibility"
-	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/mail"
 	"github.com/djavorszky/ddn/server/registry"
@@ -94,20 +93,20 @@ func prepImportAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func doImport(dbID int, dumpfile string) {
-	dbe, err := database.FetchByID(dbID)
+	dbe, err := db.FetchByID(dbID)
 	if err != nil {
 		log.Printf("Failed getting entry by ID: %s", err.Error())
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: " + err.Error()
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
-		database.Update(&dbe)
+		db.Update(&dbe)
 
 		return
 	}
 
 	dbe.Status = status.CopyInProgress
-	database.Update(&dbe)
+	db.Update(&dbe)
 
 	url, err := copyFile(dumpfile)
 	if err != nil {
@@ -116,12 +115,12 @@ func doImport(dbID int, dumpfile string) {
 		dbe.Message = "Server error: " + err.Error()
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
-		database.Update(&dbe)
+		db.Update(&dbe)
 		return
 	}
 
 	dbe.Dumpfile = url
-	database.Update(&dbe)
+	db.Update(&dbe)
 
 	conn, ok := registry.Get(dbe.ConnectorName)
 	if !ok {
@@ -129,7 +128,7 @@ func doImport(dbID int, dumpfile string) {
 		dbe.Message = "Server error: connector went offline."
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
-		database.Update(&dbe)
+		db.Update(&dbe)
 		return
 	}
 
@@ -139,7 +138,7 @@ func doImport(dbID int, dumpfile string) {
 		dbe.Message = "Server error: " + err.Error()
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
-		database.Update(&dbe)
+		db.Update(&dbe)
 		os.Remove("./web/dumps/" + dumpfile)
 		return
 	}
@@ -182,7 +181,7 @@ func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public s
 		entry.Public = vis.Public
 	}
 
-	err := database.Insert(&entry)
+	err := db.Insert(&entry)
 	if err != nil {
 		return 0, fmt.Errorf("failed persisting database locally: %s", err.Error())
 	}
@@ -309,7 +308,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		entry.Public = vis.Public
 	}
 
-	err = database.Insert(&entry)
+	err = db.Insert(&entry)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
 		session.AddFlash(fmt.Sprintf("failed persisting database locally: %s", err.Error()))
@@ -321,7 +320,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		session.AddFlash(err.Error(), "fail")
 
-		database.Delete(entry)
+		db.Delete(entry)
 		os.Remove("./web/dumps/" + filename)
 		return
 	}
@@ -391,7 +390,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		entry.Public = vis.Public
 	}
 
-	err = database.Insert(&entry)
+	err = db.Insert(&entry)
 	if err != nil {
 		log.Printf("Failed adding entry: %s", err.Error())
 	}
@@ -499,7 +498,7 @@ func extend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe, err := database.FetchByID(ID)
+	dbe, err := db.FetchByID(ID)
 	if err != nil {
 		http.Error(w, "Failed fetching entry: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -508,7 +507,7 @@ func extend(w http.ResponseWriter, r *http.Request) {
 	dbe.ExpiryDate = time.Now().AddDate(0, 0, 30)
 	dbe.Status = status.Success
 
-	err = database.Update(&dbe)
+	err = db.Update(&dbe)
 	if err != nil {
 		http.Error(w, "Failed updating entry: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -548,7 +547,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe, err := database.FetchByID(ID)
+	dbe, err := db.FetchByID(ID)
 	if err != nil {
 		log.Printf("Failed querying for database: %s", err.Error())
 		session.AddFlash("Failed querying database", "fail")
@@ -570,7 +569,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 
 	dbe.Status = status.DropInProgress
 
-	database.Update(&dbe)
+	db.Update(&dbe)
 
 	go dropAsync(conn, ID, dbe.DBName, dbe.DBUser)
 
@@ -578,7 +577,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 }
 
 func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
-	dbe, err := database.FetchByID(ID)
+	dbe, err := db.FetchByID(ID)
 	if err != nil {
 		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
 		return
@@ -589,13 +588,13 @@ func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
 		dbe.Status = status.DropDatabaseFailed
 		dbe.Message = err.Error()
 
-		database.Update(&dbe)
+		db.Update(&dbe)
 
 		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
 		return
 	}
 
-	database.Delete(dbe)
+	db.Delete(dbe)
 }
 
 func portalext(w http.ResponseWriter, r *http.Request) {
@@ -622,7 +621,7 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe, err := database.FetchByID(ID)
+	dbe, err := db.FetchByID(ID)
 	if err != nil {
 		log.Printf("Failed querying for database: %s", err.Error())
 		session.AddFlash("Failed querying database", "fail")
@@ -651,7 +650,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe, err := database.FetchByID(msg.ID)
+	dbe, err := db.FetchByID(msg.ID)
 	if err != nil {
 		log.Printf("Failed querying for database: %s", err.Error())
 		return
@@ -659,7 +658,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 
 	dbe.Status = msg.StatusID
 
-	database.Update(&dbe)
+	db.Update(&dbe)
 
 	// Delete the dumpfile once import is started or if an error has occurred.
 	if dbe.Status == status.ImportInProgress || dbe.IsErr() {
@@ -682,7 +681,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		dbe.Message = msg.Message
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
-		err = database.Update(&dbe)
+		err = db.Update(&dbe)
 		if err != nil {
 			log.Printf("Couldn't update local db: %s", err.Error())
 		}
@@ -780,7 +779,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 		Status:        status.Success,
 	}
 
-	database.Insert(&dbentry)
+	db.Insert(&dbentry)
 
 	return con, nil
 }

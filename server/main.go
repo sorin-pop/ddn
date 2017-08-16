@@ -10,14 +10,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/djavorszky/ddn/server/database"
+
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
-	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/database/mysql"
 	"github.com/djavorszky/ddn/server/mail"
 )
 
 var (
 	config Config
+	db     database.BackendConnection
 )
 
 const version = "1.5.1"
@@ -103,11 +106,19 @@ func main() {
 		}
 	}
 
-	err = database.ConnectAndPrepare(config.DBAddress, config.DBPort, config.DBUser, config.DBPass, config.DBName)
+	db = mysql.DB{
+		Address:  config.DBAddress,
+		Port:     config.DBPort,
+		User:     config.DBUser,
+		Pass:     config.DBPass,
+		Database: config.DBName,
+	}
+
+	err = db.ConnectAndPrepare()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close()
+	defer db.Close()
 
 	log.Println("Database connection established")
 

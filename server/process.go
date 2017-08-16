@@ -7,7 +7,6 @@ import (
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/status"
-	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/mail"
 	"github.com/djavorszky/ddn/server/registry"
 )
@@ -24,7 +23,7 @@ func maintain() {
 	ticker := time.NewTicker(24 * time.Hour)
 
 	for range ticker.C {
-		dbs, err := database.FetchAll()
+		dbs, err := db.FetchAll()
 		if err != nil {
 			log.Printf("Failed listing databases: %s", err.Error())
 		}
@@ -41,7 +40,7 @@ func maintain() {
 				}
 
 				conn.DropDatabase(registry.ID(), dbe.DBName, dbe.DBUser)
-				database.Delete(dbe)
+				db.Delete(dbe)
 
 				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
 <h3>Database dropped</h3>
@@ -77,7 +76,7 @@ func maintain() {
 			if dbe.ExpiryDate.Before(weekPlus) {
 				dbe.Status = status.RemovalScheduled
 
-				database.Update(&dbe)
+				db.Update(&dbe)
 
 				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q to be removed in one week", dbe.DBName), fmt.Sprintf(`
 <h3>Database removal scheduled</h3>

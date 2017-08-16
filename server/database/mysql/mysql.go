@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/sutils"
@@ -18,15 +19,52 @@ var (
 	conn     *sql.DB
 )
 
+// DB implements the BackendConnection
+type DB struct {
+	Address, Port, User, Pass, Database string
+}
+
+// ConnectAndPrepare establishes a database connection and initializes the tables, if needed
+func (mys DB) ConnectAndPrepare() error {
+	var err error
+
+	datasource := fmt.Sprintf("%s:%s@tcp(%s:%s)/", mys.User, mys.Pass, mys.Address, mys.Port)
+	err = connect(datasource)
+	if err != nil {
+		return fmt.Errorf("couldn't connect to the database: %s", err.Error())
+	}
+
+	_, err = conn.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s CHARSET utf8;", mys.Database))
+	if err != nil {
+		return fmt.Errorf("executing create database query failed: %s", sutils.TrimNL(err.Error()))
+	}
+
+	conn.Close()
+
+	datasource = datasource + mys.Database
+
+	err = connect(datasource)
+	if err != nil {
+		return fmt.Errorf("couldn't connect to the database: %s", err.Error())
+	}
+
+	err = initTables()
+	if err != nil {
+		return fmt.Errorf("initializing tables failed: %s", err.Error())
+	}
+
+	return nil
+}
+
 // FetchByID returns the entry associated with that ID, or
 // an error if it does not exist
-func FetchByID(ID int) (data.Row, error) {
-	if err := alive(); err != nil {
+func (mys DB) FetchByID(ID int) (data.Row, error) {
+	if err := mys.alive(); err != nil {
 		return data.Row{}, fmt.Errorf("database down: %s", err.Error())
 	}
 
 	row := conn.QueryRow("SELECT * FROM `databases` WHERE id = ?", ID)
-	res, err := readRow(row)
+	res, err := mys.readRow(row)
 	if err != nil {
 		return data.Row{}, fmt.Errorf("failed reading result: %v", err)
 	}
@@ -38,8 +76,8 @@ func FetchByID(ID int) (data.Row, error) {
 // specified user, an empty list if it's not the user does
 // not have any entries, or an error if something went
 // wrong
-func FetchByCreator(creator string) ([]data.Row, error) {
-	if err := alive(); err != nil {
+func (mys DB) FetchByCreator(creator string) ([]data.Row, error) {
+	if err := mys.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
 	}
 
@@ -51,7 +89,7 @@ func FetchByCreator(creator string) ([]data.Row, error) {
 	}
 
 	for rows.Next() {
-		row, err := readRows(rows)
+		row, err := mys.readRows(rows)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
@@ -68,8 +106,8 @@ func FetchByCreator(creator string) ([]data.Row, error) {
 }
 
 // Insert adds an entry to the database, returning its ID
-func Insert(entry *data.Row) error {
-	if err := alive(); err != nil {
+func (mys DB) Insert(entry *data.Row) error {
+	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
@@ -107,8 +145,8 @@ func Insert(entry *data.Row) error {
 }
 
 // Update updates an already existing entry
-func Update(entry *data.Row) error {
-	if err := alive(); err != nil {
+func (mys DB) Update(entry *data.Row) error {
+	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
@@ -120,7 +158,7 @@ func Update(entry *data.Row) error {
 	}
 
 	if count == 0 {
-		return Insert(entry)
+		return mys.Insert(entry)
 	}
 
 	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `connectorName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
@@ -151,8 +189,8 @@ func Update(entry *data.Row) error {
 }
 
 // Delete removes the entry from the database
-func Delete(entry data.Row) error {
-	if err := alive(); err != nil {
+func (mys DB) Delete(entry data.Row) error {
+	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
@@ -162,8 +200,8 @@ func Delete(entry data.Row) error {
 }
 
 // FetchPublic returns all entries that have "Public" set to true
-func FetchPublic() ([]data.Row, error) {
-	if err := alive(); err != nil {
+func (mys DB) FetchPublic() ([]data.Row, error) {
+	if err := mys.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
 	}
 
@@ -175,7 +213,7 @@ func FetchPublic() ([]data.Row, error) {
 	}
 
 	for rows.Next() {
-		row, err := readRows(rows)
+		row, err := mys.readRows(rows)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
@@ -187,8 +225,8 @@ func FetchPublic() ([]data.Row, error) {
 }
 
 // FetchAll returns all entries.
-func FetchAll() ([]data.Row, error) {
-	if err := alive(); err != nil {
+func (mys DB) FetchAll() ([]data.Row, error) {
+	if err := mys.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
 	}
 
@@ -200,7 +238,7 @@ func FetchAll() ([]data.Row, error) {
 	}
 
 	for rows.Next() {
-		row, err := readRows(rows)
+		row, err := mys.readRows(rows)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
@@ -211,7 +249,7 @@ func FetchAll() ([]data.Row, error) {
 	return entries, nil
 }
 
-func readRow(result *sql.Row) (data.Row, error) {
+func (mys DB) readRow(result *sql.Row) (data.Row, error) {
 	var row data.Row
 
 	err := result.Scan(
@@ -238,7 +276,7 @@ func readRow(result *sql.Row) (data.Row, error) {
 	return row, nil
 }
 
-func readRows(rows *sql.Rows) (data.Row, error) {
+func (mys DB) readRows(rows *sql.Rows) (data.Row, error) {
 	var row data.Row
 
 	err := rows.Scan(
@@ -266,7 +304,7 @@ func readRows(rows *sql.Rows) (data.Row, error) {
 }
 
 // Alive checks whether the connection is alive. Returns error if not.
-func alive() error {
+func (mys DB) alive() error {
 	defer func() {
 		if p := recover(); p != nil {
 			log.Println("Panic Attack! Database seems to be down.")
@@ -282,6 +320,75 @@ func alive() error {
 }
 
 // Close closes the database connection
-func Close() error {
+func (DB) Close() error {
 	return conn.Close()
+}
+
+type dbUpdate struct {
+	Query   string
+	Comment string
+}
+
+var queries = []dbUpdate{
+	dbUpdate{
+		Query:   "CREATE TABLE `version` (`queryId` INT NOT NULL AUTO_INCREMENT, `query` LONGTEXT NULL, `comment` TEXT NULL, `date` DATETIME NULL, PRIMARY KEY (`queryId`));",
+		Comment: "Create the version table",
+	},
+	dbUpdate{
+		Query:   "CREATE TABLE IF NOT EXISTS `databases` ( `id` INT NOT NULL AUTO_INCREMENT, `dbname` VARCHAR(255) NULL, `dbuser` VARCHAR(255) NULL, `dbpass` VARCHAR(255) NULL, `dbsid` VARCHAR(45) NULL, `dumpfile` LONGTEXT NULL, `createDate` DATETIME NULL, `expiryDate` DATETIME NULL, `creator` VARCHAR(255) NULL, `connectorName` VARCHAR(255) NULL, `dbAddress` VARCHAR(255) NULL, `dbPort` VARCHAR(45) NULL, `dbvendor` VARCHAR(255) NULL, `status` INT,  PRIMARY KEY (`id`));",
+		Comment: "Create the databases table",
+	},
+	dbUpdate{
+		Query:   "ALTER TABLE `databases` ADD COLUMN `visibility` INT(11) NULL DEFAULT 0 AFTER `status`;",
+		Comment: "Add 'visibility' to databases, default 0",
+	},
+	dbUpdate{
+		Query:   "ALTER TABLE `databases` ADD COLUMN `message` LONGTEXT AFTER `status`;",
+		Comment: "Add 'message' column",
+	},
+	dbUpdate{
+		Query:   "UPDATE `databases` SET `message` = '' WHERE `message` IS NULL;",
+		Comment: "Update 'message' columns to empty where null",
+	},
+}
+
+func connect(datasource string) error {
+	var err error
+
+	conn, err = sql.Open("mysql", datasource+"?parseTime=true")
+	if err != nil {
+		return fmt.Errorf("creating connection pool failed: %s", err.Error())
+	}
+
+	err = conn.Ping()
+	if err != nil {
+		conn.Close()
+		return fmt.Errorf("database ping failed: %s", sutils.TrimNL(err.Error()))
+	}
+
+	return nil
+}
+
+func initTables() error {
+	var (
+		err      error
+		startLoc int
+	)
+
+	conn.QueryRow("SELECT count(*) FROM `version`").Scan(&startLoc)
+
+	for _, q := range queries[startLoc:] {
+		log.Printf("Updating database %q", q.Comment)
+		_, err = conn.Exec(q.Query)
+		if err != nil {
+			return fmt.Errorf("executing query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
+		}
+
+		_, err = conn.Exec("INSERT INTO `version` (query, comment, date) VALUES (?, ?, ?)", q.Query, q.Comment, time.Now())
+		if err != nil {
+			return fmt.Errorf("updating version table with query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
+		}
+	}
+
+	return nil
 }

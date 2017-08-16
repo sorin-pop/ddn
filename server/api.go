@@ -10,7 +10,6 @@ import (
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
-	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/sutils"
@@ -97,7 +96,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		Status:        status.Success,
 	}
 
-	err = database.Insert(&dbe)
+	err = db.Insert(&dbe)
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
 			Status:  status.CreateDatabaseFailed,
@@ -141,7 +140,7 @@ func apiSafe2Restart(w http.ResponseWriter, r *http.Request) {
 	imports := make(map[string]int)
 
 	// Check if server and connectors are restartable
-	entries, err := database.FetchAll()
+	entries, err := db.FetchAll()
 	if err != nil {
 		msg := inet.Message{Status: http.StatusInternalServerError, Message: "ERR_QUERY_FAILED"}
 
