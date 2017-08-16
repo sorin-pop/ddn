@@ -10,10 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/djavorszky/ddn/server/database"
-
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
+	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/database/mysql"
 	"github.com/djavorszky/ddn/server/mail"
 )
@@ -142,8 +141,9 @@ func main() {
 	// Start connector checker goroutine
 	go checkConnectors()
 
-	port := fmt.Sprintf(":%s", config.ServerPort)
+	log.Printf("Starting to listen on port %s", config.ServerPort)
 
+	port := fmt.Sprintf(":%s", config.ServerPort)
 	log.Println(http.ListenAndServe(port, Router()))
 
 	if len(config.AdminEmail) != 0 {
