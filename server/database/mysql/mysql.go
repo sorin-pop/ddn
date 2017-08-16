@@ -56,6 +56,11 @@ func (mys DB) ConnectAndPrepare() error {
 	return nil
 }
 
+// Close closes the database connection
+func (DB) Close() error {
+	return conn.Close()
+}
+
 // FetchByID returns the entry associated with that ID, or
 // an error if it does not exist
 func (mys DB) FetchByID(ID int) (data.Row, error) {
@@ -100,6 +105,56 @@ func (mys DB) FetchByCreator(creator string) ([]data.Row, error) {
 	err = rows.Err()
 	if err != nil {
 		return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+	}
+
+	return entries, nil
+}
+
+// FetchPublic returns all entries that have "Public" set to true
+func (mys DB) FetchPublic() ([]data.Row, error) {
+	if err := mys.alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var entries []data.Row
+
+	rows, err := conn.Query("SELECT * FROM `databases` WHERE visibility = 1 ORDER BY id DESC")
+	if err != nil {
+		return nil, fmt.Errorf("failed running query: %v", err)
+	}
+
+	for rows.Next() {
+		row, err := mys.readRows(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+
+		entries = append(entries, row)
+	}
+
+	return entries, nil
+}
+
+// FetchAll returns all entries.
+func (mys DB) FetchAll() ([]data.Row, error) {
+	if err := mys.alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var entries []data.Row
+
+	rows, err := conn.Query("SELECT * FROM `databases` ORDER BY id DESC")
+	if err != nil {
+		return nil, fmt.Errorf("failed running query: %v", err)
+	}
+
+	for rows.Next() {
+		row, err := mys.readRows(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+
+		entries = append(entries, row)
 	}
 
 	return entries, nil
@@ -199,56 +254,6 @@ func (mys DB) Delete(entry data.Row) error {
 	return err
 }
 
-// FetchPublic returns all entries that have "Public" set to true
-func (mys DB) FetchPublic() ([]data.Row, error) {
-	if err := mys.alive(); err != nil {
-		return nil, fmt.Errorf("database down: %s", err.Error())
-	}
-
-	var entries []data.Row
-
-	rows, err := conn.Query("SELECT * FROM `databases` WHERE visibility = 1 ORDER BY id DESC")
-	if err != nil {
-		return nil, fmt.Errorf("failed running query: %v", err)
-	}
-
-	for rows.Next() {
-		row, err := mys.readRows(rows)
-		if err != nil {
-			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
-		}
-
-		entries = append(entries, row)
-	}
-
-	return entries, nil
-}
-
-// FetchAll returns all entries.
-func (mys DB) FetchAll() ([]data.Row, error) {
-	if err := mys.alive(); err != nil {
-		return nil, fmt.Errorf("database down: %s", err.Error())
-	}
-
-	var entries []data.Row
-
-	rows, err := conn.Query("SELECT * FROM `databases` ORDER BY id DESC")
-	if err != nil {
-		return nil, fmt.Errorf("failed running query: %v", err)
-	}
-
-	for rows.Next() {
-		row, err := mys.readRows(rows)
-		if err != nil {
-			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
-		}
-
-		entries = append(entries, row)
-	}
-
-	return entries, nil
-}
-
 func (mys DB) readRow(result *sql.Row) (data.Row, error) {
 	var row data.Row
 
@@ -317,11 +322,6 @@ func (mys DB) alive() error {
 	}
 
 	return nil
-}
-
-// Close closes the database connection
-func (DB) Close() error {
-	return conn.Close()
 }
 
 type dbUpdate struct {
