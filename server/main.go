@@ -10,10 +10,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/djavorszky/ddn/common/inet"
+
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database"
-	"github.com/djavorszky/ddn/server/database/mysql"
+	"github.com/djavorszky/ddn/server/database/sqlite"
 	"github.com/djavorszky/ddn/server/mail"
 )
 
@@ -70,13 +72,16 @@ func main() {
 	}
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
-		log.Println("Couldn't find properties file, generating one.")
+		log.Println("Couldn't find properties file, trying to download one.")
 
-		filename, config = setup(*filename)
-
-		if err := createProps(*filename, config); err != nil {
-			log.Fatal("couldn't create properties file:", err.Error())
+		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/server/srv.conf")
+		if err != nil {
+			log.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
 		}
+
+		os.Rename(tmpConfig, *filename)
+
+		log.Println("Continuing with default configuration...")
 	}
 
 	if _, err := toml.DecodeFile(*filename, &config); err != nil {
@@ -105,13 +110,7 @@ func main() {
 		}
 	}
 
-	db = &mysql.DB{
-		Address:  config.DBAddress,
-		Port:     config.DBPort,
-		User:     config.DBUser,
-		Pass:     config.DBPass,
-		Database: config.DBName,
-	}
+	db = &sqlite.DB{DBLocation: "./prod.db"}
 
 	err = db.ConnectAndPrepare()
 	if err != nil {
