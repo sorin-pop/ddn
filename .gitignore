@@ -26,6 +26,8 @@ _testmain.go
 *.properties
 *.conf
 
+*.db
+
 !srv.conf
 !con.conf
 
