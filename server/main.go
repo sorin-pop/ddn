@@ -15,6 +15,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database"
+	"github.com/djavorszky/ddn/server/database/mysql"
 	"github.com/djavorszky/ddn/server/database/sqlite"
 	"github.com/djavorszky/ddn/server/mail"
 )
@@ -110,7 +111,20 @@ func main() {
 		}
 	}
 
-	db = &sqlite.DB{DBLocation: "./prod.db"}
+	switch config.DBProvider {
+	case "mysql":
+		db = &mysql.DB{
+			Address:  config.DBAddress,
+			Port:     config.DBPort,
+			User:     config.DBUser,
+			Pass:     config.DBPass,
+			Database: config.DBName,
+		}
+	case "sqlite":
+		db = &sqlite.DB{DBLocation: config.DBAddress}
+	default:
+		log.Fatalf("Unknown database provider: %s", config.DBProvider)
+	}
 
 	err = db.ConnectAndPrepare()
 	if err != nil {
