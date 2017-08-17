@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/server/database/data"
+	"github.com/djavorszky/ddn/server/database/dbutil"
 	"github.com/djavorszky/sutils"
 
 	// Db
@@ -62,7 +63,7 @@ func (mys *DB) FetchByID(ID int) (data.Row, error) {
 	}
 
 	row := mys.conn.QueryRow("SELECT * FROM `databases` WHERE id = ?", ID)
-	res, err := mys.readRow(row)
+	res, err := dbutil.ReadRow(row)
 	if err != nil {
 		return data.Row{}, fmt.Errorf("failed reading result: %v", err)
 	}
@@ -87,7 +88,7 @@ func (mys *DB) FetchByCreator(creator string) ([]data.Row, error) {
 	}
 
 	for rows.Next() {
-		row, err := mys.readRows(rows)
+		row, err := dbutil.ReadRows(rows)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
@@ -117,7 +118,7 @@ func (mys *DB) FetchPublic() ([]data.Row, error) {
 	}
 
 	for rows.Next() {
-		row, err := mys.readRows(rows)
+		row, err := dbutil.ReadRows(rows)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
@@ -142,7 +143,7 @@ func (mys *DB) FetchAll() ([]data.Row, error) {
 	}
 
 	for rows.Next() {
-		row, err := mys.readRows(rows)
+		row, err := dbutil.ReadRows(rows)
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
@@ -245,60 +246,6 @@ func (mys *DB) Delete(entry data.Row) error {
 	_, err := mys.conn.Exec("DELETE FROM `databases` WHERE id = ?", entry.ID)
 
 	return err
-}
-
-func (mys *DB) readRow(result *sql.Row) (data.Row, error) {
-	var row data.Row
-
-	err := result.Scan(
-		&row.ID,
-		&row.DBName,
-		&row.DBUser,
-		&row.DBPass,
-		&row.DBSID,
-		&row.Dumpfile,
-		&row.CreateDate,
-		&row.ExpiryDate,
-		&row.Creator,
-		&row.ConnectorName,
-		&row.DBAddress,
-		&row.DBPort,
-		&row.DBVendor,
-		&row.Status,
-		&row.Message,
-		&row.Public)
-	if err != nil {
-		return data.Row{}, fmt.Errorf("failed reading row: %v", err)
-	}
-
-	return row, nil
-}
-
-func (mys *DB) readRows(rows *sql.Rows) (data.Row, error) {
-	var row data.Row
-
-	err := rows.Scan(
-		&row.ID,
-		&row.DBName,
-		&row.DBUser,
-		&row.DBPass,
-		&row.DBSID,
-		&row.Dumpfile,
-		&row.CreateDate,
-		&row.ExpiryDate,
-		&row.Creator,
-		&row.ConnectorName,
-		&row.DBAddress,
-		&row.DBPort,
-		&row.DBVendor,
-		&row.Status,
-		&row.Message,
-		&row.Public)
-	if err != nil {
-		return data.Row{}, fmt.Errorf("failed reading row: %v", err)
-	}
-
-	return row, nil
 }
 
 // Alive checks whether the connection is alive. Returns error if not.

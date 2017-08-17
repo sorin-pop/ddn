@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/server/database/data"
+	"github.com/djavorszky/ddn/server/database/dbutil"
 )
 
 const (
@@ -135,4 +136,37 @@ func TestInitTables(t *testing.T) {
 		t.Errorf("error reading result from query: %s", err.Error())
 	}
 	rows.Close()
+}
+
+func TestInsert(t *testing.T) {
+	err := lite.Insert(&testEntry)
+	if err != nil {
+		t.Errorf("lite.Insert(testEntry) failed with error: %v", err)
+	}
+
+	if testEntry.ID == 0 {
+		t.Errorf("lite.Insert(testEntry) resulted in  id of 0")
+	}
+
+	result, err := lite.FetchByID(testEntry.ID)
+	if err != nil {
+		t.Errorf("FetchById(%d) resulted in error: %v", testEntry.ID, err)
+	}
+
+	if err = dbutil.CompareRows(testEntry, result); err != nil {
+		t.Errorf("Persisted and read results not the same: %v", err)
+	}
+}
+
+func TestFetchByID(t *testing.T) {
+	lite.Insert(&testEntry)
+
+	res, err := lite.FetchByID(testEntry.ID)
+	if err != nil {
+		t.Errorf("FetchById(%d) failed with error: %v", testEntry.ID, err)
+	}
+
+	if err := dbutil.CompareRows(res, testEntry); err != nil {
+		t.Errorf("Fetched result not the same as queried: %v", err)
+	}
 }

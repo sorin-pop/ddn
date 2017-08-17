@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/server/database/data"
+	"github.com/djavorszky/ddn/server/database/dbutil"
 	"github.com/djavorszky/sutils"
 
 	// DB
@@ -49,7 +50,17 @@ func (lite *DB) Close() error {
 // FetchByID returns the entry associated with that ID, or
 // an error if it does not exist
 func (lite *DB) FetchByID(ID int) (data.Row, error) {
-	return data.Row{}, nil
+	if err := lite.alive(); err != nil {
+		return data.Row{}, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	row := lite.conn.QueryRow("SELECT * FROM databases WHERE id = ?", ID)
+	res, err := dbutil.ReadRow(row)
+	if err != nil {
+		return data.Row{}, fmt.Errorf("failed reading result: %v", err)
+	}
+
+	return res, nil
 }
 
 // FetchByCreator returns public entries that were created by the
@@ -72,6 +83,40 @@ func (lite *DB) FetchAll() ([]data.Row, error) {
 
 // Insert adds an entry to the database, returning its ID
 func (lite *DB) Insert(row *data.Row) error {
+	if err := lite.alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?)"
+
+	res, err := lite.conn.Exec(query,
+		row.DBName,
+		row.DBUser,
+		row.DBPass,
+		row.DBSID,
+		row.Dumpfile,
+		row.CreateDate,
+		row.ExpiryDate,
+		row.Creator,
+		row.ConnectorName,
+		row.DBAddress,
+		row.DBPort,
+		row.DBVendor,
+		row.Status,
+		row.Message,
+		row.Public,
+	)
+	if err != nil {
+		return fmt.Errorf("insert failed: %v", err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed getting new ID: %v", err)
+	}
+
+	row.ID = int(id)
+
 	return nil
 }
 
@@ -124,6 +169,22 @@ func (lite *DB) initTables() error {
 		if err != nil {
 			return fmt.Errorf("updating version table with query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
 		}
+	}
+
+	return nil
+}
+
+// Alive checks whether the connection is alive. Returns error if not.
+func (lite *DB) alive() error {
+	defer func() {
+		if p := recover(); p != nil {
+			log.Println("Panic Attack! Database seems to be down.")
+		}
+	}()
+
+	_, err := lite.conn.Exec("select * from databases WHERE 1 = 0")
+	if err != nil {
+		return fmt.Errorf("executing stayalive query failed: %s", sutils.TrimNL(err.Error()))
 	}
 
 	return nil

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/server/database/data"
+	"github.com/djavorszky/ddn/server/database/dbutil"
 	"github.com/djavorszky/sutils"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -196,7 +197,7 @@ func TestFetchByID(t *testing.T) {
 		t.Errorf("FetchById(%d) failed with error: %v", testEntry.ID, err)
 	}
 
-	if err := compareDBEntries(res, testEntry); err != nil {
+	if err := dbutil.CompareRows(res, testEntry); err != nil {
 		t.Errorf("Fetched result not the same as queried: %v", err)
 	}
 }
@@ -240,7 +241,7 @@ func TestInsert(t *testing.T) {
 		t.Errorf("FetchById(%d) resulted in error: %v", testEntry.ID, err)
 	}
 
-	if err = compareDBEntries(testEntry, result); err != nil {
+	if err = dbutil.CompareRows(testEntry, result); err != nil {
 		t.Errorf("Persisted and read results not the same: %v", err)
 	}
 }
@@ -274,7 +275,7 @@ func TestUpdate(t *testing.T) {
 
 	readEntry, _ := mys.FetchByID(testEntry.ID)
 
-	if err := compareDBEntries(updatedEntry, readEntry); err != nil {
+	if err := dbutil.CompareRows(updatedEntry, readEntry); err != nil {
 		t.Errorf("Updated and read entreis not the same: %v", err)
 	}
 }
@@ -316,7 +317,7 @@ func TestFetchPublic(t *testing.T) {
 		t.Errorf("FetchPublic() expected 1 result, got %d instead", len(res))
 	}
 
-	if err := compareDBEntries(res[0], testEntry); err != nil {
+	if err := dbutil.CompareRows(res[0], testEntry); err != nil {
 		t.Errorf("Read and persisted mismatch: %v", err)
 	}
 }
@@ -348,12 +349,12 @@ func TestReadRow(t *testing.T) {
 	}
 
 	for rows.Next() {
-		row, err := mys.readRows(rows)
+		row, err := dbutil.ReadRows(rows)
 		if err != nil {
 			t.Errorf("Failed reading row from rows: %s", err.Error())
 		}
 
-		if err = compareDBEntries(testEntry, row); err != nil {
+		if err = dbutil.CompareRows(testEntry, row); err != nil {
 			t.Errorf("Persisted and read DBEntry not the same: %s", err.Error())
 		}
 	}
@@ -365,71 +366,4 @@ func TestReadRow(t *testing.T) {
 	}
 
 	testEntry.ID++
-}
-
-func compareDBEntries(first, second data.Row) error {
-	if first.ID != second.ID {
-		return fmt.Errorf("ID mismatch. First: '%d' vs Second: '%d'", first.ID, second.ID)
-	}
-
-	if first.DBVendor != second.DBVendor {
-		return fmt.Errorf("DBVendor mismatch. First: %q vs Second: %q", first.DBVendor, second.DBVendor)
-	}
-
-	if first.DBName != second.DBName {
-		return fmt.Errorf("DBName mismatch. First: %q vs Second: %q", first.DBName, second.DBName)
-	}
-
-	if first.DBUser != second.DBUser {
-		return fmt.Errorf("DBUser mismatch. First: %q vs Second: %q", first.DBUser, second.DBUser)
-	}
-
-	if first.DBPass != second.DBPass {
-		return fmt.Errorf("DBPass mismatch. First: %q vs Second: %q", first.DBPass, second.DBPass)
-	}
-
-	if first.DBSID != second.DBSID {
-		return fmt.Errorf("DBSID mismatch. First: %q vs Second: %q", first.DBSID, second.DBSID)
-	}
-
-	if first.Dumpfile != second.Dumpfile {
-		return fmt.Errorf("Dumpfile mismatch. First: %q vs Second: %q", first.Dumpfile, second.Dumpfile)
-	}
-
-	delta := first.CreateDate.Sub(second.CreateDate)
-	if delta < -1*time.Second || delta > 1*time.Second {
-		return fmt.Errorf("CreateDate mismatch. First: %q vs Second: %q", first.CreateDate.Round(time.Second).Format(time.ANSIC), second.CreateDate.Round(time.Second).Format(time.ANSIC))
-	}
-
-	delta = first.ExpiryDate.Sub(second.ExpiryDate)
-	if delta < -1*time.Second || delta > 1*time.Second {
-		return fmt.Errorf("ExpiryDate mismatch. First: %q vs Second: %q", first.ExpiryDate.Round(time.Second).Format(time.ANSIC), second.ExpiryDate.Round(time.Second).Format(time.ANSIC))
-	}
-
-	if first.Creator != second.Creator {
-		return fmt.Errorf("Creator mismatch. First: %q vs Second: %q", first.Creator, second.Creator)
-	}
-
-	if first.ConnectorName != second.ConnectorName {
-		return fmt.Errorf("ConnectorName mismatch. First: %q vs Second: %q", first.ConnectorName, second.ConnectorName)
-	}
-
-	if first.DBAddress != second.DBAddress {
-		return fmt.Errorf("DBAddress mismatch. First: %q vs Second: %q", first.DBAddress, second.DBAddress)
-	}
-
-	if first.DBPort != second.DBPort {
-		return fmt.Errorf("DBPort mismatch. First: %q vs Second: %q", first.DBPort, second.DBPort)
-	}
-
-	if first.Status != second.Status {
-		return fmt.Errorf("Status mismatch. First: %q vs Second: %q", first.Status, second.Status)
-
-	}
-
-	if first.Public != second.Public {
-		return fmt.Errorf("Public mismatch. First: %q vs Second: %q", first.Public, second.Public)
-	}
-
-	return nil
 }
