@@ -276,7 +276,7 @@ func TestUpdate(t *testing.T) {
 	readEntry, _ := mys.FetchByID(testEntry.ID)
 
 	if err := dbutil.CompareRows(updatedEntry, readEntry); err != nil {
-		t.Errorf("Updated and read entreis not the same: %v", err)
+		t.Errorf("Updated and read entries not the same: %v", err)
 	}
 }
 

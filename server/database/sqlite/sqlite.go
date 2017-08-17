@@ -68,17 +68,82 @@ func (lite *DB) FetchByID(ID int) (data.Row, error) {
 // not have any entries, or an error if something went
 // wrong
 func (lite *DB) FetchByCreator(creator string) ([]data.Row, error) {
-	return []data.Row{}, nil
+	if err := lite.alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var entries []data.Row
+
+	rows, err := lite.conn.Query("SELECT * FROM databases WHERE creator = ? AND visibility = 0 ORDER BY id DESC", creator)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
+	}
+
+	for rows.Next() {
+		row, err := dbutil.ReadRows(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+
+		entries = append(entries, row)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+	}
+
+	return entries, nil
 }
 
 // FetchPublic returns all entries that have "Public" set to true
 func (lite *DB) FetchPublic() ([]data.Row, error) {
-	return []data.Row{}, nil
+	if err := lite.alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var entries []data.Row
+
+	rows, err := lite.conn.Query("SELECT * FROM `databases` WHERE visibility = 1 ORDER BY id DESC")
+	if err != nil {
+		return nil, fmt.Errorf("failed running query: %v", err)
+	}
+
+	for rows.Next() {
+		row, err := dbutil.ReadRows(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+
+		entries = append(entries, row)
+	}
+
+	return entries, nil
 }
 
 // FetchAll returns all entries.
 func (lite *DB) FetchAll() ([]data.Row, error) {
-	return []data.Row{}, nil
+	if err := lite.alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var entries []data.Row
+
+	rows, err := lite.conn.Query("SELECT * FROM `databases` ORDER BY id DESC")
+	if err != nil {
+		return nil, fmt.Errorf("failed running query: %v", err)
+	}
+
+	for rows.Next() {
+		row, err := dbutil.ReadRows(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+
+		entries = append(entries, row)
+	}
+
+	return entries, nil
 }
 
 // Insert adds an entry to the database, returning its ID
@@ -121,13 +186,58 @@ func (lite *DB) Insert(row *data.Row) error {
 }
 
 // Update updates an already existing entry
-func (lite *DB) Update(row *data.Row) error {
+func (lite *DB) Update(entry *data.Row) error {
+	if err := lite.alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var count int
+
+	err := lite.conn.QueryRow("SELECT count(*) FROM `databases` WHERE id = ?", entry.ID).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed existence check: %v", err)
+	}
+
+	if count == 0 {
+		return lite.Insert(entry)
+	}
+
+	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `connectorName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
+
+	_, err = lite.conn.Exec(query,
+		entry.DBName,
+		entry.DBUser,
+		entry.DBPass,
+		entry.DBSID,
+		entry.Dumpfile,
+		entry.CreateDate,
+		entry.ExpiryDate,
+		entry.Creator,
+		entry.ConnectorName,
+		entry.DBAddress,
+		entry.DBPort,
+		entry.DBVendor,
+		entry.Status,
+		entry.Message,
+		entry.Public,
+		entry.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed update: %v", err)
+	}
+
 	return nil
 }
 
 // Delete removes the entry from the database
-func (lite *DB) Delete(row data.Row) error {
-	return nil
+func (lite *DB) Delete(entry data.Row) error {
+	if err := lite.alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	_, err := lite.conn.Exec("DELETE FROM `databases` WHERE id = ?", entry.ID)
+
+	return err
 }
 
 type dbUpdate struct {
