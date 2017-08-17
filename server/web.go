@@ -176,7 +176,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		}
 	}
 
-	toLoad := []string{"base", "nav", "connectors", "properties"}
+	toLoad := []string{"base", "nav", "properties"}
 	toLoad = append(toLoad, pages...)
 
 	tmpl, err := buildTemplate(toLoad...)
