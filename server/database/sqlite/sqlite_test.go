@@ -41,8 +41,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	fmt.Println("For these tests to run, a local database should be present which has a user named 'travis' with no password authentication")
-
 	err := setup()
 	if err != nil {
 		fmt.Printf("Failed setup: %s", err.Error())

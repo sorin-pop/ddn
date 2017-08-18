@@ -8,5 +8,5 @@ services:
   - mysql
 
 before_install: 
-  - "mysql -e 'CREATE DATABASE IF NOT EXISTS unit_test;'"
+  - "mysql -e 'CREATE DATABASE IF NOT EXISTS unit_test; GRANT ALL PRIVILEGES ON unit_test.* TO travis;'"
 
