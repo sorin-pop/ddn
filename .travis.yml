@@ -6,7 +6,6 @@ go_import_path: github.com/djavorszky/ddn
 
 services: 
   - mysql
-  - sqlite
 
 before_install: 
   - "mysql -e 'CREATE DATABASE IF NOT EXISTS unit_test;'"
