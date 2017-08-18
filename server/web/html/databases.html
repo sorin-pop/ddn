@@ -1,22 +1,20 @@
 {{ if .HasPrivateDBs }}
-
-<h3>Your private databases</h3>
-<div class="col-md-12">
-    <table id="private_dbs" class="table table-hover table-bordered">
+<style>.container-fluid{padding: 0}</style>
+    <table id="private_dbs" class="table table-hover table-bordered my-3">
         <thead>
             <tr>
-                <th>Database Name</th>
+                <th>Name</th>
                 <th>Connector</th>
                 <th>Created</th>
                 <th>Expires</th>
                 <th>Status</th>
-                <th data-orderable="false">Actions</th>
+                <th data-orderable="false" style="width: 110px">Actions</th>
             </tr>
         </thead>
         <tbody>
             {{range .PrivateDatabases}}
                 {{if .IsStatusOk}}
-                    <tr class="table-success">
+                    <tr>
                 {{else if .InProgress}}
                     <tr class="table-info">
                 {{else if .IsWarn}}
@@ -33,55 +31,42 @@
                         (<a tabindex="0" role="button" data-toggle="popover" data-placement="bottom" title="Failed" data-content="{{.Message}}">Why?</a>)
                     {{end}}
                 </td>
-                <td>
+                <td class="text-center">
                     {{if .InProgress}}
                     <div class="progress">
                         <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="{{.Progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{.Progress}}%"></div>
                     </div>
                     {{else}}
-                    <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Actions
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            {{if not .IsErr}}
-                                <a class="dropdown-item" href="/extend/{{.ID}}">Extend Expiry</a>
-                                <a class="dropdown-item" href="/portalext/{{.ID}}">Portal-exts</a>
-                                <div class="dropdown-divider"></div>
-                            {{end}}
-                            <a class="dropdown-item" href="/drop/{{.ID}}" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')">Drop Database</a>
-                        </div>
-                    </div>
+                        {{if not .IsErr}}
+                        <a class="btn btn-sm btn-primary" href="/extend/{{.ID}}" title="Extend Expiry"><small><i class="fa fa-plus" aria-hidden="true"></i></small> <i class="fa fa-clock-o" aria-hidden="true"></i></a>
+                        <a class="btn btn-sm btn-primary" href="/portalext/{{.ID}}" title="portal properties"><i class="fa fa-info" aria-hidden="true"></i></a>
+                        {{end}}
+                        <a class="btn btn-sm btn-danger" href="/drop/{{.ID}}" title="Drop Database" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')"><i class="fa fa-trash" aria-hidden="true"></i></a>
                     {{end}}
                 </td>
             </tr>
             {{end}}
         </tbody>
     </table>
-                            
-
-</div>
 {{end}}
-
+<hr class="my-5">
 {{if .HasPublicDBs}}
-<h3>Public databases</h3>
-<div class="col-md-12">
-    <table id="public_dbs" class="table table-hover table-bordered">
+<table id="public_dbs" class="table table-hover table-bordered my-3">
         <thead>
             <tr>
-                <th>Database Name</th>
+                <th>Name</th>
                 <th>Connector</th>
                 <th>Created</th>
                 <th>Expires</th>
                 <th>Owner</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th data-orderable="false" style="width: 110px">Actions</th>
             </tr>
         </thead>
         <tbody>
             {{range .PublicDatabases}}
                 {{if .IsStatusOk}}
-                    <tr class="table-success">
+                    <tr>
                 {{else if .InProgress}}
                     <tr class="table-info">
                 {{else if .IsWarn}}
@@ -99,30 +84,21 @@
                         (<a tabindex="0" role="button" data-toggle="popover" data-placement="top" title="Failed" data-content="{{.Message}}">Why?</a>)
                     {{end}}
                 </td>
-                <td>
+                <td class="text-center">
                     {{if .InProgress}}
                     <div class="progress">
                         <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="{{.Progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{.Progress}}%"></div>
                     </div>
                     {{else}}
-                    <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Actions
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <a class="dropdown-item" href="/extend/{{.ID}}">Extend Expiry</a>
-                            <a class="dropdown-item" href="/portalext/{{.ID}}">Portal-exts</a>
-                            {{if eq $.User .Creator}}
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="/drop/{{.ID}}" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')">Drop Database</a>
-                            {{end}}
-                        </div>
-                    </div>
+                        {{if not .IsErr}}
+                        <a class="btn btn-sm btn-primary" href="/extend/{{.ID}}" title="Extend Expiry"><small><i class="fa fa-plus" aria-hidden="true"></i></small> <i class="fa fa-clock-o" aria-hidden="true"></i></a>
+                        <a class="btn btn-sm btn-primary" href="/portalext/{{.ID}}" title="portal properties"><i class="fa fa-info" aria-hidden="true"></i></a>
+                        {{end}}
+                        <a class="btn btn-sm btn-danger" href="/drop/{{.ID}}" title="Drop Database" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')"><i class="fa fa-trash" aria-hidden="true"></i></a>
                     {{end}}
                 </td>
             </tr>
             {{end}}
         </tbody>
-    </table>
-</div>
+</table>
 {{end}}

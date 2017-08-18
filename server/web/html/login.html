@@ -1,11 +1,48 @@
 {{define "content"}}
-        <div class="col-md-6 offset-md-3">
-            <form class="form-signin" method="POST", action="/login">
-                <h2 class="form-signin-heading">Please provide your email address</h2>
-                <label class="sr-only" for="email">Email address</label>
-                <input id="email" name="email" class="form-control" type="email" autofocus="" required="" placeholder="Email address">
-            
-                <button class="btn btn-lg btn-primary btn-block" type="submit">Done</button>
-            </form>
-        </div>
+<style>
+    body {
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #eee;
+    }
+    h2 {
+        padding-top: 1em
+    }
+    .row>.col:first-child {
+        padding-right: 0;
+        margin-top: -6px;
+        font-size: 6em;
+        text-align: center;
+    }
+    .form-signin {
+        max-width: 350px;
+        padding: 15px;
+        margin: 0 auto;
+    }
+    .form-signin .form-signin-heading,
+    #inputEmail {
+        margin-bottom: 10px;
+    }
+    .form-signin .form-control {
+        position: relative;
+        height: auto;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 10px;
+        font-size: 16px;
+    }
+    .form-signin .form-control:focus {
+        z-index: 2;
+    }
+</style>
+<form class="form-signin" method="POST", action="/login">
+    <div class="row">
+        <div class="col"><i class="fa fa-database" aria-hidden="true"></i></div>
+        <div class="col"><h1>Distributed Database Network</h1></div>
+    </div>
+    <h2 class="form-signin-heading">Please sign in</h2>
+    <label for="inputEmail" class="sr-only">Email address</label>
+    <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+</form>
 {{end}}

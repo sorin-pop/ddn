@@ -51,7 +51,7 @@ function valid(selector) {
 function checkConnector() {
     var connector = $("#connector")
 
-    if (connector.length != 0) {
+    if (connector && connector.length != 0) {
         $("#dbname").prop('disabled', false);
         $("#user").prop('disabled', false);
         $("#password").prop('disabled', false);
@@ -81,4 +81,14 @@ $(document).ready( function () {
         stateSave: true,
         paging: false
     });
+    var privateHeader = document.getElementById('private_dbs_wrapper'),
+        publicHeader  = document.getElementById('public_dbs_wrapper');
+    if(privateHeader) {
+        privateHeader.firstChild.firstChild.textContent = "Private Databases";
+        privateHeader.firstChild.firstChild.className += " h3";
+    }
+    if(publicHeader) {
+        publicHeader.firstChild.firstChild.textContent = "Public Databases";
+        publicHeader.firstChild.firstChild.className += " h3";
+    }
 });

@@ -1,35 +1,23 @@
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <img class="card-img-top" src="/res/img/banner_62_sml.png" alt="Card image cap">
-            <div class="card-block">
-                <h4 class="card-title"><= 6.2 EE properties</h4>
-            </div>
-           <code>
-            {{with .Ext62 -}}
-                <small>{{.Driver}}</small><br>
-                <small>{{.URL}}</small><br>
-                <small>{{.User}}</small><br>
-                <small>{{.Password}}</small><br>
-            {{end -}}
-            </code>
-        </div>
+<style>textarea{resize: none}</style>
+<div class="row text-center">
+    <div class="col-6">
+        <h4>6.2 properties</h4>
+           <textarea class="form-control" rows="7" onclick="this.select()">
+{{with .Ext62 -}}{{.Driver}}
+{{.URL}}
+{{.User}}
+{{.Password}}{{end -}}
+            </textarea>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <img class="card-img-top" src="/res/img/banner_dxp_sml.png" alt="Card image cap">
-            <div class="card-block">
-                <h4 class="card-title">DXP properties</h4>
-            </div>
-            <code>
-            {{with .ExtDXP -}}
-                <small>{{.Driver}}</small><br>
-                <small>{{.URL}}</small><br>
-                <small>{{.User}}</small><br>
-                <small>{{.Password}}</small><br>
-            {{end -}}
-            </code>
-        </div>
+    <div class="col-6">
+                <h4>DXP properties</h4>
+            <textarea class="form-control" rows="7" onclick="this.select()">
+{{with .ExtDXP -}}
+{{.Driver}}
+{{.URL}}
+{{.User}}
+{{.Password}}{{end -}}
+            </textarea>
     </div>
 </div>
 

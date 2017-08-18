@@ -1,33 +1,14 @@
 {{define "content"}}
 
 {{if ne .Message ""}}
-    <div class="col-md-12">
-        <div class="alert alert-{{.MessageType}}">{{.Message}}</div>
-    </div>
+<div class="alert alert-{{.MessageType}}">{{.Message}}</div>
 {{end}}
 
 {{ if .HasEntry }}
-<div class="col-md-12">
     {{template "properties.html" .}}
-</div>
 {{end}}
 
-<div class="row">
-    {{if .AnyOnline}}
-        {{range .Connectors}}
-            <div class="col">
-                {{if .Up}}
-                <i class="fa fa-check fa-fw up" aria-hidden="true"></i>
-                {{else}}
-                {{end}}
-                <i class="fa fa-exclamation-triangle fa-fw down" aria-hidden="true"></i>
-                {{.ShortName}} ({{.LongName}})
-            </div>
-        {{end}}
-    {{else}}
-    <div class="col">None of the connectors are online.</div>
-    {{end}}
-</div>
+
 
 {{ if or .HasPrivateDBs .HasPublicDBs }}
     {{template "databases.html" .}}

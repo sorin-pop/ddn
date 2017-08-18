@@ -1,27 +1,50 @@
-<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse mb-4">
-  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <a class="navbar-brand" href="/"><i class="fa fa-cloud" aria-hidden="true"></i>
- Database</a>
-  <div class="collapse navbar-collapse" id="navbarCollapse">
-    <ul class="navbar-nav mr-auto">
-      {{range $uri, $name := .Pages}}
-        {{if eq $uri $.ActivePage}}
-          <li class="nav-item active">
-            <a class="nav-link" href="{{$uri}}">{{$name}} <span class="sr-only">(current)</span></a>
-          </li>
-        {{else}}
-          <li class="nav-item">
-            <a class="nav-link" href="{{$uri}}">{{$name}}</a>
-          </li>
+<style>
+/* Move down content because we have a fixed navbar that is 3.5rem tall */
+body {
+  padding-top: 2.5rem;
+}
+</style>
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="/"><i class="fa fa-database" aria-hidden="true"></i> DDN</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav mr-auto">
+          {{range $uri, $name := .Pages}}
+          {{if eq $uri $.ActivePage}}
+            <li class="nav-item active">
+              <a class="nav-link" href="{{$uri}}">{{$name}} <span class="sr-only">(current)</span></a>
+            </li>
+          {{else}}
+            <li class="nav-item">
+              <a class="nav-link" href="{{$uri}}">{{$name}}</a>
+            </li>
+          {{end}}
         {{end}}
-      {{end}}
-    </ul>
-    {{if .HasUser}}
+      </ul>
+      {{if .HasUser}}
       <span class="navbar-text">
         {{.User}} (<a class="link" href="/logout">logout</a>)
       </span>
-    {{end}}
+      {{end}}
+    </div>
   </div>
-</nav>
+  </nav>
+  <div class="container">
+  
+  {{if .AnyOnline}}
+  <ul class="nav nav-pills justify-content-center">
+      {{range .Connectors}}
+          <li class="nav-item btn {{if .Up}}btn-success{{else}}btn-danger{{end}} disabled btn-sm">
+              <i class="fa fa-fw {{if .Up}}fa-check{{else}}fa-exclamation-triangle{{end}}" aria-hidden="true"></i>
+              {{.ShortName}} ({{.LongName}})
+          </li>
+      {{end}}
+  </ul>
+  {{else}}
+  <div class="col">None of the connectors are online.</div>
+  {{end}} 
+</div>

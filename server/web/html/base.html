@@ -2,32 +2,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Cloud Database - {{.Title}}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/node_modules/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/node_modules/datatables.net-bs4/css/dataTables.bootstrap4.css">
- 
-    <link rel="shortcut icon" href="/res/favicon.ico">
-    <style type="text/css">.up{color: green}.down{color: red}</style>
+  <title>DDN - {{.Title}}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+  <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/node_modules/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/node_modules/datatables.net-bs4/css/dataTables.bootstrap4.css">
+   
+  <link rel="shortcut icon" href="/res/favicon.ico">
 </head>
-  <body>
-    <div class="container">
-      {{template "nav.html" .}}
-      <div class="row">
-      {{template "content" .}}
-      </div>
-    </div>
-    <!-- Third party -->
-    <script src="/node_modules/jquery/dist/jquery.slim.min.js"></script>
-    <script src="/node_modules/popper.js/dist/popper.min.js"></script>
-    <script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="/node_modules/datatables.net/js/jquery.dataTables.js"></script>
-    <script src="/node_modules/datatables.net-bs4/js/dataTables.bootstrap4.js"></script>
-
-    <script src="/res/js/extra.js"></script>
-  </body>
+<body>
+  {{if .HasUser}}
+  {{template "nav.html" .}}
+  {{end}}
+  <div class="container my-3">
+    {{template "content" .}}
+  </div>
+  <!-- Third party -->
+  <script src="/node_modules/jquery/dist/jquery.slim.min.js"></script>
+  <script src="/node_modules/popper.js/dist/umd/popper.min.js"></script>
+  <script src="/node_modules/bootstrap/dist//js/bootstrap.min.js"></script>
+  <script src="/node_modules/datatables.net/js/jquery.dataTables.js"></script>
+  <script src="/node_modules/datatables.net-bs4/js/dataTables.bootstrap4.js"></script>
+  
+  <script src="/res/js/extra.js"></script>
+</body>
 </html>
 {{end}}
