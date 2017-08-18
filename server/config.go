@@ -33,7 +33,7 @@ func (c Config) Print() {
 		log.Printf("Database User:\t\t%s", c.DBUser)
 		log.Printf("Database Name:\t\t%s", c.DBName)
 	} else if c.DBProvider == "sqlite" {
-		log.Printf("Database file location: %s", c.DBAddress)
+		log.Printf("Database file location:\t%s", c.DBAddress)
 	}
 
 	log.Printf("Server Host:\t\t%s", c.ServerHost)
