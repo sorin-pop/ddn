@@ -8,23 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/BurntSushi/toml"
 )
-
-func generateProps(filename string) (*string, error) {
-	filename, conf := generateInteractive(filename)
-
-	file, err := os.Create(filename)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create file: %s", err.Error())
-	}
-	defer file.Close()
-
-	toml.NewEncoder(file).Encode(conf)
-
-	return &filename, nil
-}
 
 func unzip(path string) ([]string, error) {
 	defer os.Remove(path)

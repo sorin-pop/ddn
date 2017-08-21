@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
 )
 
@@ -56,8 +57,6 @@ func main() {
 		if _, err = os.Stat(*logname); err == nil {
 			rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
 
-			fmt.Printf("Logfile %s already exists, rotating it to %s", *logname, rotated)
-
 			os.Rename(*logname, rotated)
 		}
 
@@ -82,12 +81,16 @@ func main() {
 	}
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
-		log.Println("Couldn't find properties file, generating one.")
+		log.Println("Couldn't find properties file, trying to download one.")
 
-		filename, err = generateProps(*filename)
+		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/connector/con.conf")
 		if err != nil {
-			log.Fatal("properties generation failed:", err.Error())
+			log.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
 		}
+
+		os.Rename(tmpConfig, *filename)
+
+		log.Println("Continuing with default configuration...")
 	}
 
 	if _, err := toml.DecodeFile(*filename, &conf); err != nil {
