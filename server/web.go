@@ -193,7 +193,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 func buildTemplate(pages ...string) (*template.Template, error) {
 	var templates []string
 	for _, page := range pages {
-		templates = append(templates, fmt.Sprintf("web/html/%s.html", page))
+		templates = append(templates, fmt.Sprintf("%s/web/html/%s.html", workdir, page))
 	}
 
 	tmpl, err := template.ParseFiles(templates...)

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -21,13 +22,19 @@ import (
 )
 
 var (
-	config Config
-	db     database.BackendConnection
+	workdir string
+	config  Config
+	db      database.BackendConnection
 )
 
 const version = "1.5.1"
 
 func main() {
+	path, _ := filepath.Abs(os.Args[0])
+	workdir = filepath.Dir(path)
+
+	fmt.Println(workdir)
+
 	defer func() {
 		if p := recover(); p != nil {
 			if len(config.AdminEmail) != 0 {
@@ -56,8 +63,6 @@ func main() {
 	if *logname != "std" {
 		if _, err = os.Stat(*logname); err == nil {
 			rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
-
-			fmt.Printf("Logfile %s already exists, rotating it to %s", *logname, rotated)
 
 			os.Rename(*logname, rotated)
 		}
