@@ -33,8 +33,6 @@ func main() {
 	path, _ := filepath.Abs(os.Args[0])
 	workdir = filepath.Dir(path)
 
-	fmt.Println(workdir)
-
 	defer func() {
 		if p := recover(); p != nil {
 			if len(config.AdminEmail) != 0 {
