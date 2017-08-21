@@ -8,17 +8,15 @@ import (
 	"os"
 	"os/signal"
 	"os/user"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/BurntSushi/toml"
-
-	"path/filepath"
-
 	"github.com/djavorszky/ddn/common/model"
 )
 
-const version = "1.5.1"
+const version = "2.0.0"
 
 var (
 	conf       Config
