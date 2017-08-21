@@ -13,12 +13,19 @@
   <link rel="apple-touch-icon-precomposed" href="/res/apple-touch-icon.png"/>
   <meta name="msapplication-TileImage" content="/res/tileimage.png"/>
   <link rel="shortcut icon" href="/res/favicon.ico">
+  <style>
+    /* Move down content because we have a fixed navbar that is 3.5rem tall */
+    body{padding-top: 4.5rem}
+    .container-fluid{padding: 0}
+  </style>
   {{if .HasUser}}
   {{template "nav.html" .}}
-  {{end}}
   <div class="container my-3">
     {{template "content" .}}
   </div>
+  {{else}}
+  {{template "content" .}}
+  {{end}}
   <!-- Third party -->
   <script src="/node_modules/jquery/dist/jquery.slim.min.js"></script>
   <script src="/node_modules/popper.js/dist/umd/popper.min.js"></script>
