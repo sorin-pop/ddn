@@ -4,17 +4,17 @@ echo "building binary.."
 cd ../server
 go build
 
-echo "archiving.."
-tar czf ddn-server.tar.gz server web
+echo "copying.."
+cp server ../dist/server
+cp -r web ../dist/web
+
 cd ../dist
 
-mv ../server/ddn-server.tar.gz .
-
 echo "building image"
-docker build -t ddn/server .
+docker build -t djavorszky/ddn .
 
 echo "starting container.."
-docker run -dit -p 7010:7010 -v `pwd`/data:/ddn/data ddn/server:latest
+docker run -dit -p 7010:7010 --name ddn-server -v /home/javdaniel/go/src/github.com/djavorszky/ddn/dist/data:/ddn/data -v /home/javdaniel/go/src/github.com/djavorszky/ddn/dist/ftp:/ddn/ftp djavorszky/ddn:latest
 
 echo "removing artefacts.."
-rm -rf ddn-server.tar.gz
+rm -rf server web
