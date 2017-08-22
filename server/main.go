@@ -107,13 +107,6 @@ func main() {
 		}
 	}
 
-	if config.MountLoc != "" {
-		if _, err = os.Stat(config.MountLoc); os.IsNotExist(err) {
-			log.Printf("Mounted folder does not exist, unsetting it")
-			config.MountLoc = ""
-		}
-	}
-
 	switch config.DBProvider {
 	case "mysql":
 		db = &mysql.DB{
