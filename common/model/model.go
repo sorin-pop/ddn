@@ -52,19 +52,19 @@ type RegisterResponse struct {
 
 // Connector is used to represent a DDN Connector.
 type Connector struct {
-	ID            int
-	DBVendor      string
-	DBPort        string
-	DBAddr        string
-	DBSID         string
-	ShortName     string
-	LongName      string
-	Identifier    string
-	ConnectorPort string
-	Version       string
-	Address       string
-	Token         string
-	Up            bool
+	ID            int    `json:"id"`
+	DBVendor      string `json:"vendor"`
+	DBPort        string `json:"dbport"`
+	DBAddr        string `json:"dbaddress"`
+	DBSID         string `json:"sid"`
+	ShortName     string `json:"connector"`
+	LongName      string `json:"connector_long"`
+	Identifier    string `json:"connector_identifier"`
+	ConnectorPort string `json:"connector_port"`
+	Version       string `json:"connector_version"`
+	Address       string `json:"connector_address"`
+	Token         string `json:"connector_token"`
+	Up            bool   `json:"connector_up"`
 }
 
 // CreateDatabase sends a request to the connector to create a database.
