@@ -6,9 +6,9 @@ go build
 
 echo "archiving.."
 tar czf ddn-server.tar.gz server web
-cd ../out
+cd ../dist
 
-mv -v ../server/ddn-server.tar.gz .
+mv ../server/ddn-server.tar.gz .
 
 echo "building image"
 docker build -t ddn/server .
@@ -17,4 +17,4 @@ echo "starting container.."
 docker run -dit -p 7010:7010 -v `pwd`/data:/ddn/data ddn/server:latest
 
 echo "removing artefacts.."
-rm -rf data ddn-server.tar.gz
+rm -rf ddn-server.tar.gz
