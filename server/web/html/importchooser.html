@@ -1,24 +1,28 @@
 {{define "content"}}
-<div class="col md-8">
-    {{if .AnyOnline}}
-        <h3>Options!</h3>
+{{if .AnyOnline}}
+<h3>Options!</h3>
+<div class="row">
+    <div class="col-sm-6 text-center">
         <div class="card">
-            <div class="card-block">
+            <div class="card-body">
                 <h4 class="card-title">Browse the server</h4>
                 <p class="card-text">A folder has been mounted for your convenience - you can browse it to select the file you wish to import.</p>
-                <a href="browse" class="card-link">Browse server</a>
+                <a href="browse" class="btn btn-primary">Browse server</a>
             </div>
         </div>
+    </div>
+    <div class="col-sm-6 text-center">
         <div class="card">
-            <div class="card-block">
+            <div class="card-body">
                 <h4 class="card-title">Upload a file</h4>
                 <p class="card-text">Upload the dump if you have it locally. This option should only be chosen for dumpfiles that are less than 1 Gb in size.</p>
-                <a href="/fileimport" class="card-link">Upload</a>
+                <a href="/fileimport" class="btn btn-primary">Upload</a>
             </div>
         </div>
-    {{else}}
-        <h3>Connectors are offline</h3>
-        <p>Since none of the connectors are online, I'm afraid I can't let you start an import process.</p>
-    {{end}}
+    </div>
 </div>
+{{else}}
+<h3>Connectors are offline</h3>
+<p>Since none of the connectors are online, I'm afraid I can't let you start an import process.</p>
+{{end}}
 {{end}}
