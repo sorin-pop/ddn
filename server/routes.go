@@ -135,7 +135,7 @@ var routes = Routes{
 	},
 	route{
 		"api/list",
-		"POST",
+		"GET",
 		"/api/list",
 		apiList,
 	},
