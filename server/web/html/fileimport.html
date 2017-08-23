@@ -4,6 +4,19 @@
         <h3>Import database</h3>
         <form method="POST" enctype="multipart/form-data" action="/import">
             <div class="form-group row">
+                <label for="connector" class="col-sm-3 col-form-label">Database</label>
+                <div class="col-sm-9">
+                    <select id="connector" name="connector" class="form-control">
+                        <option selected disabled hidden style='display: none' value=''>Select one</option>
+                        {{range .Connectors}}
+                            {{if .Up}}
+                                <option value="{{.ShortName}}">{{.ShortName}}</option>
+                            {{end}}
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
                 <label for="dbname" class="col-sm-3 col-form-label">Dumpfile</label>
                 <div class="col-sm-9">
                     <input type="file" class="form-control" id="dbdump" name="dbdump" required>
@@ -25,19 +38,6 @@
                 <label for="password" class="col-sm-3 col-form-label">Database password</label>
                 <div class="col-sm-9">
                     <input type="password" class="form-control" id="password" name="password" placeholder="Database password (optional)">
-                </div>
-            </div>
-            <div class="form-group row">
-                <label for="connector" class="col-sm-3 col-form-label">Database</label>
-                <div class="col-sm-9">
-                    <select id="connector" name="connector" class="form-control">
-                        <option selected disabled hidden style='display: none' value=''>Select one</option>
-                        {{range .Connectors}}
-                            {{if .Up}}
-                                <option value="{{.ShortName}}">{{.ShortName}}</option>
-                            {{end}}
-                        {{end}}
-                    </select>
                 </div>
             </div>
             <div class="form-group row">
