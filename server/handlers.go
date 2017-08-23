@@ -139,7 +139,7 @@ func doImport(dbID int, dumpfile string) {
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
 		db.Update(&dbe)
-		os.Remove("./web/dumps/" + dumpfile)
+		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, dumpfile))
 		return
 	}
 
@@ -199,7 +199,7 @@ func copyFile(dump string) (string, error) {
 	}
 	defer src.Close()
 
-	dst, err := os.OpenFile("./web/dumps/"+filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	dst, err := os.OpenFile(fmt.Sprintf("%s/web/dumps/%s", workdir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed creating file: %s", err.Error())
 
@@ -241,7 +241,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	for _, uploadFile := range r.MultipartForm.File {
 		filename = uploadFile[0].Filename
 
-		dst, err := os.OpenFile("./web/dumps/"+filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		dst, err := os.OpenFile(fmt.Sprintf("%s/web/dumps/%s", workdir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			log.Printf("Failed creating file: %s", err.Error())
 			return
@@ -258,7 +258,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("Failed saving file: %s", err.Error())
 
-			os.Remove("./web/dumps/" + filename)
+			os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 			return
 		}
 	}
@@ -273,7 +273,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	conn, ok := registry.Get(connector)
 	if !ok {
 		session.AddFlash(fmt.Sprintf("Failed importing database, connector %s went offline", connector), "fail")
-		os.Remove("./web/dumps/" + filename)
+		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 		return
 	}
 
@@ -312,7 +312,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
 		session.AddFlash(fmt.Sprintf("failed persisting database locally: %s", err.Error()))
-		os.Remove("./web/dumps/" + filename)
+		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 		return
 	}
 
@@ -321,7 +321,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		session.AddFlash(err.Error(), "fail")
 
 		db.Delete(entry)
-		os.Remove("./web/dumps/" + filename)
+		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 		return
 	}
 
@@ -664,7 +664,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 	if dbe.Status == status.ImportInProgress || dbe.IsErr() {
 		loc := strings.LastIndex(dbe.Dumpfile, "/")
 
-		file := fmt.Sprintf("./web/dumps/%s", dbe.Dumpfile[loc+1:])
+		file := fmt.Sprintf("%s/web/dumps/%s", workdir, dbe.Dumpfile[loc+1:])
 		os.Remove(file)
 	}
 
