@@ -32,9 +32,9 @@
   {{if .AnyOnline}}
   <ul class="nav nav-pills justify-content-center">
       {{range .Connectors}}
-          <li class="nav-item btn {{if .Up}}btn-success{{else}}btn-danger{{end}} disabled btn-sm">
+          <li class="nav-item btn {{if .Up}}btn-success{{else}}btn-danger{{end}} disabled btn-sm" data-toggle="tooltip" title="{{.LongName}}">
               <i class="fa fa-fw {{if .Up}}fa-check{{else}}fa-exclamation-triangle{{end}}" aria-hidden="true"></i>
-              {{.ShortName}} ({{.LongName}})
+              {{.ShortName}}
           </li>
       {{end}}
   </ul>
