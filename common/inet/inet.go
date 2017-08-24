@@ -48,6 +48,17 @@ func DownloadFile(dest, url string) (string, error) {
 
 // AddrExists checks the URL to see if it's valid, downloadable file or not.
 func AddrExists(url string) bool {
+	respCode := GetResponseCode(url)
+
+	if respCode == http.StatusOK {
+		return true
+	}
+
+	return false
+}
+
+// GetResponseCode returns the response code of a HTTP call
+func GetResponseCode(url string) int {
 	defer func() {
 		if p := recover(); p != nil {
 			// panic happens, no need to log anything. It's usually a refusal.
@@ -61,16 +72,11 @@ func AddrExists(url string) bool {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		resp.Body.Close()
-		return false
+		return 0
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		return true
-	}
-
-	return false
+	return resp.StatusCode
 }
 
 // SendResponse composes the message, writes the header, then writes the bytes

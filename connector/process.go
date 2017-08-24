@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -117,11 +118,12 @@ func startImport(dbreq model.DBRequest) {
 
 // This method should always be called asynchronously
 func keepAlive() {
-	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
+	endpoint := fmt.Sprintf("%s/%s/%s", conf.MasterAddress, "alive", conf.ShortName)
 
 	ticker := time.NewTicker(10 * time.Second)
 	for range ticker.C {
-		if !inet.AddrExists(endpoint) {
+		// Check if the endpoint is up
+		if !inet.AddrExists(conf.MasterAddress) {
 			if registered {
 				log.Println("Lost connection to master server, will attempt to reconnect once it's back.")
 
@@ -131,6 +133,7 @@ func keepAlive() {
 			continue
 		}
 
+		// If it is, check if we're not registered
 		if !registered {
 			log.Println("Master server back online.")
 
@@ -138,6 +141,19 @@ func keepAlive() {
 			if err != nil {
 				log.Printf("couldn't register with master: %s", err.Error())
 			}
+
+			registered = true
+		}
+
+		respCode := inet.GetResponseCode(endpoint)
+		if respCode == http.StatusOK {
+			continue
+		}
+
+		// response is not "OK", so we need to register
+		err := registerConnector()
+		if err != nil {
+			log.Printf("couldn't register with master: %v", err)
 		}
 	}
 }

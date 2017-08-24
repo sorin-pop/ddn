@@ -146,10 +146,10 @@ func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
 }
 
 func registerConnector() error {
-	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "alive")
+	endpoint := conf.MasterAddress
 
 	if !inet.AddrExists(endpoint) {
-		return fmt.Errorf("Master server does not exist at given endpoint")
+		return fmt.Errorf("master server does not exist at given endpoint")
 	}
 
 	longname := fmt.Sprintf("%s %s", conf.Vendor, conf.Version)

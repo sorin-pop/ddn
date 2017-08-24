@@ -28,7 +28,7 @@ var routes = Routes{
 	route{
 		"alive",
 		"GET",
-		"/alive",
+		"/alive/{shortname:[a-zA-Z0-9-_]+}",
 		alive,
 	},
 	route{

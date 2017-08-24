@@ -453,9 +453,16 @@ func unregister(w http.ResponseWriter, r *http.Request) {
 func alive(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 
-	buf.WriteString("yup")
+	vars := mux.Vars(r)
+	shortname := vars["shortname"]
 
-	inet.WriteHeader(w, http.StatusOK)
+	if registry.Exists(shortname) {
+		buf.WriteString("yup")
+		inet.WriteHeader(w, http.StatusOK)
+	} else {
+		buf.WriteString("nope")
+		inet.WriteHeader(w, http.StatusNotFound)
+	}
 
 	w.Write(buf.Bytes())
 }
