@@ -3,6 +3,7 @@ package srv
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -13,10 +14,9 @@ func Logger(inner http.Handler, handler string) http.Handler {
 
 		inner.ServeHTTP(w, r)
 
-		switch r.RequestURI {
-		case "/alive", "/heartbeat":
+		if strings.HasPrefix(r.RequestURI, "/alive") ||
+			r.RequestURI == "/heartbeat" {
 			return
-
 		}
 
 		log.Printf("[%s]\t%s\t%s\t%s\t",

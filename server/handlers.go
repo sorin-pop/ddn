@@ -450,6 +450,15 @@ func unregister(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Unregistered: %s", conn.Identifier)
 }
 
+func heartbeat(w http.ResponseWriter, r *http.Request) {
+	var buf bytes.Buffer
+
+	buf.WriteString("ba-bump")
+
+	inet.WriteHeader(w, http.StatusOK)
+	w.Write(buf.Bytes())
+}
+
 func alive(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 

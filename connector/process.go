@@ -123,7 +123,7 @@ func keepAlive() {
 	ticker := time.NewTicker(10 * time.Second)
 	for range ticker.C {
 		// Check if the endpoint is up
-		if !inet.AddrExists(conf.MasterAddress) {
+		if !inet.AddrExists(fmt.Sprintf("%s/%s", conf.MasterAddress, "heartbeat")) {
 			if registered {
 				log.Println("Lost connection to master server, will attempt to reconnect once it's back.")
 

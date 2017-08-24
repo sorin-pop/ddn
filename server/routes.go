@@ -26,6 +26,12 @@ var routes = Routes{
 		unregister,
 	},
 	route{
+		"heartbeat",
+		"GET",
+		"/heartbeat",
+		heartbeat,
+	},
+	route{
 		"alive",
 		"GET",
 		"/alive/{shortname:[a-zA-Z0-9-_]+}",

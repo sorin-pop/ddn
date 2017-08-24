@@ -146,7 +146,7 @@ func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
 }
 
 func registerConnector() error {
-	endpoint := conf.MasterAddress
+	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "heartbeat")
 
 	if !inet.AddrExists(endpoint) {
 		return fmt.Errorf("master server does not exist at given endpoint")

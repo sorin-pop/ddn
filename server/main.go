@@ -27,7 +27,7 @@ var (
 	db      database.BackendConnection
 )
 
-const version = "2.0.0"
+const version = "2.0.1"
 
 func main() {
 	path, _ := filepath.Abs(os.Args[0])
