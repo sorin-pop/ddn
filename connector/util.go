@@ -1,21 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"syscall"
 
 	"github.com/djavorszky/notif"
-	"github.com/djavorszky/sutils"
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/model"
@@ -76,73 +70,6 @@ func RunCommand(name string, args ...string) CommandResult {
 type CommandResult struct {
 	stdout, stderr string
 	exitCode       int
-}
-
-func textsOccur(file *os.File, t ...[]string) (map[int]bool, error) {
-	found := make(map[int]bool)
-
-	for _, strslice := range t {
-		for _, str := range strslice {
-			lines, err := sutils.FindWith(strings.HasPrefix, file, str)
-			if err != nil {
-				return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
-			}
-			if len(lines) > 1 {
-				return nil, fmt.Errorf("more than one %q statements found in dump", str)
-			}
-
-			if len(lines) == 1 {
-				found[lines[0]] = true
-			}
-
-			file.Seek(0, 0)
-		}
-	}
-
-	return found, nil
-}
-
-func removeLinesFromFile(file *os.File, lines map[int]bool) (*os.File, error) {
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "ddnc")
-	if err != nil {
-		return nil, fmt.Errorf("could not create tempfile: %s", err.Error())
-	}
-
-	writer := bufio.NewWriter(tmpFile)
-
-	curLine := 0
-	reader := bufio.NewReader(file)
-
-	for {
-		curLine++
-
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			return nil, err
-		}
-
-		if _, ok := lines[curLine]; ok {
-			continue
-		}
-
-		writer.WriteString(line)
-	}
-
-	err = writer.Flush()
-	if err != nil {
-		return nil, fmt.Errorf("could not flush writer: %s", err.Error())
-	}
-
-	tmpFilePath, _ := filepath.Abs(tmpFile.Name())
-	newFilePath, _ := filepath.Abs(file.Name())
-
-	os.Rename(tmpFilePath, newFilePath)
-
-	return os.Open(newFilePath)
 }
 
 func registerConnector() error {

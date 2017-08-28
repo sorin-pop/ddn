@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -331,13 +333,8 @@ func strip(test string) string {
 }
 
 func (db *mysql) ValidateDump(path string) (string, error) {
-	var (
-		lines map[int]bool
-
-		create  = []string{"create database", "CREATE DATABASE"}
-		drop    = []string{"drop database", "DROP DATABASE"}
-		definer = []string{"/*!50013 DEFINER=", "/*!50013 definer="}
-	)
+	toRemove := []string{"create database", "drop database", "/*!50013 definer=", "use ",
+		"CREATE DATABASE", "DROP DATABASE", "/*!50013 DEFINER=", "USE "}
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -345,16 +342,25 @@ func (db *mysql) ValidateDump(path string) (string, error) {
 	}
 	defer file.Close()
 
-	lines, err = textsOccur(file, create, drop, definer)
+	lines, err := sutils.OccursWith(strings.HasPrefix, file, toRemove)
 	if err != nil {
-		return path, err
+		return path, fmt.Errorf("couldn't find occurrences: %v", err)
 	}
 
 	if len(lines) > 0 {
-		file, err = removeLinesFromFile(file, lines)
+		tmpFile, err := ioutil.TempFile(os.TempDir(), "ddnc")
+		if err != nil {
+			return path, fmt.Errorf("could not create tempfile: %s", err.Error())
+		}
+
+		err = sutils.CopyWithoutLines(file, lines, tmpFile)
 		if err != nil {
 			return path, fmt.Errorf("removing extra lines from dump failed: %s", err.Error())
 		}
+
+		tmpFilePath, _ := filepath.Abs(tmpFile.Name())
+
+		os.Rename(tmpFilePath, path)
 	}
 
 	return path, nil
