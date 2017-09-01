@@ -21,6 +21,4 @@ if [[ ! -f ddnc.conf ]]; then
 	exit 1
 fi
 
-
-
 echo "all done. simply run the connector, or add -h for additional information."

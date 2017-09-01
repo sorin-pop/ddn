@@ -5,6 +5,11 @@ mountDir=""
 containerName="ddn-server"
 publicPort="7010"
 
+if [[ $dataDir == "" ]] || [[ $mountDir == "" ]]; then
+	echo "please set 'dataDir' and 'mountDir' in the script to point to valid locations"
+	exit 1
+fi
+
 echo "pulling djavorszky/ddn:latest"
 docker pull djavorszky/ddn:latest
 
