@@ -19,9 +19,9 @@
   "homepage": "https://github.com/djavorszky/ddn",
   "dependencies": {
     "bootstrap": "^4.0.0-beta",
-    "popper.js": "^1.11.0",
-    "datatables.net": "latest",
+    "datatables.net": "^1.10.16",
     "datatables.net-bs4": "latest",
-    "font-awesome": "latest"
+    "font-awesome": "latest",
+    "popper.js": "^1.12.5"
   }
 }
