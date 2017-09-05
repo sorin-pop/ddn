@@ -4,6 +4,11 @@ echo "building binary.."
 cd ../server
 go build
 
+echo "updating libraries"
+cd web
+npm install -u
+cd ..
+
 echo "copying.."
 cp server ../dist/server
 cp -r web ../dist/web
