@@ -26,6 +26,8 @@ type Config struct {
 	ShortName       string `toml:"connector-shortname"`
 	ConnectorName   string `toml:"connector-longname"`
 	MasterAddress   string `toml:"server-address"`
+	RLogAddress     string `toml:"rlog-address"`
+	RLogPort        string `toml:"rlog-port"`
 }
 
 // Print prints the Config object to the log.

@@ -54,13 +54,13 @@ func main() {
 	flag.Parse()
 
 	if *logname != "std" {
-		if _, err = os.Stat(*logname); err == nil {
+		if _, err := os.Stat(*logname); err == nil {
 			rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
 
 			os.Rename(*logname, rotated)
 		}
 
-		logOut, err := os.OpenFile(*logname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		logOut, err := os.OpenFile(*logname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			fmt.Printf("error opening file %s, will continue logging to stderr: %s", *logname, err.Error())
 			logOut = os.Stderr
@@ -69,7 +69,6 @@ func main() {
 
 		log.SetOutput(logOut)
 	}
-
 	usr, err = user.Current()
 	if err != nil {
 		log.Fatal("couldn't get default user: ", err.Error())
@@ -80,26 +79,7 @@ func main() {
 		log.Fatal("couldn't get hostname: ", err.Error())
 	}
 
-	if _, err = os.Stat(*filename); os.IsNotExist(err) {
-		log.Println("Couldn't find properties file, trying to download one.")
-
-		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/connector/con.conf")
-		if err != nil {
-			log.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
-		}
-
-		os.Rename(tmpConfig, *filename)
-
-		log.Println("Continuing with default configuration...")
-	}
-
-	if _, err := toml.DecodeFile(*filename, &conf); err != nil {
-		log.Fatal("couldn't read configuration file: ", err.Error())
-	}
-
-	if _, err = os.Stat(conf.Exec); os.IsNotExist(err) {
-		log.Fatal("database executable doesn't exist:", conf.Exec)
-	}
+	loadProperties(*filename)
 
 	db, err = GetDB(conf.Vendor)
 	if err != nil {
@@ -165,4 +145,31 @@ func main() {
 	startup = time.Now()
 
 	log.Fatal(http.ListenAndServe(port, Router()))
+}
+
+func setupLog(logname string) (*File, error) {
+
+}
+
+func loadProperties(filename string) {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		log.Println("Couldn't find properties file, trying to download one.")
+
+		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/connector/con.conf")
+		if err != nil {
+			log.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
+		}
+
+		os.Rename(tmpConfig, filename)
+
+		log.Println("Continuing with default configuration...")
+	}
+
+	if _, err := toml.DecodeFile(filename, &conf); err != nil {
+		log.Fatal("couldn't read configuration file: ", err.Error())
+	}
+
+	if _, err := os.Stat(conf.Exec); os.IsNotExist(err) {
+		log.Fatal("database executable doesn't exist:", conf.Exec)
+	}
 }
