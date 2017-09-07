@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
@@ -48,8 +49,7 @@ func main() {
 	go func() {
 		<-c
 		// Received kill
-		log.Println("Received signal to terminate.")
-		os.Exit(1)
+		logger.Fatal("Received signal to terminate.")
 	}()
 
 	var err error
@@ -76,34 +76,34 @@ func main() {
 	}
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
-		log.Println("Couldn't find properties file, trying to download one.")
+		logger.Warn("Couldn't find properties file, trying to download one.")
 
 		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/server/srv.conf")
 		if err != nil {
-			log.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
+			logger.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
 		}
 
 		os.Rename(tmpConfig, *filename)
 
-		log.Println("Continuing with default configuration...")
+		logger.Info("Continuing with default configuration...")
 	}
 
 	if _, err := toml.DecodeFile(*filename, &config); err != nil {
-		log.Fatal("couldn't read configuration file: ", err.Error())
+		logger.Fatal("couldn't read configuration file: %v", err)
 	}
 
-	log.Println("Starting with properties:")
+	logger.Info("Starting with properties:")
 
 	config.Print()
 
 	if config.MountLoc != "" {
 		err = brwsr.Mount(config.MountLoc)
 		if err != nil {
-			log.Printf("Couldn't mount folder: %s", err.Error())
+			logger.Warn("Couldn't mount folder: %s", err)
 
 			config.MountLoc = ""
 		} else {
-			log.Printf("Mounted folder %q", config.MountLoc)
+			logger.Info("Mounted folder %q", config.MountLoc)
 		}
 	}
 
@@ -119,16 +119,16 @@ func main() {
 	case "sqlite":
 		db = &sqlite.DB{DBLocation: config.DBAddress}
 	default:
-		log.Fatalf("Unknown database provider: %s", config.DBProvider)
+		logger.Fatal("Unknown database provider: %s", config.DBProvider)
 	}
 
 	err = db.ConnectAndPrepare()
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		logger.Fatal("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	log.Println("Database connection established")
+	logger.Info("Database connection established")
 
 	if config.SMTPAddr != "" {
 		if config.SMTPUser != "" {
@@ -138,9 +138,9 @@ func main() {
 		}
 
 		if err != nil {
-			log.Printf("Mail failed to initialize: %v", err)
+			logger.Warn("Mail failed to initialize: %v", err)
 		} else {
-			log.Printf("Mail initialized")
+			logger.Info("Mail initialized")
 		}
 	}
 
@@ -150,10 +150,10 @@ func main() {
 	// Start connector checker goroutine
 	go checkConnectors()
 
-	log.Printf("Starting to listen on port %s", config.ServerPort)
+	logger.Info("Starting to listen on port %s", config.ServerPort)
 
 	port := fmt.Sprintf(":%s", config.ServerPort)
-	log.Println(http.ListenAndServe(port, Router()))
+	logger.Error("%v", http.ListenAndServe(port, Router()))
 
 	if len(config.AdminEmail) != 0 {
 		for _, addr := range config.AdminEmail {

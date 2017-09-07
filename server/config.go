@@ -1,8 +1,6 @@
 package main
 
-import (
-	"log"
-)
+import "github.com/djavorszky/ddn/common/logger"
 
 // Config to hold the database server and ddn server configuration
 type Config struct {
@@ -25,22 +23,22 @@ type Config struct {
 
 // Print prints the configuration to the log.
 func (c Config) Print() {
-	log.Printf("Database Provider:\t\t%s", c.DBProvider)
+	logger.Info("Database Provider:\t\t%s", c.DBProvider)
 
 	if c.DBProvider == "mysql" {
-		log.Printf("Database Address:\t\t%s", c.DBAddress)
-		log.Printf("Database Port:\t\t%s", c.DBPort)
-		log.Printf("Database User:\t\t%s", c.DBUser)
-		log.Printf("Database Name:\t\t%s", c.DBName)
+		logger.Info("Database Address:\t\t%s", c.DBAddress)
+		logger.Info("Database Port:\t\t%s", c.DBPort)
+		logger.Info("Database User:\t\t%s", c.DBUser)
+		logger.Info("Database Name:\t\t%s", c.DBName)
 	} else if c.DBProvider == "sqlite" {
-		log.Printf("Database file location:\t%s", c.DBAddress)
+		logger.Info("Database file location:\t%s", c.DBAddress)
 	}
 
-	log.Printf("Server Host:\t\t%s", c.ServerHost)
-	log.Printf("Server Port:\t\t%s", c.ServerPort)
+	logger.Info("Server Host:\t\t%s", c.ServerHost)
+	logger.Info("Server Port:\t\t%s", c.ServerPort)
 
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
-		log.Printf("Admin email:\t\t%s", c.AdminEmail)
-		log.Printf("Server configured to send emails.")
+		logger.Info("Admin email:\t\t%s", c.AdminEmail)
+		logger.Info("Server configured to send emails.")
 	}
 }

@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
-
 	"strings"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database/data"
@@ -94,7 +93,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 			page.HasEntry = true
 			entry, err := db.FetchByID(id)
 			if err != nil {
-				log.Printf("Failed querying for database: %s", err.Error())
+				logger.Error("database query: %v", err)
 				session.AddFlash("Failed querying database", "fail")
 			} else {
 				switch entry.DBVendor {
@@ -157,7 +156,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 		privateDBs, err := db.FetchByCreator(page.User)
 		if err != nil {
-			log.Printf("couldn't list databases: %s", err.Error())
+			logger.Error("couldn't list databases: %v", err)
 		}
 
 		if len(privateDBs) != 0 {
@@ -167,7 +166,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 		publicDBs, err := db.FetchPublic()
 		if err != nil {
-			log.Printf("couldn't list databases: %s", err.Error())
+			logger.Error("couldn't list databases: %v", err)
 		}
 
 		if len(publicDBs) != 0 {

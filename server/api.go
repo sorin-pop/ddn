@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database/data"
@@ -37,7 +37,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		log.Printf("couldn't decode json request: %s", err.Error())
+		logger.Error("couldn't decode json request: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return

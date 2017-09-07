@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
 	vis "github.com/djavorszky/ddn/common/visibility"
@@ -83,7 +83,7 @@ func prepImportAction(w http.ResponseWriter, r *http.Request) {
 
 	dbID, err := doPrepImport(getUser(r), connector, dumpfile, dbname, dbuser, dbpass, public)
 	if err != nil {
-		session.AddFlash(fmt.Sprintf("Failed preparing import: %s", err.Error()), "fail")
+		session.AddFlash(fmt.Sprintf("Failed preparing import: %v", err), "fail")
 		return
 	}
 
@@ -95,7 +95,7 @@ func prepImportAction(w http.ResponseWriter, r *http.Request) {
 func doImport(dbID int, dumpfile string) {
 	dbe, err := db.FetchByID(dbID)
 	if err != nil {
-		log.Printf("Failed getting entry by ID: %s", err.Error())
+		logger.Error("Failed getting entry by ID: %v", err)
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: " + err.Error()
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
@@ -110,7 +110,7 @@ func doImport(dbID int, dumpfile string) {
 
 	url, err := copyFile(dumpfile)
 	if err != nil {
-		log.Printf("Failed copying file: %s", err.Error())
+		logger.Error("file copy: %v", err)
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: " + err.Error()
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
@@ -183,7 +183,7 @@ func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public s
 
 	err := db.Insert(&entry)
 	if err != nil {
-		return 0, fmt.Errorf("failed persisting database locally: %s", err.Error())
+		return 0, fmt.Errorf("database persist: %v", err)
 	}
 
 	return entry.ID, nil
@@ -194,21 +194,21 @@ func copyFile(dump string) (string, error) {
 
 	src, err := os.OpenFile(filepath.Join(config.MountLoc, dump), os.O_RDONLY, 0644)
 	if err != nil {
-		return "", fmt.Errorf("failed opening source file: %s", err.Error())
+		return "", fmt.Errorf("failed opening source file: %v", err)
 
 	}
 	defer src.Close()
 
 	dst, err := os.OpenFile(fmt.Sprintf("%s/web/dumps/%s", workdir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return "", fmt.Errorf("failed creating file: %s", err.Error())
+		return "", fmt.Errorf("failed creating file: %v", err)
 
 	}
 	defer dst.Close()
 
 	_, err = io.Copy(dst, src)
 	if err != nil {
-		return "", fmt.Errorf("failed copying file: %s", err.Error())
+		return "", fmt.Errorf("failed copying file: %v", err)
 
 	}
 
@@ -243,20 +243,20 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 		dst, err := os.OpenFile(fmt.Sprintf("%s/web/dumps/%s", workdir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
-			log.Printf("Failed creating file: %s", err.Error())
+			logger.Error("Failed creating file: %v", err)
 			return
 		}
 		defer dst.Close()
 
 		upf, err := uploadFile[0].Open()
 		if err != nil {
-			log.Printf("Failed opening uploaded file: %s", err.Error())
+			logger.Error("Failed opening uploaded file: %v", err)
 			return
 		}
 
 		_, err = io.Copy(dst, upf)
 		if err != nil {
-			log.Printf("Failed saving file: %s", err.Error())
+			logger.Error("Failed saving file: %v", err)
 
 			os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 			return
@@ -265,7 +265,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	err = r.MultipartForm.RemoveAll()
 	if err != nil {
-		log.Printf("Could not removeall multipartform: %s", err.Error())
+		logger.Error("Could not removeall multipartform: %v", err)
 	}
 
 	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
@@ -310,8 +310,8 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	err = db.Insert(&entry)
 	if err != nil {
-		log.Printf("Error: %s", err.Error())
-		session.AddFlash(fmt.Sprintf("failed persisting database locally: %s", err.Error()))
+		logger.Error("persist: %v", err)
+		session.AddFlash(fmt.Sprintf("failed persisting database locally: %v", err))
 		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 		return
 	}
@@ -392,7 +392,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 
 	err = db.Insert(&entry)
 	if err != nil {
-		log.Printf("Failed adding entry: %s", err.Error())
+		logger.Error("persist: %v", err)
 	}
 
 	session.Values["id"] = entry.ID
@@ -403,7 +403,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	var req model.RegisterRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		log.Printf("couldn't decode json request: %s", err.Error())
+		logger.Error("json decode: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
@@ -426,7 +426,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	registry.Store(ddnc)
 
-	log.Printf("Registered: %v", req.ConnectorName)
+	logger.Info("Registered: %v", req.ConnectorName)
 
 	conAddr := fmt.Sprintf("%s:%s", ddnc.Address, ddnc.ConnectorPort)
 
@@ -441,13 +441,13 @@ func unregister(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&conn)
 	if err != nil {
-		log.Printf("Could not jsonify message: %s", err.Error())
+		logger.Error("json encode: %v", err)
 		return
 	}
 
 	registry.Remove(conn.ShortName)
 
-	log.Printf("Unregistered: %s", conn.Identifier)
+	logger.Info("Unregistered: %s", conn.Identifier)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -551,7 +551,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 	user := getUser(r)
 
 	if user == "" {
-		log.Println("Drop database tried without a logged in user.")
+		logger.Error("Drop database tried without a logged in user.")
 		return
 	}
 
@@ -565,20 +565,20 @@ func drop(w http.ResponseWriter, r *http.Request) {
 
 	dbe, err := db.FetchByID(ID)
 	if err != nil {
-		log.Printf("Failed querying for database: %s", err.Error())
+		logger.Error("FetchById: %v", err)
 		session.AddFlash("Failed querying database", "fail")
 		return
 	}
 
 	if dbe.Creator != user {
-		log.Printf("User %q tried to drop database of user %q.", user, dbe.Creator)
+		logger.Error("User %q tried to drop database of user %q.", user, dbe.Creator)
 		session.AddFlash("Failed dropping database: You can only drop databases you created.", "fail")
 		return
 	}
 
 	conn, ok := registry.Get(dbe.ConnectorName)
 	if !ok {
-		log.Printf("Connector %q is offline, can't drop database with id '%d'", dbe.ConnectorName, ID)
+		logger.Error("Connector %q is offline, can't drop database with id '%d'", dbe.ConnectorName, ID)
 		session.AddFlash("Unable to drop database: Connector is down.", "fail")
 		return
 	}
@@ -595,7 +595,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
 	dbe, err := db.FetchByID(ID)
 	if err != nil {
-		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
+		logger.Error("Couldn't drop database %q on connector %q: %v", dbname, conn.ShortName, err)
 		return
 	}
 
@@ -606,7 +606,7 @@ func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
 
 		db.Update(&dbe)
 
-		log.Printf("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err.Error())
+		logger.Error("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err)
 		return
 	}
 
@@ -625,7 +625,7 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 	user := getUser(r)
 
 	if user == "" {
-		log.Println("Portal-ext request without logged in user.")
+		logger.Error("Portal-ext request without logged in user.")
 		return
 	}
 
@@ -639,13 +639,13 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 
 	dbe, err := db.FetchByID(ID)
 	if err != nil {
-		log.Printf("Failed querying for database: %s", err.Error())
+		logger.Error("FetchById: %v", err)
 		session.AddFlash("Failed querying database", "fail")
 		return
 	}
 
 	if dbe.Public == vis.Private && dbe.Creator != user {
-		log.Printf("User %q tried to get portalext of db created by %q.", user, dbe.Creator)
+		logger.Error("User %q tried to get portalext of db created by %q.", user, dbe.Creator)
 		session.AddFlash("Failed fetching portal-ext: You can only fetch the portal-ext of public databases or ones that you created.", "fail")
 		return
 	}
@@ -660,7 +660,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
-		log.Printf("couldn't decode json request: %s", err.Error())
+		logger.Error("json decode: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
@@ -668,7 +668,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 
 	dbe, err := db.FetchByID(msg.ID)
 	if err != nil {
-		log.Printf("Failed querying for database: %s", err.Error())
+		logger.Error("FetchById: %v", err)
 		return
 	}
 
@@ -699,7 +699,7 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 
 		err = db.Update(&dbe)
 		if err != nil {
-			log.Printf("Couldn't update local db: %s", err.Error())
+			logger.Error("Update: %v", err)
 		}
 	}
 
@@ -768,7 +768,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 
 	resp, err := notif.SndLoc(req, dest)
 	if err != nil {
-		return model.Connector{}, fmt.Errorf("couldn't create database on connector: %s", err.Error())
+		return model.Connector{}, fmt.Errorf("couldn't create database on connector: %v", err)
 	}
 
 	var msg inet.Message
@@ -776,7 +776,7 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 
 	err = json.NewDecoder(respBytes).Decode(&msg)
 	if err != nil {
-		return model.Connector{}, fmt.Errorf("malformed response from connector: %s", err.Error())
+		return model.Connector{}, fmt.Errorf("malformed response from connector: %v", err)
 	}
 
 	if msg.Status != status.Success {

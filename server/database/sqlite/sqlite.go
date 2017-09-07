@@ -3,9 +3,9 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/database/dbutil"
 	"github.com/djavorszky/sutils"
@@ -269,7 +269,7 @@ func (lite *DB) initTables() error {
 	lite.conn.QueryRow("SELECT count(*) FROM version").Scan(&startLoc)
 
 	for _, q := range queries[startLoc:] {
-		log.Printf("Updating database %q", q.Comment)
+		logger.Info("Updating database %q", q.Comment)
 		_, err = lite.conn.Exec(q.Query)
 		if err != nil {
 			return fmt.Errorf("executing query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))
@@ -288,7 +288,7 @@ func (lite *DB) initTables() error {
 func (lite *DB) alive() error {
 	defer func() {
 		if p := recover(); p != nil {
-			log.Println("Panic Attack! Database seems to be down.")
+			logger.Error("Panic Attack! Database seems to be down.")
 		}
 	}()
 

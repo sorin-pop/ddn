@@ -3,9 +3,9 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/database/dbutil"
 	"github.com/djavorszky/sutils"
@@ -252,7 +252,7 @@ func (mys *DB) Delete(entry data.Row) error {
 func (mys *DB) alive() error {
 	defer func() {
 		if p := recover(); p != nil {
-			log.Println("Panic Attack! Database seems to be down.")
+			logger.Error("Panic Attack! Database seems to be down.")
 		}
 	}()
 
@@ -317,7 +317,7 @@ func (mys *DB) initTables() error {
 	mys.conn.QueryRow("SELECT count(*) FROM `version`").Scan(&startLoc)
 
 	for _, q := range queries[startLoc:] {
-		log.Printf("Updating database %q", q.Comment)
+		logger.Info("Updating database %q", q.Comment)
 		_, err = mys.conn.Exec(q.Query)
 		if err != nil {
 			return fmt.Errorf("executing query %q (%q) failed: %s", q.Comment, q.Query, sutils.TrimNL(err.Error()))

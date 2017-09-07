@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/mail"
 	"github.com/djavorszky/ddn/server/registry"
@@ -25,7 +25,7 @@ func maintain() {
 	for range ticker.C {
 		dbs, err := db.FetchAll()
 		if err != nil {
-			log.Printf("Failed listing databases: %s", err.Error())
+			logger.Error("Failed listing databases: %s", err.Error())
 		}
 
 		for _, dbe := range dbs {
@@ -35,7 +35,7 @@ func maintain() {
 			if dbe.ExpiryDate.Before(now) {
 				conn, ok := registry.Get(dbe.ConnectorName)
 				if !ok {
-					log.Printf("Wanted to drop database %q but its connector %q is offline", dbe.DBName, dbe.ConnectorName)
+					logger.Error("drop database %q - connector %q offline", dbe.DBName, dbe.ConnectorName)
 					continue
 				}
 
