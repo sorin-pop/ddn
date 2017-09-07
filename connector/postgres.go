@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/sutils"
 	_ "github.com/lib/pq"
@@ -49,7 +49,7 @@ func (db *postgres) Close() {
 func (db *postgres) Alive() error {
 	defer func() {
 		if p := recover(); p != nil {
-			log.Println("Panic Attack! Database seems to be down.")
+			logger.Error("Panic Attack! Database seems to be down.")
 		}
 	}()
 

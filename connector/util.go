@@ -12,6 +12,7 @@ import (
 	"github.com/djavorszky/notif"
 
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 )
 
@@ -25,7 +26,7 @@ func RunCommand(name string, args ...string) CommandResult {
 		exitCode       int
 	)
 
-	log.Println("Running command: ", name, args)
+	logger.Info("Running command: ", name, args)
 
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = &outbuf
@@ -45,7 +46,7 @@ func RunCommand(name string, args ...string) CommandResult {
 			// in this situation, exit code could not be get, and stderr will be
 			// empty string very likely, so we use the default fail code, and format err
 			// to string and set to stderr
-			log.Printf("Could not get exit code for failed program: %v, %v", name, args)
+			logger.Error("Could not get exit code for failed program: %v, %v", name, args)
 
 			exitCode = defaultFailedCode
 
@@ -98,7 +99,7 @@ func registerConnector() error {
 
 	resp, err := notif.SndLoc(ddnc, register)
 	if err != nil {
-		return fmt.Errorf("Could not register with the master server: %s", err.Error())
+		return fmt.Errorf("register: %v", err)
 	}
 
 	connector = model.Connector{
@@ -110,12 +111,12 @@ func registerConnector() error {
 	}
 	err = json.NewDecoder(bytes.NewBufferString(resp)).Decode(&connector)
 	if err != nil {
-		log.Fatalf("Could not decode server response: %s", err.Error())
+		logger.Fatal("response decoding: %v", err)
 	}
 
 	registered = true
 
-	log.Printf("Registered with master server. Got assigned ID '%d'", connector.ID)
+	logger.Info("Registered with master server. Got assigned ID '%d'", connector.ID)
 
 	return nil
 }
@@ -126,7 +127,7 @@ func unregisterConnector() {
 	unregister := fmt.Sprintf("%s/%s", conf.MasterAddress, "unregister")
 	_, err := notif.SndLoc(connector, unregister)
 	if err != nil {
-		log.Fatalf("Could not register with the master server: %s", err.Error())
+		logger.Fatal("unregister: %v", err)
 	}
 
 	log.Fatalf("Successfully unregistered the connector.")

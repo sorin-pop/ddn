@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 
 	"bytes"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/sutils"
 
@@ -56,7 +56,7 @@ func (db *mysql) Close() {
 func (db *mysql) Alive() error {
 	defer func() {
 		if p := recover(); p != nil {
-			log.Println("Panic Attack! Database seems to be down.")
+			logger.Error("Panic Attack! Database seems to be down.")
 		}
 	}()
 

@@ -1,6 +1,10 @@
 package logger
 
-import "os"
+import (
+	"fmt"
+	"log"
+	"os"
+)
 
 // LogLevel is used to determine what to log.
 type LogLevel int
@@ -8,15 +12,15 @@ type LogLevel int
 func (l LogLevel) String() string {
 	switch l {
 	case 31:
-		return "FATAL"
+		return "fatal"
 	case 15:
-		return "ERROR"
+		return "error"
 	case 7:
-		return "WARN"
+		return "warn"
 	case 3:
-		return "INFO"
+		return "info"
 	case 1:
-		return "DEBUG"
+		return "debug"
 	default:
 		return "unknown"
 	}
@@ -32,7 +36,7 @@ const (
 )
 
 var (
-	level = ERROR
+	level = INFO
 )
 
 // SetLogLevel should be used to set the loglevel of the application
@@ -41,36 +45,36 @@ func SetLogLevel(logLevel LogLevel) {
 }
 
 // Fatal should be used to log a critical incident and exit the application
-func Fatal(msg string) {
+func Fatal(msg string, args ...interface{}) {
 	defer os.Exit(1)
-
+	log.Printf("[%s] %s", FATAL, fmt.Sprintf(msg, args...))
 }
 
 // Error should be used for application errors that should be resolved
-func Error(msg string) {
+func Error(msg string, args ...interface{}) {
 	if shouldLog(ERROR) {
-
+		log.Printf("[%s] %s", ERROR, fmt.Sprintf(msg, args...))
 	}
 }
 
 // Warn should be used for events that can be dangerous
-func Warn(msg string) {
+func Warn(msg string, args ...interface{}) {
 	if shouldLog(WARN) {
-
+		log.Printf("[%s] %s", WARN, fmt.Sprintf(msg, args...))
 	}
 }
 
 // Info should be used to share data.
-func Info(msg string) {
+func Info(msg string, args ...interface{}) {
 	if shouldLog(INFO) {
-
+		log.Printf("[%s] %s", INFO, fmt.Sprintf(msg, args...))
 	}
 }
 
 // Debug should be used for debugging purposes only.
-func Debug(msg string) {
+func Debug(msg string, args ...interface{}) {
 	if shouldLog(DEBUG) {
-
+		log.Printf("[%s] %s", DEBUG, fmt.Sprintf(msg, args...))
 	}
 }
 

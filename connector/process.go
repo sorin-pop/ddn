@@ -2,19 +2,17 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/djavorszky/notif"
-
-	"strings"
-
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/notif"
 )
 
 func startImport(dbreq model.DBRequest) {
@@ -28,7 +26,7 @@ func startImport(dbreq model.DBRequest) {
 	path, err := inet.DownloadFile("dumps", dbreq.DumpLocation)
 	if err != nil {
 		db.DropDatabase(dbreq)
-		log.Printf("could not download file: %s", err.Error())
+		logger.Error("could not download file: %v", err)
 
 		ch <- notif.Y{StatusCode: status.DownloadFailed, Msg: "Downloading file failed: " + err.Error()}
 		return
@@ -52,7 +50,7 @@ func startImport(dbreq model.DBRequest) {
 			files, err = untar(path)
 		default:
 			db.DropDatabase(dbreq)
-			log.Println("import process stopped; encountered unsupported archive")
+			logger.Error("import process stopped; encountered unsupported archive")
 
 			ch <- notif.Y{StatusCode: status.ArchiveNotSupported, Msg: "archive not supported"}
 			return
@@ -63,7 +61,7 @@ func startImport(dbreq model.DBRequest) {
 
 		if err != nil {
 			db.DropDatabase(dbreq)
-			log.Printf("could not extract archive: %s", err.Error())
+			logger.Error("could not extract archive: %v", err)
 
 			ch <- notif.Y{StatusCode: status.ExtractingArchiveFailed, Msg: "Extracting file failed: " + err.Error()}
 			return
@@ -71,7 +69,7 @@ func startImport(dbreq model.DBRequest) {
 
 		if len(files) > 1 {
 			db.DropDatabase(dbreq)
-			log.Println("import process stopped; more than one file found in archive")
+			logger.Error("import process stopped; more than one file found in archive")
 
 			ch <- notif.Y{StatusCode: status.MultipleFilesInArchive, Msg: "Archive contains more than one file, import stopped"}
 			return
@@ -85,7 +83,7 @@ func startImport(dbreq model.DBRequest) {
 
 	if err != nil {
 		db.DropDatabase(dbreq)
-		log.Printf("database validation failed: %s", err.Error())
+		logger.Error("database validation failed: %v", err)
 
 		ch <- notif.Y{StatusCode: status.ValidationFailed, Msg: "Validating dump failed: " + err.Error()}
 		return
@@ -107,7 +105,7 @@ func startImport(dbreq model.DBRequest) {
 
 	err = db.ImportDatabase(dbreq)
 	if err != nil {
-		log.Printf("could not import database: %s", err.Error())
+		logger.Error("could not import database: %v", err)
 
 		ch <- notif.Y{StatusCode: status.ImportFailed, Msg: "Importing dump failed: " + err.Error()}
 		return
@@ -125,7 +123,7 @@ func keepAlive() {
 		// Check if the endpoint is up
 		if !inet.AddrExists(fmt.Sprintf("%s/%s", conf.MasterAddress, "heartbeat")) {
 			if registered {
-				log.Println("Lost connection to master server, will attempt to reconnect once it's back.")
+				logger.Error("Lost connection to master server, will attempt to reconnect once it's back.")
 
 				registered = false
 			}
@@ -135,11 +133,11 @@ func keepAlive() {
 
 		// If it is, check if we're not registered
 		if !registered {
-			log.Println("Master server back online.")
+			logger.Info("Master server back online.")
 
 			err := registerConnector()
 			if err != nil {
-				log.Printf("couldn't register with master: %s", err.Error())
+				logger.Error("couldn't register with master: %v", err)
 			}
 
 			registered = true
@@ -153,7 +151,7 @@ func keepAlive() {
 		// response is not "OK", so we need to register
 		err := registerConnector()
 		if err != nil {
-			log.Printf("couldn't register with master: %v", err)
+			logger.Error("couldn't register with master: %v", err)
 		}
 	}
 }

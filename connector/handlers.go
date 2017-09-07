@@ -3,16 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
-	"github.com/djavorszky/notif"
-	"github.com/djavorszky/sutils"
-
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/notif"
+	"github.com/djavorszky/sutils"
 )
 
 // index should display whenever someone visits the main page.
@@ -28,7 +27,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
-		log.Printf("couldn't decode json request: %s", err.Error())
+		logger.Error("couldn't decode json request: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
@@ -44,7 +43,7 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httpStatus = http.StatusInternalServerError
 		msg.Status = status.CreateDatabaseFailed
-		msg.Message = fmt.Sprintf("creating database failed: %s", err.Error())
+		msg.Message = fmt.Sprintf("creating database failed: %v", err)
 	} else {
 		msg.Status = status.Success
 		msg.Message = "Successfully created the database and user!"
@@ -63,8 +62,8 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	msg.Status = status.Success
 	msg.Message, err = db.ListDatabase()
 	if err != nil {
-		errStr := fmt.Sprintf("listing databases failed: %s", err.Error())
-		log.Printf(errStr)
+		errStr := fmt.Sprintf("list databases: %v", err)
+		logger.Error(errStr)
 
 		var errMsg inet.Message
 
@@ -84,13 +83,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
-		log.Printf("couldn't decode json request: %s", err.Error())
+		logger.Error("couldn't decode json request: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
 	}
 
-	log.Printf("%+v", msg)
+	logger.Debug("%+v", msg)
 }
 
 // dropDatabase will drop the named database with its tablespace and user
@@ -102,7 +101,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
-		log.Printf("couldn't drop database: %s", err.Error())
+		logger.Error("couldn't drop database: %v", err)
 
 		inet.SendResponse(w, http.StatusInternalServerError, inet.ErrorJSONResponse(err))
 		return
@@ -119,7 +118,7 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httpStatus = http.StatusInternalServerError
 		msg.Status = status.DropDatabaseFailed
-		msg.Message = fmt.Sprintf("dropping database failed: %s", err.Error())
+		msg.Message = fmt.Sprintf("dropping database failed: %v", err)
 	} else {
 		msg.Status = status.Success
 		msg.Message = "Successfully dropped the database and user!"
@@ -138,7 +137,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&dbreq)
 	if err != nil {
-		log.Printf("couldn't decode json request: %s", err.Error())
+		logger.Error("couldn't decode json request: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
 		return
@@ -160,7 +159,7 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 	err = db.CreateDatabase(dbreq)
 	if err != nil {
 		msg.Status = status.CreateDatabaseFailed
-		msg.Message = fmt.Sprintf("creating database failed: %s", err.Error())
+		msg.Message = fmt.Sprintf("creating database failed: %v", err)
 
 		inet.SendResponse(w, http.StatusInternalServerError, msg)
 		return
@@ -202,7 +201,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 
 	err := db.Alive()
 	if err != nil {
-		log.Printf("database dead: %s", err.Error())
+		logger.Error("database dead: %v", err)
 		msg = inet.ErrorResponse()
 	}
 

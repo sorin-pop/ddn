@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"runtime"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/prompter"
 )
 
@@ -32,31 +32,31 @@ type Config struct {
 
 // Print prints the Config object to the log.
 func (c Config) Print() {
-	log.Printf("Vendor:\t\t%s\n", conf.Vendor)
-	log.Printf("Version:\t\t%s\n", conf.Version)
-	log.Printf("Executable:\t\t%s\n", conf.Exec)
+	logger.Info("Vendor:\t\t%s\n", conf.Vendor)
+	logger.Info("Version:\t\t%s\n", conf.Version)
+	logger.Info("Executable:\t\t%s\n", conf.Exec)
 
-	log.Printf("Username:\t\t%s\n", conf.User)
-	log.Printf("Password:\t\t****\n")
+	logger.Info("Username:\t\t%s\n", conf.User)
+	logger.Info("Password:\t\t****\n")
 
 	if conf.Vendor == "oracle" {
-		log.Printf("SID:\t\t%s", conf.SID)
-		log.Printf("DatafileDir:\t\t%s", conf.DatafileDir)
+		logger.Info("SID:\t\t%s", conf.SID)
+		logger.Info("DatafileDir:\t\t%s", conf.DatafileDir)
 	}
 
-	log.Printf("Local DB addr:\t%s\n", conf.LocalDBAddr)
-	log.Printf("Local DB port:\t%s\n", conf.LocalDBPort)
+	logger.Info("Local DB addr:\t%s\n", conf.LocalDBAddr)
+	logger.Info("Local DB port:\t%s\n", conf.LocalDBPort)
 
-	log.Printf("Remote DB addr:\t%s\n", conf.ConnectorDBHost)
-	log.Printf("Remote DB port:\t%s\n", conf.ConnectorDBPort)
+	logger.Info("Remote DB addr:\t%s\n", conf.ConnectorDBHost)
+	logger.Info("Remote DB port:\t%s\n", conf.ConnectorDBPort)
 
-	log.Printf("Connector addr:\t%s\n", conf.ConnectorAddr)
-	log.Printf("Connector port:\t%s\n", conf.ConnectorPort)
+	logger.Info("Connector addr:\t%s\n", conf.ConnectorAddr)
+	logger.Info("Connector port:\t%s\n", conf.ConnectorPort)
 
-	log.Printf("Short name:\t\t%s\n", conf.ShortName)
-	log.Printf("Connector name:\t%s\n", conf.ConnectorName)
+	logger.Info("Short name:\t\t%s\n", conf.ShortName)
+	logger.Info("Connector name:\t%s\n", conf.ConnectorName)
 
-	log.Printf("Master address:\t%s\n", conf.MasterAddress)
+	logger.Info("Master address:\t%s\n", conf.MasterAddress)
 }
 
 // NewConfig returns a configuration file based on the vendor

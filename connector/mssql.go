@@ -3,11 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 )
 
@@ -37,7 +37,7 @@ func (db *mssql) CreateDatabase(dbRequest model.DBRequest) error {
 		if strings.Contains(res.stderr, "already exists") {
 			return fmt.Errorf("database %q already exists", dbRequest.DatabaseName)
 		}
-		log.Printf("unable to create database:\n> stdout:\n%q\n> stderr:\n%q\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		logger.Error("unable to create database:\n> stdout:\n%q\n> stderr:\n%q\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 
 		return fmt.Errorf("create database failed with exitcode '%d'", res.exitCode)
 	}
@@ -53,7 +53,7 @@ func (db *mssql) DropDatabase(dbRequest model.DBRequest) error {
 
 	if res.exitCode != 0 {
 		if !(strings.Contains(res.stderr, "it does not exist")) {
-			log.Printf("Unable to drop database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+			logger.Error("Unable to drop database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 
 			return fmt.Errorf("drop database failed with exitcode '%d'", res.exitCode)
 		}
@@ -84,7 +84,7 @@ func (db *mssql) ImportDatabase(dbRequest model.DBRequest) error {
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		log.Printf("Dump import seems to have failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		logger.Error("Dump import seems to have failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 
 		return fmt.Errorf("import failed with exitcode '%q'", res.exitCode)
 	}
@@ -104,7 +104,7 @@ func (db *mssql) Version() (string, error) {
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		log.Printf("Unable to get SQL Server version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		logger.Error("Unable to get SQL Server version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
 
 		return "", fmt.Errorf("getting version failed with exitcode '%d'", res.exitCode)
 	}

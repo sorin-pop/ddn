@@ -14,6 +14,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/common/inet"
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 )
 
@@ -34,7 +35,7 @@ var (
 func main() {
 	defer func() {
 		if p := recover(); p != nil {
-			log.Println("Panic... Unregistering")
+			logger.Error("Panic... Unregistering")
 			unregisterConnector()
 		}
 	}()
@@ -69,42 +70,43 @@ func main() {
 
 		log.SetOutput(logOut)
 	}
+
 	usr, err = user.Current()
 	if err != nil {
-		log.Fatal("couldn't get default user: ", err.Error())
+		logger.Fatal("couldn't get default user: ", err.Error())
 	}
 
 	hostname, err = os.Hostname()
 	if err != nil {
-		log.Fatal("couldn't get hostname: ", err.Error())
+		logger.Fatal("couldn't get hostname: ", err.Error())
 	}
 
 	loadProperties(*filename)
 
 	db, err = GetDB(conf.Vendor)
 	if err != nil {
-		log.Fatal("couldn't get database instance:", err)
+		logger.Fatal("couldn't get database instance:", err)
 	}
 
-	log.Println("Starting with properties:")
+	logger.Info("Starting with properties:")
 	conf.Print()
 
 	err = db.Connect(conf)
 	if err != nil {
-		log.Fatal("couldn't establish database connection:", err.Error())
+		logger.Fatal("couldn't establish database connection:", err.Error())
 	}
 	defer db.Close()
-	log.Println("Database connection established")
+	logger.Info("Database connection established")
 
 	ver, err := db.Version()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("database: %v", err)
 	}
 
 	if ver != conf.Version {
-		log.Println("Version mismatch, please update configuration file:")
-		log.Println("> Configuration:\t", conf.Version)
-		log.Println("> Read from DB:\t", ver)
+		logger.Warn("Version mismatch, please update configuration file:")
+		logger.Warn("> Configuration:\t%s", conf.Version)
+		logger.Warn("> Read from DB:\t%s", ver)
 
 		conf.Version = ver
 	}
@@ -113,63 +115,57 @@ func main() {
 	if _, err = os.Stat(filepath.Join(".", "dumps")); os.IsNotExist(err) {
 		err = os.Mkdir("dumps", os.ModePerm)
 		if err != nil {
-			log.Fatalf("Couldn't create dumps folder, please create it manually: %s", err.Error())
+			logger.Fatal("Couldn't create dumps folder, please create it manually: %v", err)
 		}
 
-		log.Println("Created 'dumps' folder")
-	} else {
-		log.Println("'dumps' folder already exists.")
+		logger.Info("Created 'dumps' folder")
 	}
 
 	// For Oracle, create or replace the stored procedure that executes the import, by running the sql/oracle/import_procedure.sql file
 	if odb, ok := db.(*oracle); ok {
-		log.Println("Creating or replacing the import_dump stored procedure.")
+		logger.Info("Creating or replacing the import_dump stored procedure.")
 		err := odb.RefreshImportStoredProcedure()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal("oracle: %v", err)
 		}
 	}
 
 	err = registerConnector()
 	if err != nil {
-		log.Printf("could not register connector: %s", err.Error())
-		log.Println(">> will try to connect to it if it comes online")
+		logger.Error("could not register connector: %s", err.Error())
+		logger.Error(">> will try to connect to it if it comes online")
 	}
 
 	go keepAlive()
 
-	log.Println("Starting to listen on port", conf.ConnectorPort)
+	logger.Info("Starting to listen on port %s", conf.ConnectorPort)
 
 	port = fmt.Sprintf(":%s", conf.ConnectorPort)
 
 	startup = time.Now()
 
-	log.Fatal(http.ListenAndServe(port, Router()))
-}
-
-func setupLog(logname string) (*File, error) {
-
+	logger.Fatal("server: %v", http.ListenAndServe(port, Router()))
 }
 
 func loadProperties(filename string) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		log.Println("Couldn't find properties file, trying to download one.")
+		logger.Warn("Couldn't find properties file, trying to download one.")
 
 		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/connector/con.conf")
 		if err != nil {
-			log.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
+			logger.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
 		}
 
 		os.Rename(tmpConfig, filename)
 
-		log.Println("Continuing with default configuration...")
+		logger.Info("Continuing with default configuration...")
 	}
 
 	if _, err := toml.DecodeFile(filename, &conf); err != nil {
-		log.Fatal("couldn't read configuration file: ", err.Error())
+		logger.Fatal("couldn't read configuration file: ", err.Error())
 	}
 
 	if _, err := os.Stat(conf.Exec); os.IsNotExist(err) {
-		log.Fatal("database executable doesn't exist:", conf.Exec)
+		logger.Fatal("database executable doesn't exist:", conf.Exec)
 	}
 }
