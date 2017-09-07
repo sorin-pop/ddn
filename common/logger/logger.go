@@ -60,14 +60,14 @@ func Error(msg string, args ...interface{}) {
 // Warn should be used for events that can be dangerous
 func Warn(msg string, args ...interface{}) {
 	if shouldLog(WARN) {
-		log.Printf("[%s] %s", WARN, fmt.Sprintf(msg, args...))
+		log.Printf("[%s]  %s", WARN, fmt.Sprintf(msg, args...))
 	}
 }
 
 // Info should be used to share data.
 func Info(msg string, args ...interface{}) {
 	if shouldLog(INFO) {
-		log.Printf("[%s] %s", INFO, fmt.Sprintf(msg, args...))
+		log.Printf("[%s]  %s", INFO, fmt.Sprintf(msg, args...))
 	}
 }
 

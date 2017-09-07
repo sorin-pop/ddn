@@ -1,10 +1,11 @@
 package srv
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/djavorszky/ddn/common/logger"
 )
 
 // Logger logs queries to the log with some extra information
@@ -19,7 +20,7 @@ func Logger(inner http.Handler, handler string) http.Handler {
 			return
 		}
 
-		log.Printf("[%s]\t%s\t%s\t%s\t",
+		logger.Info("[%s]\t%s\t%s\t%s\t",
 			r.RemoteAddr, r.Method, r.RequestURI, time.Since(start))
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/status"
 )
 
@@ -97,10 +98,10 @@ func ErrorResponse() Message {
 func ErrorJSONResponse(err error) Message {
 	var msg Message
 
-	log.Println("Could not decode JSON message:", err.Error())
+	logger.Error("json decode: %v", err)
 
 	msg.Status = status.InvalidJSON
-	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %s", err.Error())
+	msg.Message = fmt.Sprintf("Invalid JSON request, received error: %v", err)
 
 	return msg
 }
