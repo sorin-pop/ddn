@@ -63,7 +63,7 @@ func TestList(t *testing.T) {
 	}
 
 	if len(list.Entries) != 2 {
-		t.Errorf("Lenght of List('') should be 2, is %d", len(list.Entries))
+		t.Errorf("Length of List('') should be 2, is %d", len(list.Entries))
 	}
 
 	if !list.OnRoot {

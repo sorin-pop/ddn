@@ -76,6 +76,7 @@ func CompareRows(first, second data.Row) error {
 	return nil
 }
 
+// ReadRow reads an sql.Row into a data.Row
 func ReadRow(result *sql.Row) (data.Row, error) {
 	var row data.Row
 
@@ -103,6 +104,7 @@ func ReadRow(result *sql.Row) (data.Row, error) {
 	return row, nil
 }
 
+// ReadRows reads an sql.Rows into a data.Row
 func ReadRows(rows *sql.Rows) (data.Row, error) {
 	var row data.Row
 

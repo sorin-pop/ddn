@@ -246,15 +246,15 @@ type dbUpdate struct {
 }
 
 var queries = []dbUpdate{
-	dbUpdate{
+	{
 		Query:   "CREATE TABLE version (queryId INTEGER PRIMARY KEY, query TEXT NULL, comment TEXT NULL, date DATETIME NULL);",
 		Comment: "Create the version table",
 	},
-	dbUpdate{
+	{
 		Query:   "CREATE TABLE databases (id INTEGER PRIMARY KEY, dbname VARCHAR(255) NULL, dbuser VARCHAR(255) NULL, dbpass VARCHAR(255) NULL, dbsid VARCHAR(45) NULL, dumpfile TEXT NULL, createDate DATETIME NULL, expiryDate DATETIME NULL, creator VARCHAR(255) NULL, connectorName VARCHAR(255) NULL, dbAddress VARCHAR(255) NULL, dbPort VARCHAR(45) NULL, dbvendor VARCHAR(255) NULL, status INTEGER, message TEXT, visibility INTEGER DEFAULT 0);",
 		Comment: "Create the databases table",
 	},
-	dbUpdate{
+	{
 		Query:   "UPDATE databases SET message = '' WHERE message IS NULL;",
 		Comment: "Update 'message' columns to empty where null",
 	},

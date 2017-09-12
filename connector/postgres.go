@@ -191,7 +191,7 @@ func (db *postgres) DropDatabase(dbRequest model.DBRequest) error {
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("commiting transaction failed: %s", err.Error())
+		return fmt.Errorf("committing transaction failed: %s", err.Error())
 	}
 
 	return nil

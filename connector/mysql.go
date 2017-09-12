@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -10,8 +11,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"bytes"
 
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
@@ -237,7 +236,7 @@ func (db *mysql) DropDatabase(dbRequest model.DBRequest) error {
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("commiting transaction failed: %s", strip(err.Error()))
+		return fmt.Errorf("committing transaction failed: %s", strip(err.Error()))
 	}
 
 	return nil
