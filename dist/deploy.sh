@@ -1,21 +1,23 @@
 #!/bin/bash
 
-echo "building binary.."
-cd ../server
+rootloc="`pwd`/.."
+
+echo "building binary of server.."
+cd $rootloc/server
 go build
 
 echo "updating libraries"
-cd web
+cd $rootloc/server/web
 npm install -u
 cd ..
 
-echo "copying.."
-cp server ../dist/server
-cp -r web ../dist/web
+echo "copying server.."
+cp $rootloc/server/server $rootloc/dist/server
+cp -r $rootloc/server/web $rootloc/dist/web
 
-cd ../dist
+cd $rootloc/dist
 
-echo "building image"
+echo "building server image"
 docker build -t djavorszky/ddn .
 
 echo "stopping previous version"
@@ -26,4 +28,4 @@ echo "starting container.."
 docker run -dit -p 7010:7010 --name ddn-server -v /home/javdaniel/go/src/github.com/djavorszky/ddn/dist/data:/ddn/data -v /home/javdaniel/go/src/github.com/djavorszky/ddn/dist/ftp:/ddn/ftp djavorszky/ddn:latest
 
 echo "removing artefacts.."
-rm -rf server web
+rm -rf server web 
