@@ -11,15 +11,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
-
-	"github.com/BurntSushi/toml"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database"
 	"github.com/djavorszky/ddn/server/database/mysql"
 	"github.com/djavorszky/ddn/server/database/sqlite"
 	"github.com/djavorszky/ddn/server/mail"
+	"github.com/djavorszky/disco"
 )
 
 var (
@@ -74,6 +74,11 @@ func main() {
 
 		log.SetOutput(logOut)
 	}
+
+	if err = grabRemoteLogger(); err != nil {
+		logger.Warn("Couldn't get remote logger: %v", err)
+	}
+	defer logger.Close()
 
 	if _, err = os.Stat(*filename); os.IsNotExist(err) {
 		logger.Warn("Couldn't find properties file, trying to download one.")
@@ -150,6 +155,11 @@ func main() {
 	// Start connector checker goroutine
 	go checkConnectors()
 
+	// Announce presence
+	if err := announce(); err != nil {
+		logger.Fatal("Failed announcing presence: %v", err)
+	}
+
 	logger.Info("Starting to listen on port %s", config.ServerPort)
 
 	port := fmt.Sprintf(":%s", config.ServerPort)
@@ -160,4 +170,25 @@ func main() {
 			mail.Send(addr, "[Cloud DB] Server went down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
 		}
 	}
+}
+
+func grabRemoteLogger() error {
+	host := fmt.Sprintf("%s:%s", config.ServerHost, config.ServerPort)
+
+	service, err := disco.Query("224.0.0.1:9999", host, "rlog", 4*time.Second)
+	if err != nil {
+		return fmt.Errorf("announce#query: %v", err)
+	}
+
+	return logger.UseRemoteLogger(service.Addr, "clouddb", "server")
+}
+
+func announce() error {
+	host := fmt.Sprintf("%s:%s", config.ServerHost, config.ServerPort)
+	err := disco.Announce("224.0.0.1:9999", host, "ddn-server")
+	if err != nil {
+		return fmt.Errorf("announce: %v", err)
+	}
+
+	return nil
 }
