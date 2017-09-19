@@ -83,28 +83,62 @@ func SetLogLevel(logLevel LogLevel) {
 
 // Fatal should be used to log a critical incident and exit the application
 func Fatal(msg string, args ...interface{}) {
-	doLog(FATAL, client.Fatal, msg, args...)
-	os.Exit(1)
+	defer os.Exit(1)
+
+	if remote {
+		client.Fatal(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
+		return
+	}
+
+	log.Printf("[%s] %s", FATAL, fmt.Sprintf(msg, args...))
 }
 
 // Error should be used for application errors that should be resolved
 func Error(msg string, args ...interface{}) {
-	doLog(ERROR, client.Error, msg, args...)
+	if shouldLog(ERROR) {
+		if remote {
+			client.Error(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
+			return
+		}
+
+		log.Printf("[%s] %s", ERROR, fmt.Sprintf(msg, args...))
+	}
 }
 
 // Warn should be used for events that can be dangerous
 func Warn(msg string, args ...interface{}) {
-	doLog(WARN, client.Warn, msg, args...)
+	if shouldLog(WARN) {
+		if remote {
+			client.Warn(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
+			return
+		}
+
+		log.Printf("[%s] %s", WARN, fmt.Sprintf(msg, args...))
+	}
 }
 
 // Info should be used to share data.
 func Info(msg string, args ...interface{}) {
-	doLog(INFO, client.Info, msg, args...)
+	if shouldLog(INFO) {
+		if remote {
+			client.Info(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
+			return
+		}
+
+		log.Printf("[%s]  %s", INFO, fmt.Sprintf(msg, args...))
+	}
 }
 
 // Debug should be used for debugging purposes only.
 func Debug(msg string, args ...interface{}) {
-	doLog(DEBUG, client.Debug, msg, args...)
+	if shouldLog(DEBUG) {
+		if remote {
+			client.Debug(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
+			return
+		}
+
+		log.Printf("[%s] %s", DEBUG, fmt.Sprintf(msg, args...))
+	}
 }
 
 func shouldLog(lvl LogLevel) bool {
@@ -113,18 +147,4 @@ func shouldLog(lvl LogLevel) bool {
 	}
 
 	return false
-}
-
-func doLog(level LogLevel, remotely func(context.Context, *rlog.LogMessage, ...grpc.CallOption) (*rlog.LogResponse, error), msg string, args ...interface{}) {
-	if shouldLog(level) {
-		if remote {
-			_, err := remotely(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-			if err != nil {
-				remote = false
-				Error("Remote logger disappeared: %v", err)
-			}
-		}
-
-		log.Printf("[%s] %s", level, fmt.Sprintf(msg, args...))
-	}
 }
