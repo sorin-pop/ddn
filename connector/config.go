@@ -32,31 +32,31 @@ type Config struct {
 
 // Print prints the Config object to the log.
 func (c Config) Print() {
-	logger.Info("Vendor:\t\t%s\n", conf.Vendor)
-	logger.Info("Version:\t\t%s\n", conf.Version)
-	logger.Info("Executable:\t\t%s\n", conf.Exec)
+	logger.Info("Vendor:\t\t%s", conf.Vendor)
+	logger.Info("Version:\t\t%s", conf.Version)
+	logger.Info("Executable:\t\t%s", conf.Exec)
 
-	logger.Info("Username:\t\t%s\n", conf.User)
-	logger.Info("Password:\t\t****\n")
+	logger.Info("Username:\t\t%s", conf.User)
+	logger.Info("Password:\t\t****")
 
 	if conf.Vendor == "oracle" {
 		logger.Info("SID:\t\t%s", conf.SID)
 		logger.Info("DatafileDir:\t\t%s", conf.DatafileDir)
 	}
 
-	logger.Info("Local DB addr:\t%s\n", conf.LocalDBAddr)
-	logger.Info("Local DB port:\t%s\n", conf.LocalDBPort)
+	logger.Info("Local DB addr:\t%s", conf.LocalDBAddr)
+	logger.Info("Local DB port:\t%s", conf.LocalDBPort)
 
-	logger.Info("Remote DB addr:\t%s\n", conf.ConnectorDBHost)
-	logger.Info("Remote DB port:\t%s\n", conf.ConnectorDBPort)
+	logger.Info("Remote DB addr:\t%s", conf.ConnectorDBHost)
+	logger.Info("Remote DB port:\t%s", conf.ConnectorDBPort)
 
-	logger.Info("Connector addr:\t%s\n", conf.ConnectorAddr)
-	logger.Info("Connector port:\t%s\n", conf.ConnectorPort)
+	logger.Info("Connector addr:\t%s", conf.ConnectorAddr)
+	logger.Info("Connector port:\t%s", conf.ConnectorPort)
 
-	logger.Info("Short name:\t\t%s\n", conf.ShortName)
-	logger.Info("Connector name:\t%s\n", conf.ConnectorName)
+	logger.Info("Short name:\t\t%s", conf.ShortName)
+	logger.Info("Connector name:\t%s", conf.ConnectorName)
 
-	logger.Info("Master address:\t%s\n", conf.MasterAddress)
+	logger.Info("Master address:\t%s", conf.MasterAddress)
 }
 
 // NewConfig returns a configuration file based on the vendor

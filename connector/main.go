@@ -16,6 +16,7 @@ import (
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/disco"
 )
 
 const version = "2.0.2"
@@ -54,6 +55,8 @@ func main() {
 
 	flag.Parse()
 
+	loadProperties(*filename)
+
 	if *logname != "std" {
 		if _, err := os.Stat(*logname); err == nil {
 			rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
@@ -70,6 +73,10 @@ func main() {
 
 		log.SetOutput(logOut)
 	}
+	if err = grabRemoteLogger(); err != nil {
+		logger.Warn("Couldn't get remote logger: %v", err)
+	}
+	defer logger.Close()
 
 	usr, err = user.Current()
 	if err != nil {
@@ -80,8 +87,6 @@ func main() {
 	if err != nil {
 		logger.Fatal("couldn't get hostname: ", err.Error())
 	}
-
-	loadProperties(*filename)
 
 	db, err = GetDB(conf.Vendor)
 	if err != nil {
@@ -138,6 +143,11 @@ func main() {
 
 	go keepAlive()
 
+	// Announce presence
+	if err := announce(); err != nil {
+		logger.Fatal("Failed announcing presence: %v", err)
+	}
+
 	logger.Info("Starting to listen on port %s", conf.ConnectorPort)
 
 	port = fmt.Sprintf(":%s", conf.ConnectorPort)
@@ -168,4 +178,26 @@ func loadProperties(filename string) {
 	if _, err := os.Stat(conf.Exec); os.IsNotExist(err) {
 		logger.Fatal("database executable doesn't exist:", conf.Exec)
 	}
+}
+
+func grabRemoteLogger() error {
+	logger.Info("Trying to get remote logger")
+
+	host := fmt.Sprintf("%s:%s", conf.ConnectorAddr, conf.ConnectorPort)
+	service, err := disco.Query("224.0.0.1:9999", host, "rlog", 4*time.Second)
+	if err != nil {
+		return fmt.Errorf("query rlog: %v", err)
+	}
+
+	return logger.UseRemoteLogger(service.Addr, "clouddb", conf.ShortName)
+}
+
+func announce() error {
+	host := fmt.Sprintf("%s:%s", conf.ConnectorAddr, conf.ConnectorPort)
+	err := disco.Announce("224.0.0.1:9999", host, conf.ShortName)
+	if err != nil {
+		return fmt.Errorf("announce: %v", err)
+	}
+
+	return nil
 }

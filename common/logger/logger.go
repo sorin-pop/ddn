@@ -87,7 +87,6 @@ func Fatal(msg string, args ...interface{}) {
 
 	if remote {
 		client.Fatal(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-		return
 	}
 
 	log.Printf("[%s] %s", FATAL, fmt.Sprintf(msg, args...))
@@ -98,7 +97,6 @@ func Error(msg string, args ...interface{}) {
 	if shouldLog(ERROR) {
 		if remote {
 			client.Error(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-			return
 		}
 
 		log.Printf("[%s] %s", ERROR, fmt.Sprintf(msg, args...))
@@ -110,10 +108,9 @@ func Warn(msg string, args ...interface{}) {
 	if shouldLog(WARN) {
 		if remote {
 			client.Warn(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-			return
 		}
 
-		log.Printf("[%s] %s", WARN, fmt.Sprintf(msg, args...))
+		log.Printf("[%s]  %s", WARN, fmt.Sprintf(msg, args...))
 	}
 }
 
@@ -122,7 +119,6 @@ func Info(msg string, args ...interface{}) {
 	if shouldLog(INFO) {
 		if remote {
 			client.Info(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-			return
 		}
 
 		log.Printf("[%s]  %s", INFO, fmt.Sprintf(msg, args...))
@@ -134,7 +130,6 @@ func Debug(msg string, args ...interface{}) {
 	if shouldLog(DEBUG) {
 		if remote {
 			client.Debug(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-			return
 		}
 
 		log.Printf("[%s] %s", DEBUG, fmt.Sprintf(msg, args...))

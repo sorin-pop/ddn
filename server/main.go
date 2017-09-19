@@ -173,11 +173,13 @@ func main() {
 }
 
 func grabRemoteLogger() error {
+	logger.Info("Trying to get remote logger")
+
 	host := fmt.Sprintf("%s:%s", config.ServerHost, config.ServerPort)
 
 	service, err := disco.Query("224.0.0.1:9999", host, "rlog", 4*time.Second)
 	if err != nil {
-		return fmt.Errorf("announce#query: %v", err)
+		return fmt.Errorf("query rlog: %v", err)
 	}
 
 	return logger.UseRemoteLogger(service.Addr, "clouddb", "server")
