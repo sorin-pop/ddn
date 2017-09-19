@@ -26,8 +26,8 @@ type Config struct {
 	ShortName       string `toml:"connector-shortname"`
 	ConnectorName   string `toml:"connector-longname"`
 	MasterAddress   string `toml:"server-address"`
-	RLogAddress     string `toml:"rlog-address"`
-	RLogPort        string `toml:"rlog-port"`
+	MulticastAddr   string `toml:"multicast-addr"`
+	MulticastPort   string `toml:"multicast-port"`
 }
 
 // Print prints the Config object to the log.
@@ -55,6 +55,8 @@ func (c Config) Print() {
 
 	logger.Info("Short name:\t\t%s", conf.ShortName)
 	logger.Info("Connector name:\t%s", conf.ConnectorName)
+
+	logger.Info("Multicast Address:\t%s:%s", c.MulticastAddr, c.MulticastPort)
 
 	logger.Info("Master address:\t%s", conf.MasterAddress)
 }

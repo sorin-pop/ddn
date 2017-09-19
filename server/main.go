@@ -179,10 +179,12 @@ func loadProperties(filename string) {
 
 func grabRemoteLogger() error {
 	logger.Info("Trying to get remote logger")
+	mHost := fmt.Sprintf("%s:%s", config.MulticastAddr, config.MulticastPort)
+	logger.Info(mHost)
 
 	host := fmt.Sprintf("%s:%s", config.ServerHost, config.ServerPort)
 
-	service, err := disco.Query("224.0.0.1:9999", host, "rlog", 4*time.Second)
+	service, err := disco.Query(mHost, host, "rlog", 4*time.Second)
 	if err != nil {
 		return fmt.Errorf("query rlog: %v", err)
 	}
@@ -191,8 +193,9 @@ func grabRemoteLogger() error {
 }
 
 func announce() error {
+	mHost := fmt.Sprintf("%s:%s", config.MulticastAddr, config.MulticastPort)
 	host := fmt.Sprintf("%s:%s", config.ServerHost, config.ServerPort)
-	err := disco.Announce("224.0.0.1:9999", host, "ddn-server")
+	err := disco.Announce(mHost, host, "ddn-server")
 	if err != nil {
 		return fmt.Errorf("announce: %v", err)
 	}
