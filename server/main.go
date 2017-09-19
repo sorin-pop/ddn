@@ -75,27 +75,12 @@ func main() {
 		log.SetOutput(logOut)
 	}
 
+	loadProperties(*filename)
+
 	if err = grabRemoteLogger(); err != nil {
 		logger.Warn("Couldn't get remote logger: %v", err)
 	}
 	defer logger.Close()
-
-	if _, err = os.Stat(*filename); os.IsNotExist(err) {
-		logger.Warn("Couldn't find properties file, trying to download one.")
-
-		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/server/srv.conf")
-		if err != nil {
-			logger.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
-		}
-
-		os.Rename(tmpConfig, *filename)
-
-		logger.Info("Continuing with default configuration...")
-	}
-
-	if _, err := toml.DecodeFile(*filename, &config); err != nil {
-		logger.Fatal("couldn't read configuration file: %v", err)
-	}
 
 	logger.Info("Starting with properties:")
 
@@ -170,6 +155,26 @@ func main() {
 			mail.Send(addr, "[Cloud DB] Server went down", fmt.Sprintf(`<p>Cloud DB down for some reason.</p>`))
 		}
 	}
+}
+
+func loadProperties(filename string) {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		logger.Warn("Couldn't find properties file, trying to download one.")
+
+		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/server/srv.conf")
+		if err != nil {
+			logger.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
+		}
+
+		os.Rename(tmpConfig, filename)
+
+		logger.Info("Continuing with default configuration...")
+	}
+
+	if _, err := toml.DecodeFile(filename, &config); err != nil {
+		logger.Fatal("couldn't read configuration file: %v", err)
+	}
+
 }
 
 func grabRemoteLogger() error {
