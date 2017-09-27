@@ -40,7 +40,8 @@ const (
 )
 
 var (
-	level  = INFO
+	// Level is to be used to control the log level of the application.
+	Level  = INFO
 	remote = false
 
 	conn   *grpc.ClientConn
@@ -74,11 +75,6 @@ func UseRemoteLogger(addr, app, service string) error {
 // Close closes the client connection to the remote logger.
 func Close() {
 	conn.Close()
-}
-
-// SetLogLevel should be used to set the loglevel of the application
-func SetLogLevel(logLevel LogLevel) {
-	level = logLevel
 }
 
 // Fatal should be used to log a critical incident and exit the application
@@ -137,7 +133,7 @@ func Debug(msg string, args ...interface{}) {
 }
 
 func shouldLog(lvl LogLevel) bool {
-	if level&lvl == level {
+	if Level&lvl == Level {
 		return true
 	}
 

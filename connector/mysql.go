@@ -346,6 +346,9 @@ func (db *mysql) ValidateDump(path string) (string, error) {
 		return path, fmt.Errorf("couldn't find occurrences: %v", err)
 	}
 
+	// Rewind file
+	file.Seek(0, 0)
+
 	if len(lines) > 0 {
 		tmpFile, err := ioutil.TempFile(os.TempDir(), "ddnc")
 		if err != nil {
@@ -361,6 +364,9 @@ func (db *mysql) ValidateDump(path string) (string, error) {
 
 		os.Rename(tmpFilePath, path)
 	}
+
+	// Rewind file
+	file.Seek(0, 0)
 
 	return path, nil
 }

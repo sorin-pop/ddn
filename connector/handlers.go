@@ -34,6 +34,8 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, createDB)...); !ok {
+		logger.Error("createDatabase: missing fields: dbreq: %v", dbreq)
+
 		inet.SendResponse(w, http.StatusBadRequest, inet.InvalidResponse())
 		return
 	}
@@ -43,10 +45,14 @@ func createDatabase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httpStatus = http.StatusInternalServerError
 		msg.Status = status.CreateDatabaseFailed
-		msg.Message = fmt.Sprintf("creating database failed: %v", err)
+		msg.Message = fmt.Sprintf("creating database %q failed: %v", dbreq.DatabaseName, err)
+
+		logger.Error(msg.Message)
 	} else {
 		msg.Status = status.Success
 		msg.Message = "Successfully created the database and user!"
+
+		logger.Debug("Successfully created database %q", dbreq.DatabaseName)
 	}
 
 	inet.SendResponse(w, httpStatus, msg)
@@ -62,13 +68,12 @@ func listDatabases(w http.ResponseWriter, r *http.Request) {
 	msg.Status = status.Success
 	msg.Message, err = db.ListDatabase()
 	if err != nil {
-		errStr := fmt.Sprintf("list databases: %v", err)
-		logger.Error(errStr)
-
 		var errMsg inet.Message
 
 		errMsg.Status = status.ListDatabaseFailed
-		errMsg.Message = errStr
+		errMsg.Message = fmt.Sprintf("list databases: %v", err)
+
+		logger.Error(errMsg.Message)
 
 		inet.SendResponse(w, http.StatusInternalServerError, errMsg)
 		return
@@ -89,7 +94,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Debug("%+v", msg)
+	logger.Debug("echo: %+v", msg)
 }
 
 // dropDatabase will drop the named database with its tablespace and user
@@ -108,6 +113,8 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, dropDB)...); !ok {
+		logger.Error("dropDatabase: missing fields: dbreq: %v", dbreq)
+
 		inet.SendResponse(w, http.StatusBadRequest, inet.InvalidResponse())
 		return
 	}
@@ -119,9 +126,13 @@ func dropDatabase(w http.ResponseWriter, r *http.Request) {
 		httpStatus = http.StatusInternalServerError
 		msg.Status = status.DropDatabaseFailed
 		msg.Message = fmt.Sprintf("dropping database failed: %v", err)
+
+		logger.Error(msg.Message)
 	} else {
 		msg.Status = status.Success
 		msg.Message = "Successfully dropped the database and user!"
+
+		logger.Debug(msg.Message)
 	}
 
 	inet.SendResponse(w, httpStatus, msg)
@@ -144,13 +155,17 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ok := sutils.Present(db.RequiredFields(dbreq, importDB)...); !ok {
+		logger.Error("importDatabase: missing fields: dbreq: %v", dbreq)
+
 		inet.SendResponse(w, http.StatusBadRequest, inet.InvalidResponse())
 		return
 	}
 
 	if exists := inet.AddrExists(dbreq.DumpLocation); !exists {
 		msg.Status = status.NotFound
-		msg.Message = "Specified file doesn't exist or is not reachable."
+		msg.Message = fmt.Sprintf("Specified file doesn't exist or is not reachable at location %q.", dbreq.DumpLocation)
+
+		logger.Error(msg.Message)
 
 		inet.SendResponse(w, http.StatusNotFound, msg)
 		return
@@ -161,9 +176,13 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 		msg.Status = status.CreateDatabaseFailed
 		msg.Message = fmt.Sprintf("creating database failed: %v", err)
 
+		logger.Error(msg.Message)
+
 		inet.SendResponse(w, http.StatusInternalServerError, msg)
 		return
 	}
+
+	logger.Debug("Starting import process for database %q", dbreq.DatabaseName)
 
 	msg.Status = status.Accepted
 	msg.Message = "Understood request, starting import process."

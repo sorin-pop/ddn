@@ -22,6 +22,7 @@ func startImport(dbreq model.DBRequest) {
 	defer close(ch)
 
 	ch <- notif.Y{StatusCode: status.DownloadInProgress, Msg: "Downloading dump"}
+	logger.Debug("Downloading dump from %q", dbreq.DumpLocation)
 
 	path, err := inet.DownloadFile("dumps", dbreq.DumpLocation)
 	if err != nil {
@@ -35,6 +36,8 @@ func startImport(dbreq model.DBRequest) {
 
 	if isArchive(path) {
 		ch <- notif.Y{StatusCode: status.ExtractingArchive, Msg: "Extracting archive"}
+
+		logger.Debug("Extracting archive: %v", path)
 
 		var (
 			files []string
@@ -78,9 +81,10 @@ func startImport(dbreq model.DBRequest) {
 		path = files[0]
 	}
 
+	logger.Debug("Validating dump: %s", path)
+
 	ch <- notif.Y{StatusCode: status.ValidatingDump, Msg: "Validating dump"}
 	path, err = db.ValidateDump(path)
-
 	if err != nil {
 		db.DropDatabase(dbreq)
 		logger.Error("database validation failed: %v", err)
@@ -101,7 +105,10 @@ func startImport(dbreq model.DBRequest) {
 
 	dbreq.DumpLocation = path
 
+	logger.Debug("Importing dump: %v", path)
 	ch <- notif.Y{StatusCode: status.ImportInProgress, Msg: "Importing"}
+
+	start := time.Now()
 
 	err = db.ImportDatabase(dbreq)
 	if err != nil {
@@ -111,6 +118,7 @@ func startImport(dbreq model.DBRequest) {
 		return
 	}
 
+	logger.Debug("Import succeded in %v", time.Since(start))
 	ch <- notif.Y{StatusCode: status.Success, Msg: "Completed"}
 }
 

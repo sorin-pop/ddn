@@ -18,7 +18,7 @@ func TestShouldLog(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		level = test.Level
+		Level = test.Level
 		for lvl, expected := range test.Check {
 			if shouldLog(lvl) != expected {
 				t.Errorf("shouldLog(%s) <-> %s is expected to be %t", lvl, test.CheckName, expected)
