@@ -152,6 +152,12 @@ var routes = Routes{
 		apiConnectorByName,
 	},
 	route{
+		"api/loglevel/",
+		"GET",
+		"/api/loglevel/{level:[a-zA-Z]+}",
+		apiSetLogLevel,
+	},
+	route{
 		"safe2restart",
 		"GET",
 		"/api/safe2restart",
