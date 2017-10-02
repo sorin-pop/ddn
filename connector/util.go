@@ -26,7 +26,7 @@ func RunCommand(name string, args ...string) CommandResult {
 		exitCode       int
 	)
 
-	logger.Info("Running command: ", name, args)
+	logger.Debug("Running command: %s %s", name, args)
 
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = &outbuf
