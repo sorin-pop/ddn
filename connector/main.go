@@ -59,9 +59,14 @@ func main() {
 
 	loadProperties(*filename)
 
+	if _, err := os.Stat(conf.Exec); os.IsNotExist(err) {
+		logger.Fatal("database executable doesn't exist:", conf.Exec)
+	}
+
 	if *logname != "std" {
 		if _, err := os.Stat(*logname); err == nil {
 			rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
+			logger.Debug("Rotating logfile to %s", rotated)
 
 			os.Rename(*logname, rotated)
 		}
@@ -90,6 +95,8 @@ func main() {
 		logger.Fatal("couldn't get hostname: ", err.Error())
 	}
 
+	logger.Debug("Hostname: %s", hostname)
+
 	db, err = GetDB(conf.Vendor)
 	if err != nil {
 		logger.Fatal("couldn't get database instance:", err)
@@ -111,9 +118,7 @@ func main() {
 	}
 
 	if ver != conf.Version {
-		logger.Warn("Version mismatch, please update configuration file:")
-		logger.Warn("> Configuration:\t%s", conf.Version)
-		logger.Warn("> Read from DB:\t%s", ver)
+		logger.Warn("Database version mismatch: Config: %q, Actual: %q", conf.Version, ver)
 
 		conf.Version = ver
 	}
@@ -139,8 +144,7 @@ func main() {
 
 	err = registerConnector()
 	if err != nil {
-		logger.Error("could not register connector: %s", err.Error())
-		logger.Error(">> will try to connect to it if it comes online")
+		logger.Error("Could not register connector, will keep trying: %s", err.Error())
 	}
 
 	go keepAlive()
@@ -156,10 +160,14 @@ func main() {
 
 	startup = time.Now()
 
+	logger.Debug("Started up at %s", startup.Round(time.Millisecond))
+
 	logger.Fatal("server: %v", http.ListenAndServe(port, Router()))
 }
 
 func loadProperties(filename string) {
+	logger.Debug("Loading properties")
+
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		logger.Warn("Couldn't find properties file, trying to download one.")
 
@@ -175,10 +183,6 @@ func loadProperties(filename string) {
 
 	if _, err := toml.DecodeFile(filename, &conf); err != nil {
 		logger.Fatal("couldn't read configuration file: ", err.Error())
-	}
-
-	if _, err := os.Stat(conf.Exec); os.IsNotExist(err) {
-		logger.Fatal("database executable doesn't exist:", conf.Exec)
 	}
 }
 
