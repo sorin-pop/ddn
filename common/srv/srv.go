@@ -20,7 +20,7 @@ func Logger(inner http.Handler, handler string) http.Handler {
 			return
 		}
 
-		logger.Info("[%s]\t%s\t%s\t%s\t",
+		logger.Debug("[%s]\t%s\t%s\t%s\t",
 			r.RemoteAddr, r.Method, r.RequestURI, time.Since(start))
 	})
 }
