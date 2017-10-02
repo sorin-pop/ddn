@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/djavorszky/ddn/common/inet"
@@ -12,6 +13,7 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
+	"github.com/gorilla/mux"
 )
 
 // index should display whenever someone visits the main page.
@@ -190,6 +192,49 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 	inet.SendResponse(w, http.StatusOK, msg)
 
 	go startImport(dbreq)
+}
+
+func apiSetLogLevel(w http.ResponseWriter, r *http.Request) {
+	var lvl logger.LogLevel
+
+	vars := mux.Vars(r)
+	level := vars["level"]
+
+	switch strings.ToLower(level) {
+	case "fatal":
+		lvl = logger.FATAL
+	case "error":
+		lvl = logger.ERROR
+	case "warn":
+		lvl = logger.WARN
+	case "info":
+		lvl = logger.INFO
+	case "debug":
+		lvl = logger.DEBUG
+	default:
+		msg := inet.Message{Status: http.StatusBadRequest, Message: "ERR_UNRECOGNIZED_LOGLEVEL"}
+
+		inet.SendResponse(w, http.StatusBadRequest, msg)
+		return
+	}
+
+	if logger.Level == lvl {
+		logger.Warn("Loglevel already at %s", lvl)
+
+		msg := inet.Message{Status: http.StatusOK, Message: fmt.Sprintf("Loglevel already at %s", lvl)}
+
+		inet.SendResponse(w, http.StatusOK, msg)
+		return
+	}
+
+	logger.Info("Changing loglevel: %s->%s", logger.Level, lvl)
+
+	msg := inet.Message{Status: http.StatusOK, Message: fmt.Sprintf("Loglevel changed from %s to %s", logger.Level, lvl)}
+
+	logger.Level = lvl
+
+	inet.SendResponse(w, http.StatusOK, msg)
+	return
 }
 
 func whoami(w http.ResponseWriter, r *http.Request) {

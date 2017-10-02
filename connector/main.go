@@ -49,7 +49,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-	logger.Level = logger.DEBUG
+	logger.Level = logger.INFO
 
 	var err error
 	filename := flag.String("p", "ddnc.conf", "Specify the configuration file's name")

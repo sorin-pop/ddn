@@ -61,4 +61,10 @@ var routes = Routes{
 		"/echo",
 		echo,
 	},
+	route{
+		"api/loglevel/",
+		"GET",
+		"/api/loglevel/{level:[a-zA-Z]+}",
+		apiSetLogLevel,
+	},
 }
