@@ -134,6 +134,12 @@ var routes = Routes{
 		portalext,
 	},
 	route{
+		"recreate",
+		"GET",
+		"/recreate/{id:[0-9]+}",
+		recreate,
+	},
+	route{
 		"api/create",
 		"POST",
 		"/api/create",

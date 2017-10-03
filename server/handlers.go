@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,12 +20,9 @@ import (
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/mail"
 	"github.com/djavorszky/ddn/server/registry"
+	"github.com/djavorszky/liferay"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
-
-	"path/filepath"
-
-	"github.com/djavorszky/liferay"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -652,6 +650,86 @@ func portalext(w http.ResponseWriter, r *http.Request) {
 
 	session.Values["id"] = ID
 	session.AddFlash("Portal-exts are as follows", "success")
+}
+
+func recreate(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
+
+	user := getUser(r)
+
+	if user == "" {
+		logger.Error("Portal-ext request without logged in user.")
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	ID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "couldn't convert id to int.", http.StatusInternalServerError)
+		return
+	}
+
+	dbe, err := db.FetchByID(ID)
+	if err != nil {
+		logger.Error("FetchById: %v", err)
+		session.AddFlash("Failed querying database", "fail")
+		return
+	}
+
+	if dbe.Creator != user {
+		logger.Error("User %q tried to get recreate the database created by %q.", user, dbe.Creator)
+		session.AddFlash("Failed recreating databasee: You can only recreate database you created.", "fail")
+		return
+	}
+
+	conn, ok := registry.Get(dbe.ConnectorName)
+	if !ok {
+		logger.Error("Connector %q is offline, can't recreate database with id '%d'", dbe.ConnectorName, ID)
+		session.AddFlash("Unable to recreate database: Connector is down.", "fail")
+		return
+	}
+
+	go recreateAsync(conn, dbe)
+
+	session.AddFlash("Started to recreate", "msg")
+}
+
+func recreateAsync(conn model.Connector, dbe data.Row) {
+	_, err := conn.DropDatabase(dbe.ID, dbe.DBName, dbe.DBUser)
+	if err != nil {
+		dbe.Status = status.DropDatabaseFailed
+		dbe.Message = err.Error()
+
+		db.Update(&dbe)
+
+		logger.Error("Recreate: couldn't drop database %q on connector %q: %s", dbe.DBName, conn.ShortName, err)
+
+		return
+	}
+
+	_, err = conn.CreateDatabase(dbe.ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	if err != nil {
+		dbe.Status = status.CreateDatabaseFailed
+		dbe.Message = err.Error()
+
+		db.Update(&dbe)
+
+		logger.Error("Recreate: couldn't create database %q on connector %q: %s", dbe.DBName, conn.ShortName, err)
+
+		return
+	}
+
+	dbe.Status = status.Success
+	db.Update(&dbe)
+
+	return
 }
 
 // upd8 updates the status of the databases.
