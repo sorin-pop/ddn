@@ -39,8 +39,9 @@
                     <div class="btn-group" role="group" aria-label="Actions">
                         {{if not .IsErr}}
                         <a class="btn btn-primary" href="/extend/{{.ID}}" title="Extend Expiry"><small><i class="fa fa-plus" aria-hidden="true"></i></small> <i class="fa fa-clock-o" aria-hidden="true"></i></a>
-                        <a class="btn btn-secondary" href="/portalext/{{.ID}}" title="portal properties"><i class="fa fa-info" aria-hidden="true"></i></a>
+                        <a class="btn btn-secondary" href="/portalext/{{.ID}}" title="Portal Properties"><i class="fa fa-info" aria-hidden="true"></i></a>
                         {{end}}
+                        <a class="btn btn-secondary" href="/recreate/{{.ID}}" title="Recreate Database" onclick="return confirm('Are you sure you wish to drop the database \'{{.DBName}}\' and create an empty one with the same credentials? ')"><i class="fa fa-refresh" aria-hidden="true"></i></a>                        
                         <a class="btn btn-danger" href="/drop/{{.ID}}" title="Drop Database" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')"><i class="fa fa-trash" aria-hidden="true"></i></a>
                     </div>
                     {{end}}
@@ -97,7 +98,8 @@
                         <a class="btn btn-secondary" href="/portalext/{{.ID}}" title="portal properties"><i class="fa fa-info" aria-hidden="true"></i></a>
                         {{end}}
                         {{if eq $.User .Creator}} 
-                        <a class="btn btn-sm btn-danger" href="/drop/{{.ID}}" title="Drop Database" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')"><i class="fa fa-trash" aria-hidden="true"></i></a> 
+                        <a class="btn btn-secondary" href="/recreate/{{.ID}}" title="Recreate Database" onclick="return confirm('Are you sure you wish to drop the database \'{{.DBName}}\' and create an empty one with the same credentials? ')"><i class="fa fa-refresh" aria-hidden="true"></i></a>                        
+                        <a class="btn btn-danger" href="/drop/{{.ID}}" title="Drop Database" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')"><i class="fa fa-trash" aria-hidden="true"></i></a>
                         {{end}}
                     </div>
                     {{end}}
