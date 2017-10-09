@@ -32,7 +32,7 @@ func maintain() {
 			now := time.Now()
 
 			// if expired
-			if dbe.ExpiryDate.Before(now) {
+			if (dbe.ExpiryDate.Year() == now.Year()) && (dbe.ExpiryDate.Month() == now.Month()) && (dbe.ExpiryDate.Day() == now.Day()) {
 				conn, ok := registry.Get(dbe.ConnectorName)
 				if !ok {
 					logger.Error("drop database %q - connector %q offline", dbe.DBName, dbe.ConnectorName)
