@@ -3,11 +3,11 @@
         <h3>Create database</h3>
         <form method="POST" action="/create">
             <div class="form-group row">
-                <label for="connector" class="col-sm-3 col-form-label">Database</label>
+                <label for="agent" class="col-sm-3 col-form-label">Database</label>
                 <div class="col-sm-9">
-                    <select id="connector" name="connector" class="form-control">
+                    <select id="agent" name="agent" class="form-control">
                         <option selected disabled hidden style='display: none' value=''>Select one</option>
-                        {{range .Connectors}}
+                        {{range .Agents}}
                             {{if .Up}}
                                 <option value="{{.ShortName}}">{{.ShortName}}</option>
                             {{end}}
@@ -47,7 +47,7 @@
             </div>
         </form>
     {{else}}
-        <h3>Connectors are offline</h3>
-        <p>Since none of the connectors are online, I'm afraid I can't let you create a new database.</p>
+        <h3>Agents are offline</h3>
+        <p>Since none of the agents are online, I'm afraid I can't let you create a new database.</p>
     {{end}}
 {{end}}

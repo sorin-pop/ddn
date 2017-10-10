@@ -143,7 +143,7 @@ func keepAlive() {
 		if !registered {
 			logger.Info("Master server back online.")
 
-			err := registerConnector()
+			err := registerAgent()
 			if err != nil {
 				logger.Error("couldn't register with master: %v", err)
 			}
@@ -157,7 +157,7 @@ func keepAlive() {
 		}
 
 		// response is not "OK", so we need to register
-		err := registerConnector()
+		err := registerAgent()
 		if err != nil {
 			logger.Error("couldn't register with master: %v", err)
 		}

@@ -9,11 +9,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/djavorszky/notif"
-
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/notif"
 )
 
 const defaultFailedCode = 1
@@ -73,7 +72,7 @@ type CommandResult struct {
 	exitCode       int
 }
 
-func registerConnector() error {
+func registerAgent() error {
 	endpoint := fmt.Sprintf("%s/%s", conf.MasterAddress, "heartbeat")
 
 	if !inet.AddrExists(endpoint) {
@@ -83,16 +82,16 @@ func registerConnector() error {
 	longname := fmt.Sprintf("%s %s", conf.Vendor, conf.Version)
 
 	ddnc := model.RegisterRequest{
-		ConnectorName: conf.ConnectorName,
-		ShortName:     conf.ShortName,
-		LongName:      longname,
-		Version:       version,
-		DBVendor:      conf.Vendor,
-		DBPort:        conf.ConnectorDBPort,
-		DBAddr:        conf.ConnectorDBHost,
-		DBSID:         conf.SID,
-		Port:          conf.ConnectorPort,
-		Addr:          conf.ConnectorAddr,
+		AgentName: conf.AgentName,
+		ShortName: conf.ShortName,
+		LongName:  longname,
+		Version:   version,
+		DBVendor:  conf.Vendor,
+		DBPort:    conf.AgentDBPort,
+		DBAddr:    conf.AgentDBHost,
+		DBSID:     conf.SID,
+		Port:      conf.AgentPort,
+		Addr:      conf.AgentAddr,
 	}
 
 	register := fmt.Sprintf("%s/%s", conf.MasterAddress, "register")
@@ -102,33 +101,33 @@ func registerConnector() error {
 		return fmt.Errorf("register: %v", err)
 	}
 
-	connector = model.Connector{
+	agent = model.Agent{
 		ShortName:  conf.ShortName,
 		LongName:   longname,
-		Identifier: conf.ConnectorName,
+		Identifier: conf.AgentName,
 		Version:    version,
 		Up:         true,
 	}
-	err = json.NewDecoder(bytes.NewBufferString(resp)).Decode(&connector)
+	err = json.NewDecoder(bytes.NewBufferString(resp)).Decode(&agent)
 	if err != nil {
 		logger.Fatal("response decoding: %v", err)
 	}
 
 	registered = true
 
-	logger.Info("Registered with master server. Got assigned ID '%d'", connector.ID)
+	logger.Info("Registered with master server. Got assigned ID '%d'", agent.ID)
 
 	return nil
 }
 
-func unregisterConnector() {
-	connector.Up = false
+func unregisterAgent() {
+	agent.Up = false
 
 	unregister := fmt.Sprintf("%s/%s", conf.MasterAddress, "unregister")
-	_, err := notif.SndLoc(connector, unregister)
+	_, err := notif.SndLoc(agent, unregister)
 	if err != nil {
 		logger.Fatal("unregister: %v", err)
 	}
 
-	log.Fatalf("Successfully unregistered the connector.")
+	log.Fatalf("Successfully unregistered the agent.")
 }

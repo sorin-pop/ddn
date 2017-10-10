@@ -18,7 +18,7 @@ import (
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
 	UseCDN           bool
-	Connectors       []model.Connector
+	Agents           []model.Agent
 	AnyOnline        bool
 	Title            string
 	Pages            map[string]string
@@ -42,7 +42,7 @@ type Page struct {
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 
 	page := Page{
-		Connectors:       registry.List(),
+		Agents:           registry.List(),
 		Title:            getTitle(r.URL.Path),
 		Pages:            getPages(),
 		ActivePage:       r.URL.Path,

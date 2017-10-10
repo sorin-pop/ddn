@@ -52,8 +52,8 @@ func CompareRows(first, second data.Row) error {
 		return fmt.Errorf("Creator mismatch. First: %q vs Second: %q", first.Creator, second.Creator)
 	}
 
-	if first.ConnectorName != second.ConnectorName {
-		return fmt.Errorf("ConnectorName mismatch. First: %q vs Second: %q", first.ConnectorName, second.ConnectorName)
+	if first.AgentName != second.AgentName {
+		return fmt.Errorf("AgentName mismatch. First: %q vs Second: %q", first.AgentName, second.AgentName)
 	}
 
 	if first.DBAddress != second.DBAddress {
@@ -90,7 +90,7 @@ func ReadRow(result *sql.Row) (data.Row, error) {
 		&row.CreateDate,
 		&row.ExpiryDate,
 		&row.Creator,
-		&row.ConnectorName,
+		&row.AgentName,
 		&row.DBAddress,
 		&row.DBPort,
 		&row.DBVendor,
@@ -118,7 +118,7 @@ func ReadRows(rows *sql.Rows) (data.Row, error) {
 		&row.CreateDate,
 		&row.ExpiryDate,
 		&row.Creator,
-		&row.ConnectorName,
+		&row.AgentName,
 		&row.DBAddress,
 		&row.DBPort,
 		&row.DBVendor,

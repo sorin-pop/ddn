@@ -160,7 +160,7 @@ func (mys *DB) Insert(entry *data.Row) error {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?)"
+	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `agentName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?)"
 
 	res, err := mys.conn.Exec(query,
 		entry.DBName,
@@ -171,7 +171,7 @@ func (mys *DB) Insert(entry *data.Row) error {
 		entry.CreateDate,
 		entry.ExpiryDate,
 		entry.Creator,
-		entry.ConnectorName,
+		entry.AgentName,
 		entry.DBAddress,
 		entry.DBPort,
 		entry.DBVendor,
@@ -210,7 +210,7 @@ func (mys *DB) Update(entry *data.Row) error {
 		return mys.Insert(entry)
 	}
 
-	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `connectorName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
+	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `agentName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
 
 	_, err = mys.conn.Exec(query,
 		entry.DBName,
@@ -221,7 +221,7 @@ func (mys *DB) Update(entry *data.Row) error {
 		entry.CreateDate,
 		entry.ExpiryDate,
 		entry.Creator,
-		entry.ConnectorName,
+		entry.AgentName,
 		entry.DBAddress,
 		entry.DBPort,
 		entry.DBVendor,
@@ -289,6 +289,10 @@ var queries = []dbUpdate{
 	{
 		Query:   "UPDATE `databases` SET `message` = '' WHERE `message` IS NULL;",
 		Comment: "Update 'message' columns to empty where null",
+	},
+	{
+		Query:   "ALTER TABLE `databases` CHANGE COLUMN `connectorName` `agentName` VARCHAR(255) NULL DEFAULT NULL;",
+		Comment: "Update 'databases' table: connectorName -> agentName",
 	},
 }
 

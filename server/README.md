@@ -5,9 +5,9 @@ Description
 
 The Distributed Database Network server, or `ddns` for short, is the central server for the whole ddn network. It is an API server with JSON API capabilities with a web UI planned once the API part is released.
 
-The main task of the server is to keep track of all the registered `connectors` (see [Distributed Database Network Connector](https://github.com/djavorszky/ddnc)), as well as to provide an endpoint for all end users to call.
+The main task of the server is to keep track of all the registered `agents` (see [Distributed Database Network Agent](https://github.com/djavorszky/ddnc)), as well as to provide an endpoint for all end users to call.
 
-Keeping track of the `connectors` will be done in a local MySQL database. Once a `connector` comes online, it will register itself with the server and provide periodic updates that it is still alive. If the connector goes down, the updates will cease - In this case, the `server` marks the connector as down and removes it from the registry.
+Keeping track of the `agents` will be done in a local MySQL database. Once a `agent` comes online, it will register itself with the server and provide periodic updates that it is still alive. If the agent goes down, the updates will cease - In this case, the `server` marks the agent as down and removes it from the registry.
 
 Installation
 ------------
@@ -22,13 +22,13 @@ Documentation
 -------------
 
 For first release, the following API endpoints are defined:
-## List connectors
-**API endpoint:** GET `/list-connectors`
+## List agents
+**API endpoint:** GET `/list-agents`
 ### Explanation
-Returns a JSON encoded string containing the databases, and their versions, on the available connectors, ordered by their shortname.
+Returns a JSON encoded string containing the databases, and their versions, on the available agents, ordered by their shortname.
 
 ### Example request
-Simply navigate to `http://ip-address:port/list-connectors`
+Simply navigate to `http://ip-address:port/list-agents`
 
 ### Example response
 ```
@@ -38,9 +38,9 @@ Simply navigate to `http://ip-address:port/list-connectors`
 ## Create database
 **API endpoint:** POST `/create-database`
 ### Explanation
-Used to create a database through on of its connectors. Passes the values forward, then gets the result back. Provides a human readable success or failure message.
+Used to create a database through on of its agents. Passes the values forward, then gets the result back. Provides a human readable success or failure message.
 
-Returns an error if whenever the connector errors out, namely:
+Returns an error if whenever the agent errors out, namely:
 
 1. DB Name is not unique (already exists), or invalid
 2. Username is not unique (already exists), or invalid
@@ -52,7 +52,7 @@ Returns immediately with a success message if creating the database and user hav
 ### Post request details
 |Key|Value|
 |---|---|
-|database_identifier|Must correspond to a valid connector identifier. See `/list-connectors` for what those are|
+|database_identifier|Must correspond to a valid agent identifier. See `/list-agents` for what those are|
 |database_name|Valid name for a database / schema. Must be non-empty|
 |username|Valid name for user. Must be non-empty|
 |password|Valid string for password. Must be non-empty|
@@ -83,20 +83,20 @@ curl -X POST -d '{"database_identifier":"mysql-55", "database_name":"exampleData
 {"Status":500,"Message":"User 'exampleUser' already exists"}
 ```
 
-# API used by the connectors only
-The below APIs are used by the connectors only and should not be used manually.
+# API used by the agents only
+The below APIs are used by the agents only and should not be used manually.
 
 ## Alive
 **API endpoint:** GET `/alive`
 ### Explanation
-Used by the connectors to check if the server is online or not. Simply returns http status code 200 and no response body when called.
+Used by the agents to check if the server is online or not. Simply returns http status code 200 and no response body when called.
 
 ## register
 **API endpoint:** POST `/register`
 ### Explanation
-Used by the connector to register itself with the server. The `model.RegisterRequest` struct should be used for requesting access, for which a `model.RegisterResponse` should be the response
+Used by the agent to register itself with the server. The `model.RegisterRequest` struct should be used for requesting access, for which a `model.RegisterResponse` should be the response
 
 ## unregister
 **API endpoint:** POST `/unregister`
 ### Explanation
-Used by the connector to unregister itself from the server. The `model.Connector` struct should be used for unregistering. There is no response to this request.
+Used by the agent to unregister itself from the server. The `model.Agent` struct should be used for unregistering. There is no response to this request.

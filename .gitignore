@@ -31,7 +31,7 @@ _testmain.go
 !srv.conf
 !con.conf
 
-connector/connector*
+agent/agent*
 server/server*
 server/web/dumps/*
 node_modules

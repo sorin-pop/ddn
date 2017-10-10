@@ -22,25 +22,25 @@ type DBRequest struct {
 
 // ClientRequest is used to represent a JSON call between a client and the server
 type ClientRequest struct {
-	ConnectorIdentifier string `json:"connector_identifier"`
-	RequesterEmail      string `json:"requester_email"`
+	AgentIdentifier string `json:"agent_identifier"`
+	RequesterEmail  string `json:"requester_email"`
 	DBRequest
 }
 
-// RegisterRequest is used to represent a JSON call between the connector and the server.
-// ID can be null if it's the initial registration, but must correspond to the connector's
+// RegisterRequest is used to represent a JSON call between the agent and the server.
+// ID can be null if it's the initial registration, but must correspond to the agent's
 // ID when unregistering
 type RegisterRequest struct {
-	ConnectorName string `json:"connector_name"`
-	DBVendor      string `json:"dbvendor"`
-	DBPort        string `json:"dbport"`
-	DBAddr        string `json:"dbaddr"`
-	DBSID         string `json:"dbsid"`
-	ShortName     string `json:"short_name"`
-	LongName      string `json:"long_name"`
-	Version       string `json:"version"`
-	Port          string `json:"port"`
-	Addr          string `json:"address"`
+	AgentName string `json:"agent_name"`
+	DBVendor  string `json:"dbvendor"`
+	DBPort    string `json:"dbport"`
+	DBAddr    string `json:"dbaddr"`
+	DBSID     string `json:"dbsid"`
+	ShortName string `json:"short_name"`
+	LongName  string `json:"long_name"`
+	Version   string `json:"version"`
+	Port      string `json:"port"`
+	Addr      string `json:"address"`
 }
 
 // RegisterResponse is used as the response to the RegisterRequest
@@ -50,25 +50,25 @@ type RegisterResponse struct {
 	Token   string `json:"token"`
 }
 
-// Connector is used to represent a DDN Connector.
-type Connector struct {
-	ID            int    `json:"id"`
-	DBVendor      string `json:"vendor"`
-	DBPort        string `json:"dbport"`
-	DBAddr        string `json:"dbaddress"`
-	DBSID         string `json:"sid"`
-	ShortName     string `json:"connector"`
-	LongName      string `json:"connector_long"`
-	Identifier    string `json:"connector_identifier"`
-	ConnectorPort string `json:"connector_port"`
-	Version       string `json:"connector_version"`
-	Address       string `json:"connector_address"`
-	Token         string `json:"connector_token"`
-	Up            bool   `json:"connector_up"`
+// Agent is used to represent a DDN Agent.
+type Agent struct {
+	ID         int    `json:"id"`
+	DBVendor   string `json:"vendor"`
+	DBPort     string `json:"dbport"`
+	DBAddr     string `json:"dbaddress"`
+	DBSID      string `json:"sid"`
+	ShortName  string `json:"agent"`
+	LongName   string `json:"agent_long"`
+	Identifier string `json:"agent_identifier"`
+	AgentPort  string `json:"agent_port"`
+	Version    string `json:"agent_version"`
+	Address    string `json:"agent_address"`
+	Token      string `json:"agent_token"`
+	Up         bool   `json:"agent_up"`
 }
 
-// CreateDatabase sends a request to the connector to create a database.
-func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
+// CreateDatabase sends a request to the agent to create a database.
+func (a Agent) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
 
 	if ok := sutils.Present(dbname, dbuser, dbpass); !ok {
 		return "", fmt.Errorf("asked to create database with missing values: dbname: %q, dbuser: %q, dbpass: %q", dbname, dbuser, dbpass)
@@ -81,11 +81,11 @@ func (c Connector) CreateDatabase(id int, dbname, dbuser, dbpass string) (string
 		Password:     dbpass,
 	}
 
-	return c.executeAction(dbreq, "create-database")
+	return a.executeAction(dbreq, "create-database")
 }
 
-// ImportDatabase starts the import on the connector.
-func (c Connector) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string) (string, error) {
+// ImportDatabase starts the import on the agent.
+func (a Agent) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string) (string, error) {
 	if ok := sutils.Present(dbname, dbuser, dbpass, dumploc); !ok {
 		return "", fmt.Errorf("asked to import database with missing values: dbname: %q, dbuser: %q, dbpass: %q, dumploc: %q", dbname, dbuser, dbpass, dumploc)
 	}
@@ -98,11 +98,11 @@ func (c Connector) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string
 		DumpLocation: dumploc,
 	}
 
-	return c.executeAction(dbreq, "import-database")
+	return a.executeAction(dbreq, "import-database")
 }
 
-// DropDatabase sends a request to the connector to create a database.
-func (c Connector) DropDatabase(id int, dbname, dbuser string) (string, error) {
+// DropDatabase sends a request to the agent to drop the specified database.
+func (a Agent) DropDatabase(id int, dbname, dbuser string) (string, error) {
 
 	if ok := sutils.Present(dbname, dbuser); !ok {
 		return "", fmt.Errorf("asked to create database with missing values: dbname: %q, dbuser: %q", dbname, dbuser)
@@ -114,11 +114,11 @@ func (c Connector) DropDatabase(id int, dbname, dbuser string) (string, error) {
 		Username:     dbuser,
 	}
 
-	return c.executeAction(dbreq, "drop-database")
+	return a.executeAction(dbreq, "drop-database")
 }
 
-func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, error) {
-	dest := fmt.Sprintf("%s:%s/%s", c.Address, c.ConnectorPort, endpoint)
+func (a Agent) executeAction(dbreq DBRequest, endpoint string) (string, error) {
+	dest := fmt.Sprintf("%s:%s/%s", a.Address, a.AgentPort, endpoint)
 
 	if !strings.HasPrefix(dest, "http://") && !strings.HasPrefix(dest, "https://") {
 		dest = fmt.Sprintf("http://%s", dest)
@@ -141,7 +141,7 @@ func (c Connector) executeAction(dbreq DBRequest, endpoint string) (string, erro
 	case status.InvalidJSON:
 		return "", fmt.Errorf("invalid JSON request")
 	case status.CreateDatabaseFailed, status.ListDatabaseFailed, status.DropDatabaseFailed:
-		return "", fmt.Errorf("connector issue: %s", respMsg.Message)
+		return "", fmt.Errorf("agent issue: %s", respMsg.Message)
 	default:
 		return "", fmt.Errorf("executing action on endpoint %q failed: %s", endpoint, respMsg.Message)
 	}

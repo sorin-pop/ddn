@@ -152,10 +152,10 @@ var routes = Routes{
 		apiList,
 	},
 	route{
-		"api/connector/byName",
+		"api/agents/byName",
 		"GET",
-		"/api/connectors/{shortname:[a-zA-Z0-9-_]+}",
-		apiConnectorByName,
+		"/api/agents/{shortname:[a-zA-Z0-9-_]+}",
+		apiAgentByName,
 	},
 	route{
 		"api/loglevel/",

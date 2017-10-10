@@ -10,7 +10,7 @@ import (
 var (
 	curID    = 0
 	ids      = make(chan int)
-	registry = make(map[string]model.Connector)
+	registry = make(map[string]model.Agent)
 
 	rw sync.RWMutex
 )
@@ -19,17 +19,17 @@ func init() {
 	go inc()
 }
 
-// Store registers the connector in the registry, or overwrites
-// if connector already in.
-func Store(conn model.Connector) {
+// Store registers the agent in the registry, or overwrites
+// if agent already in.
+func Store(conn model.Agent) {
 	rw.Lock()
 	registry[conn.ShortName] = conn
 	rw.Unlock()
 }
 
-// Get returns the connector associated with the shortName, or
-// an error if no connectors are registered with that name
-func Get(shortName string) (model.Connector, bool) {
+// Get returns the agent associated with the shortName, or
+// an error if no agent are registered with that name
+func Get(shortName string) (model.Agent, bool) {
 	rw.RLock()
 	conn, ok := registry[shortName]
 	rw.RUnlock()
@@ -37,17 +37,17 @@ func Get(shortName string) (model.Connector, bool) {
 	return conn, ok
 }
 
-// Remove removes the connector added with shortName. Does not error
-// if connector not in registry.
+// Remove removes the agent added with shortName. Does not error
+// if agent not in registry.
 func Remove(shortName string) {
 	rw.Lock()
 	delete(registry, shortName)
 	rw.Unlock()
 }
 
-// List returns the list of connectors as a slice
-func List() []model.Connector {
-	var conns []model.Connector
+// List returns the list of agents as a slice
+func List() []model.Agent {
+	var conns []model.Agent
 
 	rw.RLock()
 	for _, c := range registry {
@@ -82,9 +82,9 @@ func inc() int {
 	}
 }
 
-// ByName implements sort.Interface for []model.Connector based on
+// ByName implements sort.Interface for []model.Agent based on
 // the ShortName field
-type ByName []model.Connector
+type ByName []model.Agent
 
 func (a ByName) Len() int           { return len(a) }
 func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

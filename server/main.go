@@ -139,8 +139,8 @@ func main() {
 	// Start maintenance goroutine
 	go maintain()
 
-	// Start connector checker goroutine
-	go checkConnectors()
+	// Start agent checker goroutine
+	go checkAgents()
 
 	// Announce presence
 	if err := announce(); err != nil {

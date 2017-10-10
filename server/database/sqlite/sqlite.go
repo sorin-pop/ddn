@@ -152,7 +152,7 @@ func (lite *DB) Insert(row *data.Row) error {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `connectorName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?)"
+	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `agentName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?)"
 
 	res, err := lite.conn.Exec(query,
 		row.DBName,
@@ -163,7 +163,7 @@ func (lite *DB) Insert(row *data.Row) error {
 		row.CreateDate,
 		row.ExpiryDate,
 		row.Creator,
-		row.ConnectorName,
+		row.AgentName,
 		row.DBAddress,
 		row.DBPort,
 		row.DBVendor,
@@ -202,7 +202,7 @@ func (lite *DB) Update(entry *data.Row) error {
 		return lite.Insert(entry)
 	}
 
-	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `connectorName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
+	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `agentName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
 
 	_, err = lite.conn.Exec(query,
 		entry.DBName,
@@ -213,7 +213,7 @@ func (lite *DB) Update(entry *data.Row) error {
 		entry.CreateDate,
 		entry.ExpiryDate,
 		entry.Creator,
-		entry.ConnectorName,
+		entry.AgentName,
 		entry.DBAddress,
 		entry.DBPort,
 		entry.DBVendor,
@@ -257,6 +257,22 @@ var queries = []dbUpdate{
 	{
 		Query:   "UPDATE databases SET message = '' WHERE message IS NULL;",
 		Comment: "Update 'message' columns to empty where null",
+	},
+	{
+		Query:   "ALTER TABLE databases RENAME TO databases_tmp",
+		Comment: "Update column in 'databases': Create temp table",
+	},
+	{
+		Query:   "CREATE TABLE databases (id INTEGER PRIMARY KEY AUTOINCREMENT, dbname VARCHAR(255) NULL, dbuser VARCHAR(255) NULL, dbpass VARCHAR(255) NULL, dbsid VARCHAR(45) NULL, dumpfile TEXT NULL, createDate DATETIME NULL, expiryDate DATETIME NULL, creator VARCHAR(255) NULL, agentName VARCHAR(255) NULL, dbAddress VARCHAR(255) NULL, dbPort VARCHAR(45) NULL, dbvendor VARCHAR(255) NULL, status INTEGER, message TEXT, visibility INTEGER DEFAULT 0);",
+		Comment: "Update column in 'databases': Create updated table",
+	},
+	{
+		Query:   "INSERT INTO databases SELECT id, dbname, dbuser, dbpass, dbsid, dumpfile, createDate, expiryDate, creator, connectorName AS agentName, dbAddress, dbPort, dbvendor, status, message, visibility FROM databases_tmp;",
+		Comment: "Update column in 'databases': Insert data to updated table",
+	},
+	{
+		Query:   "DROP TABLE databases_tmp;",
+		Comment: "Update column in 'databases': Drop temp table",
 	},
 }
 

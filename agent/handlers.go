@@ -242,12 +242,12 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 
 	info["database-vendor"] = conf.Vendor
 	info["database-version"] = conf.Version
-	info["connector-version"] = version
+	info["agent-version"] = version
 
 	duration := time.Since(startup)
 
 	// Round to milliseconds.
-	info["connector-uptime"] = fmt.Sprintf("%s", duration-(duration%time.Millisecond))
+	info["agent-uptime"] = fmt.Sprintf("%s", duration-(duration%time.Millisecond))
 
 	var msg inet.MapMessage
 

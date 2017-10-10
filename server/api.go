@@ -17,7 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// apiList will list all available connectors in a JSON format.
+// apiList will list all available agents in a JSON format.
 func apiList(w http.ResponseWriter, r *http.Request) {
 	list := make(map[string]string, 10)
 	for _, con := range registry.List() {
@@ -44,23 +44,23 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := sutils.Present(req.ConnectorIdentifier, req.RequesterEmail); !ok {
+	if ok := sutils.Present(req.AgentIdentifier, req.RequesterEmail); !ok {
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
 			Status:  status.MissingParameters,
-			Message: fmt.Sprintf("Need values for 'connector_identifier' and 'requester_email', but got: %q and %q", req.ConnectorIdentifier, req.RequesterEmail)})
+			Message: fmt.Sprintf("Need values for 'agent_identifier' and 'requester_email', but got: %q and %q", req.AgentIdentifier, req.RequesterEmail)})
 		return
 	}
 
 	var (
-		conn model.Connector
+		conn model.Agent
 		ok   bool
 	)
 
-	conn, ok = registry.Get(req.ConnectorIdentifier)
+	conn, ok = registry.Get(req.AgentIdentifier)
 	if !ok {
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
 			Status:  status.MissingParameters,
-			Message: fmt.Sprintf("Connector '%s' not found in registry", req.ConnectorIdentifier)})
+			Message: fmt.Sprintf("Agent '%s' not found in registry", req.AgentIdentifier)})
 		return
 	}
 
@@ -83,18 +83,18 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dbe := data.Row{
-		DBName:        req.DatabaseName,
-		DBUser:        req.Username,
-		DBPass:        req.Password,
-		DBSID:         conn.DBSID,
-		ConnectorName: req.ConnectorIdentifier,
-		Creator:       req.RequesterEmail,
-		CreateDate:    time.Now(),
-		ExpiryDate:    time.Now().AddDate(0, 1, 0),
-		DBAddress:     conn.DBAddr,
-		DBPort:        conn.DBPort,
-		DBVendor:      conn.DBVendor,
-		Status:        status.Success,
+		DBName:     req.DatabaseName,
+		DBUser:     req.Username,
+		DBPass:     req.Password,
+		DBSID:      conn.DBSID,
+		AgentName:  req.AgentIdentifier,
+		Creator:    req.RequesterEmail,
+		CreateDate: time.Now(),
+		ExpiryDate: time.Now().AddDate(0, 1, 0),
+		DBAddress:  conn.DBAddr,
+		DBPort:     conn.DBPort,
+		DBVendor:   conn.DBVendor,
+		Status:     status.Success,
 	}
 
 	err = db.Insert(&dbe)
@@ -118,15 +118,15 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-// apiConnectorByName returns a connector by its shortname
-func apiConnectorByName(w http.ResponseWriter, r *http.Request) {
+// apiAgentByName returns an agent by its shortname
+func apiAgentByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	shortname := vars["shortname"]
 
 	conn, ok := registry.Get(shortname)
 	if !ok {
-		msg := inet.Message{Status: http.StatusServiceUnavailable, Message: "ERR_CONNECTOR_NOT_FOUND"}
+		msg := inet.Message{Status: http.StatusServiceUnavailable, Message: "ERR_AGENT_NOT_FOUND"}
 
 		inet.SendResponse(w, http.StatusServiceUnavailable, msg)
 		return
@@ -140,7 +140,7 @@ func apiConnectorByName(w http.ResponseWriter, r *http.Request) {
 func apiSafe2Restart(w http.ResponseWriter, r *http.Request) {
 	imports := make(map[string]int)
 
-	// Check if server and connectors are restartable
+	// Check if server and agents are restartable
 	entries, err := db.FetchAll()
 	if err != nil {
 		msg := inet.Message{Status: http.StatusInternalServerError, Message: "ERR_QUERY_FAILED"}
@@ -151,7 +151,7 @@ func apiSafe2Restart(w http.ResponseWriter, r *http.Request) {
 
 	for _, entry := range entries {
 		if entry.InProgress() {
-			imports[entry.ConnectorName]++
+			imports[entry.AgentName]++
 		}
 	}
 

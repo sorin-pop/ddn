@@ -71,15 +71,15 @@ func prepImportAction(w http.ResponseWriter, r *http.Request) {
 	defer session.Save(r, w)
 
 	var (
-		connector = r.PostFormValue("connector")
-		dbname    = r.PostFormValue("dbname")
-		dbuser    = r.PostFormValue("user")
-		dbpass    = r.PostFormValue("password")
-		dumpfile  = r.PostFormValue("dbdump")
-		public    = r.PostFormValue("public")
+		agent    = r.PostFormValue("agent")
+		dbname   = r.PostFormValue("dbname")
+		dbuser   = r.PostFormValue("user")
+		dbpass   = r.PostFormValue("password")
+		dumpfile = r.PostFormValue("dbdump")
+		public   = r.PostFormValue("public")
 	)
 
-	dbID, err := doPrepImport(getUser(r), connector, dumpfile, dbname, dbuser, dbpass, public)
+	dbID, err := doPrepImport(getUser(r), agent, dumpfile, dbname, dbuser, dbpass, public)
 	if err != nil {
 		session.AddFlash(fmt.Sprintf("Failed preparing import: %v", err), "fail")
 		return
@@ -120,10 +120,10 @@ func doImport(dbID int, dumpfile string) {
 	dbe.Dumpfile = url
 	db.Update(&dbe)
 
-	conn, ok := registry.Get(dbe.ConnectorName)
+	conn, ok := registry.Get(dbe.AgentName)
 	if !ok {
 		dbe.Status = status.ImportFailed
-		dbe.Message = "Server error: connector went offline."
+		dbe.Message = "Server error: agent went offline."
 		dbe.ExpiryDate = time.Now().AddDate(0, 0, 2)
 
 		db.Update(&dbe)
@@ -143,10 +143,10 @@ func doImport(dbID int, dumpfile string) {
 
 }
 
-func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public string) (int, error) {
-	conn, ok := registry.Get(connector)
+func doPrepImport(creator, agent, dumpfile, dbname, dbuser, dbpass, public string) (int, error) {
+	conn, ok := registry.Get(agent)
 	if !ok {
-		return 0, fmt.Errorf("connector went offline")
+		return 0, fmt.Errorf("agent went offline")
 	}
 
 	if conn.DBVendor == "mssql" {
@@ -161,18 +161,18 @@ func doPrepImport(creator, connector, dumpfile, dbname, dbuser, dbpass, public s
 	ensureValues(&dbname, &dbuser, &dbpass)
 
 	entry := data.Row{
-		DBName:        dbname,
-		DBUser:        dbuser,
-		DBPass:        dbpass,
-		DBSID:         conn.DBSID,
-		CreateDate:    time.Now(),
-		ExpiryDate:    time.Now().AddDate(0, 1, 0),
-		ConnectorName: connector,
-		Creator:       creator,
-		DBAddress:     conn.DBAddr,
-		DBPort:        conn.DBPort,
-		DBVendor:      conn.DBVendor,
-		Status:        status.Started,
+		DBName:     dbname,
+		DBUser:     dbuser,
+		DBPass:     dbpass,
+		DBSID:      conn.DBSID,
+		CreateDate: time.Now(),
+		ExpiryDate: time.Now().AddDate(0, 1, 0),
+		AgentName:  agent,
+		Creator:    creator,
+		DBAddress:  conn.DBAddr,
+		DBPort:     conn.DBPort,
+		DBVendor:   conn.DBVendor,
+		Status:     status.Started,
 	}
 
 	if public == "on" {
@@ -222,11 +222,11 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(32 << 24)
 
 	var (
-		connector = r.PostFormValue("connector")
-		dbname    = r.PostFormValue("dbname")
-		dbuser    = r.PostFormValue("user")
-		dbpass    = r.PostFormValue("password")
-		public    = r.PostFormValue("public")
+		agent  = r.PostFormValue("agent")
+		dbname = r.PostFormValue("dbname")
+		dbuser = r.PostFormValue("user")
+		dbpass = r.PostFormValue("password")
+		public = r.PostFormValue("public")
 	)
 
 	session, err := store.Get(r, "user-session")
@@ -268,9 +268,9 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
 
-	conn, ok := registry.Get(connector)
+	conn, ok := registry.Get(agent)
 	if !ok {
-		session.AddFlash(fmt.Sprintf("Failed importing database, connector %s went offline", connector), "fail")
+		session.AddFlash(fmt.Sprintf("Failed importing database, agent %s went offline", agent), "fail")
 		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 		return
 	}
@@ -287,19 +287,19 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	ensureValues(&dbname, &dbuser, &dbpass)
 
 	entry := data.Row{
-		DBName:        dbname,
-		DBUser:        dbuser,
-		DBPass:        dbpass,
-		DBSID:         conn.DBSID,
-		CreateDate:    time.Now(),
-		ExpiryDate:    time.Now().AddDate(0, 1, 0),
-		ConnectorName: connector,
-		Creator:       getUser(r),
-		Dumpfile:      url,
-		DBAddress:     conn.DBAddr,
-		DBPort:        conn.DBPort,
-		DBVendor:      conn.DBVendor,
-		Status:        status.Started,
+		DBName:     dbname,
+		DBUser:     dbuser,
+		DBPass:     dbpass,
+		DBSID:      conn.DBSID,
+		CreateDate: time.Now(),
+		ExpiryDate: time.Now().AddDate(0, 1, 0),
+		AgentName:  agent,
+		Creator:    getUser(r),
+		Dumpfile:   url,
+		DBAddress:  conn.DBAddr,
+		DBPort:     conn.DBPort,
+		DBVendor:   conn.DBVendor,
+		Status:     status.Started,
 	}
 
 	if public == "on" {
@@ -332,11 +332,11 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	var (
-		connector = r.PostFormValue("connector")
-		dbname    = r.PostFormValue("dbname")
-		dbuser    = r.PostFormValue("user")
-		dbpass    = r.PostFormValue("password")
-		public    = r.PostFormValue("public")
+		agent  = r.PostFormValue("agent")
+		dbname = r.PostFormValue("dbname")
+		dbuser = r.PostFormValue("user")
+		dbpass = r.PostFormValue("password")
+		public = r.PostFormValue("public")
 	)
 
 	session, err := store.Get(r, "user-session")
@@ -345,9 +345,9 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Save(r, w)
 
-	conn, ok := registry.Get(connector)
+	conn, ok := registry.Get(agent)
 	if !ok {
-		session.AddFlash(fmt.Sprintf("Failed creating database, connector %s went offline", connector), "fail")
+		session.AddFlash(fmt.Sprintf("Failed creating database, agent %s went offline", agent), "fail")
 		return
 	}
 
@@ -370,18 +370,18 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	entry := data.Row{
-		DBName:        dbname,
-		DBUser:        dbuser,
-		DBPass:        dbpass,
-		DBSID:         conn.DBSID,
-		CreateDate:    time.Now(),
-		ExpiryDate:    time.Now().AddDate(0, 1, 0),
-		ConnectorName: connector,
-		Creator:       getUser(r),
-		DBAddress:     conn.DBAddr,
-		DBPort:        conn.DBPort,
-		DBVendor:      conn.DBVendor,
-		Status:        status.Success,
+		DBName:     dbname,
+		DBUser:     dbuser,
+		DBPass:     dbpass,
+		DBSID:      conn.DBSID,
+		CreateDate: time.Now(),
+		ExpiryDate: time.Now().AddDate(0, 1, 0),
+		AgentName:  agent,
+		Creator:    getUser(r),
+		DBAddress:  conn.DBAddr,
+		DBPort:     conn.DBPort,
+		DBVendor:   conn.DBVendor,
+		Status:     status.Success,
 	}
 
 	if public == "on" {
@@ -407,26 +407,26 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ddnc := model.Connector{
-		ID:            registry.ID(),
-		DBVendor:      req.DBVendor,
-		DBPort:        req.DBPort,
-		DBAddr:        req.DBAddr,
-		DBSID:         req.DBSID,
-		ShortName:     req.ShortName,
-		LongName:      req.LongName,
-		Identifier:    req.ConnectorName,
-		Version:       req.Version,
-		Address:       req.Addr,
-		ConnectorPort: req.Port,
-		Up:            true,
+	ddnc := model.Agent{
+		ID:         registry.ID(),
+		DBVendor:   req.DBVendor,
+		DBPort:     req.DBPort,
+		DBAddr:     req.DBAddr,
+		DBSID:      req.DBSID,
+		ShortName:  req.ShortName,
+		LongName:   req.LongName,
+		Identifier: req.AgentName,
+		Version:    req.Version,
+		Address:    req.Addr,
+		AgentPort:  req.Port,
+		Up:         true,
 	}
 
 	registry.Store(ddnc)
 
-	logger.Info("Registered: %v", req.ConnectorName)
+	logger.Info("Registered: %v", req.AgentName)
 
-	conAddr := fmt.Sprintf("%s:%s", ddnc.Address, ddnc.ConnectorPort)
+	conAddr := fmt.Sprintf("%s:%s", ddnc.Address, ddnc.AgentPort)
 
 	resp, _ := inet.JSONify(model.RegisterResponse{ID: ddnc.ID, Address: conAddr})
 
@@ -435,7 +435,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func unregister(w http.ResponseWriter, r *http.Request) {
-	var conn model.Connector
+	var conn model.Agent
 
 	err := json.NewDecoder(r.Body).Decode(&conn)
 	if err != nil {
@@ -574,10 +574,10 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, ok := registry.Get(dbe.ConnectorName)
+	conn, ok := registry.Get(dbe.AgentName)
 	if !ok {
-		logger.Error("Connector %q is offline, can't drop database with id '%d'", dbe.ConnectorName, ID)
-		session.AddFlash("Unable to drop database: Connector is down.", "fail")
+		logger.Error("Agent %q is offline, can't drop database with id '%d'", dbe.AgentName, ID)
+		session.AddFlash("Unable to drop database: Agent is down.", "fail")
 		return
 	}
 
@@ -590,10 +590,10 @@ func drop(w http.ResponseWriter, r *http.Request) {
 	session.AddFlash("Started to drop the database.", "msg")
 }
 
-func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
+func dropAsync(conn model.Agent, ID int, dbname, dbuser string) {
 	dbe, err := db.FetchByID(ID)
 	if err != nil {
-		logger.Error("Couldn't drop database %q on connector %q: %v", dbname, conn.ShortName, err)
+		logger.Error("Couldn't drop database %q on agent %q: %v", dbname, conn.ShortName, err)
 		return
 	}
 
@@ -604,7 +604,7 @@ func dropAsync(conn model.Connector, ID int, dbname, dbuser string) {
 
 		db.Update(&dbe)
 
-		logger.Error("Couldn't drop database %q on connector %q: %s", dbname, conn.ShortName, err)
+		logger.Error("Couldn't drop database %q on agent %q: %s", dbname, conn.ShortName, err)
 		return
 	}
 
@@ -689,10 +689,10 @@ func recreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, ok := registry.Get(dbe.ConnectorName)
+	conn, ok := registry.Get(dbe.AgentName)
 	if !ok {
-		logger.Error("Connector %q is offline, can't recreate database with id '%d'", dbe.ConnectorName, ID)
-		session.AddFlash("Unable to recreate database: Connector is down.", "fail")
+		logger.Error("Agent %q is offline, can't recreate database with id '%d'", dbe.AgentName, ID)
+		session.AddFlash("Unable to recreate database: Agent is down.", "fail")
 		return
 	}
 
@@ -701,7 +701,7 @@ func recreate(w http.ResponseWriter, r *http.Request) {
 	session.AddFlash("Started to recreate", "msg")
 }
 
-func recreateAsync(conn model.Connector, dbe data.Row) {
+func recreateAsync(conn model.Agent, dbe data.Row) {
 	_, err := conn.DropDatabase(dbe.ID, dbe.DBName, dbe.DBUser)
 	if err != nil {
 		dbe.Status = status.DropDatabaseFailed
@@ -709,7 +709,7 @@ func recreateAsync(conn model.Connector, dbe data.Row) {
 
 		db.Update(&dbe)
 
-		logger.Error("Recreate: couldn't drop database %q on connector %q: %s", dbe.DBName, conn.ShortName, err)
+		logger.Error("Recreate: couldn't drop database %q on agent %q: %s", dbe.DBName, conn.ShortName, err)
 
 		return
 	}
@@ -721,7 +721,7 @@ func recreateAsync(conn model.Connector, dbe data.Row) {
 
 		db.Update(&dbe)
 
-		logger.Error("Recreate: couldn't create database %q on connector %q: %s", dbe.DBName, conn.ShortName, err)
+		logger.Error("Recreate: couldn't create database %q on agent %q: %s", dbe.DBName, conn.ShortName, err)
 
 		return
 	}
@@ -836,17 +836,17 @@ func ensureValues(vals ...*string) {
 	}
 }
 
-func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
-	con, ok := registry.Get(req.ConnectorIdentifier)
+func doCreateDatabase(req model.ClientRequest) (model.Agent, error) {
+	con, ok := registry.Get(req.AgentIdentifier)
 	if !ok {
-		return model.Connector{}, fmt.Errorf("requested identifier %q not in registry", req.ConnectorIdentifier)
+		return model.Agent{}, fmt.Errorf("requested identifier %q not in registry", req.AgentIdentifier)
 	}
 
-	dest := fmt.Sprintf("http://%s:%s/create-database", con.Address, con.ConnectorPort)
+	dest := fmt.Sprintf("http://%s:%s/create-database", con.Address, con.AgentPort)
 
 	resp, err := notif.SndLoc(req, dest)
 	if err != nil {
-		return model.Connector{}, fmt.Errorf("couldn't create database on connector: %v", err)
+		return model.Agent{}, fmt.Errorf("couldn't create database on agent: %v", err)
 	}
 
 	var msg inet.Message
@@ -854,23 +854,23 @@ func doCreateDatabase(req model.ClientRequest) (model.Connector, error) {
 
 	err = json.NewDecoder(respBytes).Decode(&msg)
 	if err != nil {
-		return model.Connector{}, fmt.Errorf("malformed response from connector: %v", err)
+		return model.Agent{}, fmt.Errorf("malformed response from agent: %v", err)
 	}
 
 	if msg.Status != status.Success {
-		return model.Connector{}, fmt.Errorf("creating database failed: %s", msg.Message)
+		return model.Agent{}, fmt.Errorf("creating database failed: %s", msg.Message)
 	}
 
 	dbentry := data.Row{
-		DBName:        req.DatabaseName,
-		DBUser:        req.Username,
-		DBPass:        req.Password,
-		Creator:       req.RequesterEmail,
-		CreateDate:    time.Now(),
-		ExpiryDate:    time.Now().AddDate(0, 1, 0),
-		Dumpfile:      req.DumpLocation,
-		ConnectorName: req.ConnectorIdentifier,
-		Status:        status.Success,
+		DBName:     req.DatabaseName,
+		DBUser:     req.Username,
+		DBPass:     req.Password,
+		Creator:    req.RequesterEmail,
+		CreateDate: time.Now(),
+		ExpiryDate: time.Now().AddDate(0, 1, 0),
+		Dumpfile:   req.DumpLocation,
+		AgentName:  req.AgentIdentifier,
+		Status:     status.Success,
 	}
 
 	db.Insert(&dbentry)

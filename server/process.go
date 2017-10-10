@@ -33,9 +33,9 @@ func maintain() {
 
 			// if expired
 			if (dbe.ExpiryDate.Year() == now.Year()) && (dbe.ExpiryDate.YearDay() == now.YearDay()) {
-				conn, ok := registry.Get(dbe.ConnectorName)
+				conn, ok := registry.Get(dbe.AgentName)
 				if !ok {
-					logger.Error("drop database %q - connector %q offline", dbe.DBName, dbe.ConnectorName)
+					logger.Error("drop database %q - agent %q offline", dbe.DBName, dbe.AgentName)
 					continue
 				}
 
@@ -89,14 +89,14 @@ func maintain() {
 	}
 }
 
-// checkConnectors checks whether the registered connectors are alive or not.
+// checkAgents checks whether the registered agents are alive or not.
 // If they are not alive, it'll update their status.
-func checkConnectors() {
+func checkAgents() {
 	ticker := time.NewTicker(30 * time.Second)
 
 	for range ticker.C {
 		for _, conn := range registry.List() {
-			addr := fmt.Sprintf("%s:%s/heartbeat", conn.Address, conn.ConnectorPort)
+			addr := fmt.Sprintf("%s:%s/heartbeat", conn.Address, conn.AgentPort)
 
 			if !inet.AddrExists(addr) && conn.Up {
 				conn.Up = false
@@ -104,8 +104,8 @@ func checkConnectors() {
 				registry.Store(conn)
 
 				for _, addr := range config.AdminEmail {
-					mail.Send(addr, "[Cloud DB] Connector disappeared without trace",
-						fmt.Sprintf("Connector %q at %q no longer exists.", conn.ShortName, conn.Address))
+					mail.Send(addr, "[Cloud DB] Agent disappeared without trace",
+						fmt.Sprintf("Agent %q at %q no longer exists.", conn.ShortName, conn.Address))
 				}
 
 				continue

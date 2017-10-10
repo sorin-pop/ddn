@@ -30,21 +30,21 @@ var (
 	gmt, _ = time.LoadLocation("GMT")
 
 	testEntry = data.Row{
-		ID:            1,
-		DBName:        "testDB",
-		DBUser:        "testUser",
-		DBPass:        "testPass",
-		DBSID:         "testsid",
-		Dumpfile:      "testloc",
-		CreateDate:    time.Now().In(gmt),
-		ExpiryDate:    time.Now().In(gmt).AddDate(0, 0, 30),
-		Creator:       "test@gmail.com",
-		ConnectorName: "mysql-55",
-		DBAddress:     "localhost",
-		DBPort:        "3306",
-		DBVendor:      "mysql",
-		Message:       "",
-		Status:        100,
+		ID:         1,
+		DBName:     "testDB",
+		DBUser:     "testUser",
+		DBPass:     "testPass",
+		DBSID:      "testsid",
+		Dumpfile:   "testloc",
+		CreateDate: time.Now().In(gmt),
+		ExpiryDate: time.Now().In(gmt).AddDate(0, 0, 30),
+		Creator:    "test@gmail.com",
+		AgentName:  "mysql-55",
+		DBAddress:  "localhost",
+		DBPort:     "3306",
+		DBVendor:   "mysql",
+		Message:    "",
+		Status:     100,
 	}
 )
 
@@ -252,21 +252,21 @@ func TestUpdate(t *testing.T) {
 
 	// We're updating by ID - this should updated the row for "testEntry"
 	updatedEntry := data.Row{
-		ID:            testEntry.ID,
-		DBName:        "updatedtestDB",
-		DBUser:        "updatedtestUser",
-		DBPass:        "updatedtestPass",
-		DBSID:         "updatedtestsid",
-		Dumpfile:      "updatedtestloc",
-		CreateDate:    time.Now().In(gmt),
-		ExpiryDate:    time.Now().In(gmt).AddDate(0, 0, 30),
-		Creator:       "updatedtest@gmail.com",
-		ConnectorName: "updatedysql-55",
-		DBAddress:     "updatedlocalhost",
-		DBPort:        "updated3306",
-		DBVendor:      "updatedmysql",
-		Message:       "updated",
-		Status:        200,
+		ID:         testEntry.ID,
+		DBName:     "updatedtestDB",
+		DBUser:     "updatedtestUser",
+		DBPass:     "updatedtestPass",
+		DBSID:      "updatedtestsid",
+		Dumpfile:   "updatedtestloc",
+		CreateDate: time.Now().In(gmt),
+		ExpiryDate: time.Now().In(gmt).AddDate(0, 0, 30),
+		Creator:    "updatedtest@gmail.com",
+		AgentName:  "updatedysql-55",
+		DBAddress:  "updatedlocalhost",
+		DBPort:     "updated3306",
+		DBVendor:   "updatedmysql",
+		Message:    "updated",
+		Status:     200,
 	}
 
 	err := mys.Update(&updatedEntry)
@@ -312,10 +312,12 @@ func TestFetchPublic(t *testing.T) {
 	res, err = mys.FetchPublic()
 	if err != nil {
 		t.Errorf("FetchPublic() error: %v", err)
+		return
 	}
 
 	if len(res) != 1 {
 		t.Errorf("FetchPublic() expected 1 result, got %d instead", len(res))
+		return
 	}
 
 	if err := dbutil.CompareRows(res[0], testEntry); err != nil {

@@ -32,7 +32,7 @@
   
   {{if .AnyOnline}}
   <ul class="nav nav-pills justify-content-center">
-      {{range .Connectors}}
+      {{range .Agents}}
           <li class="nav-item btn {{if .Up}}btn-success{{else}}btn-danger{{end}} disabled btn-sm mx-1" data-toggle="tooltip" title="{{.LongName}}">
               <i class="fa fa-fw {{if .Up}}fa-check{{else}}fa-exclamation-triangle{{end}}" aria-hidden="true"></i>
               {{.ShortName}}
@@ -40,6 +40,6 @@
       {{end}}
   </ul>
   {{else}}
-  <div class="col">None of the connectors are online.</div>
+  <div class="col">None of the agents are online.</div>
   {{end}} 
 </div>

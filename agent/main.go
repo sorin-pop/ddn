@@ -30,14 +30,14 @@ var (
 	startup    time.Time
 	registered bool
 
-	connector model.Connector
+	agent model.Agent
 )
 
 func main() {
 	defer func() {
 		if p := recover(); p != nil {
 			logger.Error("Panic... Unregistering")
-			unregisterConnector()
+			unregisterAgent()
 		}
 	}()
 
@@ -45,7 +45,7 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		unregisterConnector()
+		unregisterAgent()
 		os.Exit(1)
 	}()
 
@@ -142,9 +142,9 @@ func main() {
 		}
 	}
 
-	err = registerConnector()
+	err = registerAgent()
 	if err != nil {
-		logger.Error("Could not register connector, will keep trying: %s", err.Error())
+		logger.Error("Could not register agent, will keep trying: %s", err.Error())
 	}
 
 	go keepAlive()
@@ -154,9 +154,9 @@ func main() {
 		logger.Fatal("Failed announcing presence: %v", err)
 	}
 
-	logger.Info("Starting to listen on port %s", conf.ConnectorPort)
+	logger.Info("Starting to listen on port %s", conf.AgentPort)
 
-	port = fmt.Sprintf(":%s", conf.ConnectorPort)
+	port = fmt.Sprintf(":%s", conf.AgentPort)
 
 	startup = time.Now()
 
@@ -171,7 +171,7 @@ func loadProperties(filename string) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		logger.Warn("Couldn't find properties file, trying to download one.")
 
-		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/connector/con.conf")
+		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/agent/con.conf")
 		if err != nil {
 			logger.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
 		}
@@ -190,7 +190,7 @@ func grabRemoteLogger() error {
 	logger.Info("Trying to get remote logger")
 
 	mHost := fmt.Sprintf("%s:%s", conf.MulticastAddr, conf.MulticastPort)
-	host := fmt.Sprintf("%s:%s", conf.ConnectorAddr, conf.ConnectorPort)
+	host := fmt.Sprintf("%s:%s", conf.AgentAddr, conf.AgentPort)
 	service, err := disco.Query(mHost, host, "rlog", 4*time.Second)
 	if err != nil {
 		return fmt.Errorf("query rlog: %v", err)
@@ -201,7 +201,7 @@ func grabRemoteLogger() error {
 
 func announce() error {
 	mHost := fmt.Sprintf("%s:%s", conf.MulticastAddr, conf.MulticastPort)
-	host := fmt.Sprintf("%s:%s", conf.ConnectorAddr, conf.ConnectorPort)
+	host := fmt.Sprintf("%s:%s", conf.AgentAddr, conf.AgentPort)
 	err := disco.Announce(mHost, host, conf.ShortName)
 	if err != nil {
 		return fmt.Errorf("announce: %v", err)

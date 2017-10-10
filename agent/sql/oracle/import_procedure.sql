@@ -453,7 +453,7 @@ BEGIN
  IF( l_num_errors > 0 )
  THEN
    EXECUTE IMMEDIATE 'DROP PROCEDURE IMPORT_DUMP';
-   raise_application_error( -20001, 'IMPORT_DUMP stored procedure body could not be compiled, therefore it was dropped! Please correct the errors in sql/oracle/import_procedure.sql and start the connector again.' );
+   raise_application_error( -20001, 'IMPORT_DUMP stored procedure body could not be compiled, therefore it was dropped! Please correct the errors in sql/oracle/import_procedure.sql and start the agent again.' );
  END IF;
 END;
 /

@@ -22,21 +22,21 @@ var (
 	gmt, _ = time.LoadLocation("GMT")
 
 	testEntry = data.Row{
-		ID:            1,
-		DBName:        "testDB",
-		DBUser:        "testUser",
-		DBPass:        "testPass",
-		DBSID:         "testsid",
-		Dumpfile:      "testloc",
-		CreateDate:    time.Now().In(gmt),
-		ExpiryDate:    time.Now().In(gmt).AddDate(0, 0, 30),
-		Creator:       "test@gmail.com",
-		ConnectorName: "mysql-55",
-		DBAddress:     "localhost",
-		DBPort:        "3306",
-		DBVendor:      "mysql",
-		Message:       "",
-		Status:        100,
+		ID:         1,
+		DBName:     "testDB",
+		DBUser:     "testUser",
+		DBPass:     "testPass",
+		DBSID:      "testsid",
+		Dumpfile:   "testloc",
+		CreateDate: time.Now().In(gmt),
+		ExpiryDate: time.Now().In(gmt).AddDate(0, 0, 30),
+		Creator:    "test@gmail.com",
+		AgentName:  "mysql-55",
+		DBAddress:  "localhost",
+		DBPort:     "3306",
+		DBVendor:   "mysql",
+		Message:    "",
+		Status:     100,
 	}
 )
 
@@ -140,15 +140,18 @@ func TestInsert(t *testing.T) {
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("lite.Insert(testEntry) failed with error: %v", err)
+		return
 	}
 
 	if testEntry.ID == 0 {
-		t.Errorf("lite.Insert(testEntry) resulted in  id of 0")
+		t.Errorf("lite.Insert(testEntry) resulted in id of 0")
+		return
 	}
 
 	result, err := lite.FetchByID(testEntry.ID)
 	if err != nil {
 		t.Errorf("FetchById(%d) resulted in error: %v", testEntry.ID, err)
+		return
 	}
 
 	if err = dbutil.CompareRows(testEntry, result); err != nil {
@@ -157,11 +160,16 @@ func TestInsert(t *testing.T) {
 }
 
 func TestFetchByID(t *testing.T) {
-	lite.Insert(&testEntry)
+	err := lite.Insert(&testEntry)
+	if err != nil {
+		t.Errorf("Insert failed: %v", err)
+		return
+	}
 
 	res, err := lite.FetchByID(testEntry.ID)
 	if err != nil {
 		t.Errorf("FetchById(%d) failed with error: %v", testEntry.ID, err)
+		return
 	}
 
 	if err := dbutil.CompareRows(res, testEntry); err != nil {
@@ -174,16 +182,27 @@ func TestFetchByCreator(t *testing.T) {
 
 	testEntry.Creator = creator
 
-	lite.Insert(&testEntry)
-	lite.Insert(&testEntry)
+	err := lite.Insert(&testEntry)
+	if err != nil {
+		t.Errorf("Insert failed: %v", err)
+		return
+	}
+
+	err = lite.Insert(&testEntry)
+	if err != nil {
+		t.Errorf("Insert failed: %v", err)
+		return
+	}
 
 	results, err := lite.FetchByCreator(creator)
 	if err != nil {
 		t.Errorf("failed to fetch by creator: %v", err)
+		return
 	}
 
 	if len(results) != 2 {
 		t.Errorf("Expected resultset to have 2 results, %d instead", len(results))
+		return
 	}
 
 	for _, res := range results {
@@ -214,10 +233,12 @@ func TestFetchPublic(t *testing.T) {
 
 	if len(res) != 1 {
 		t.Errorf("FetchPublic() expected 1 result, got %d instead", len(res))
+		return
 	}
 
 	if err := dbutil.CompareRows(res[0], testEntry); err != nil {
 		t.Errorf("Read and persisted mismatch: %v", err)
+		return
 	}
 }
 
@@ -237,30 +258,34 @@ func TestFetchAll(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	lite.Insert(&testEntry)
+	err := lite.Insert(&testEntry)
+	if err != nil {
+		t.Errorf("Insert failed: %v", err)
+	}
 
 	// We're updating by ID - this should updated the row for "testEntry"
 	updatedEntry := data.Row{
-		ID:            testEntry.ID,
-		DBName:        "updatedtestDB",
-		DBUser:        "updatedtestUser",
-		DBPass:        "updatedtestPass",
-		DBSID:         "updatedtestsid",
-		Dumpfile:      "updatedtestloc",
-		CreateDate:    time.Now().In(gmt),
-		ExpiryDate:    time.Now().In(gmt).AddDate(0, 0, 30),
-		Creator:       "updatedtest@gmail.com",
-		ConnectorName: "updatedysql-55",
-		DBAddress:     "updatedlocalhost",
-		DBPort:        "updated3306",
-		DBVendor:      "updatedsqlite",
-		Message:       "updated",
-		Status:        200,
+		ID:         testEntry.ID,
+		DBName:     "updatedtestDB",
+		DBUser:     "updatedtestUser",
+		DBPass:     "updatedtestPass",
+		DBSID:      "updatedtestsid",
+		Dumpfile:   "updatedtestloc",
+		CreateDate: time.Now().In(gmt),
+		ExpiryDate: time.Now().In(gmt).AddDate(0, 0, 30),
+		Creator:    "updatedtest@gmail.com",
+		AgentName:  "updatedysql-55",
+		DBAddress:  "updatedlocalhost",
+		DBPort:     "updated3306",
+		DBVendor:   "updatedsqlite",
+		Message:    "updated",
+		Status:     200,
 	}
 
-	err := lite.Update(&updatedEntry)
+	err = lite.Update(&updatedEntry)
 	if err != nil {
 		t.Errorf("Update(updatedEntry) failed: %v", err)
+		return
 	}
 
 	readEntry, _ := lite.FetchByID(testEntry.ID)
@@ -271,11 +296,16 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	lite.Insert(&testEntry)
+	err := lite.Insert(&testEntry)
+	if err != nil {
+		t.Errorf("Insert failed: %v", err)
+		return
+	}
 
-	err := lite.Delete(testEntry)
+	err = lite.Delete(testEntry)
 	if err != nil {
 		t.Errorf("Delete failed: %v", err)
+		return
 	}
 
 	_, err = lite.FetchByID(testEntry.ID)
@@ -287,18 +317,21 @@ func TestDelete(t *testing.T) {
 func TestReadRow(t *testing.T) {
 	err := lite.Insert(&testEntry)
 	if err != nil {
-		t.Errorf("Failed adding a entry: %s", err.Error())
+		t.Errorf("Failed adding an entry: %s", err.Error())
+		return
 	}
 
 	rows, err := testConn.Query("SELECT * FROM `databases` WHERE id = ?", testEntry.ID)
 	if err != nil {
 		t.Errorf("Failed querying for entries: %s", err.Error())
+		return
 	}
 
 	for rows.Next() {
 		row, err := dbutil.ReadRows(rows)
 		if err != nil {
 			t.Errorf("Failed reading row from rows: %s", err.Error())
+			return
 		}
 
 		if err = dbutil.CompareRows(testEntry, row); err != nil {

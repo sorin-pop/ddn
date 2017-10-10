@@ -8,22 +8,22 @@ import (
 
 // Row represents a row in the database
 type Row struct {
-	ID            int       `json:"id"`
-	DBVendor      string    `json:"vendor"`
-	DBName        string    `json:"dbname"`
-	DBUser        string    `json:"dbuser"`
-	DBPass        string    `json:"dbpass"`
-	DBSID         string    `json:"sid"`
-	Dumpfile      string    `json:"dumplocation"`
-	CreateDate    time.Time `json:"createdate"`
-	ExpiryDate    time.Time `json:"expirydate"`
-	Creator       string    `json:"creator"`
-	ConnectorName string    `json:"connector"`
-	DBAddress     string    `json:"dbaddress"`
-	DBPort        string    `json:"dbport"`
-	Status        int       `json:"status"`
-	Message       string    `json:"message"`
-	Public        int       `json:"public"`
+	ID         int       `json:"id"`
+	DBVendor   string    `json:"vendor"`
+	DBName     string    `json:"dbname"`
+	DBUser     string    `json:"dbuser"`
+	DBPass     string    `json:"dbpass"`
+	DBSID      string    `json:"sid"`
+	Dumpfile   string    `json:"dumplocation"`
+	CreateDate time.Time `json:"createdate"`
+	ExpiryDate time.Time `json:"expirydate"`
+	Creator    string    `json:"creator"`
+	AgentName  string    `json:"agent"`
+	DBAddress  string    `json:"dbaddress"`
+	DBPort     string    `json:"dbport"`
+	Status     int       `json:"status"`
+	Message    string    `json:"message"`
+	Public     int       `json:"public"`
 }
 
 // InProgress returns true if the DBEntry's status denotes that something's in progress.

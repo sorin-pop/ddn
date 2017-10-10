@@ -22,9 +22,9 @@ const (
 )
 
 var (
-	c1 = model.Connector{ShortName: name1, LongName: long1}
-	c2 = model.Connector{ShortName: name2, LongName: long2}
-	c3 = model.Connector{ShortName: name3, LongName: long3}
+	c1 = model.Agent{ShortName: name1, LongName: long1}
+	c2 = model.Agent{ShortName: name2, LongName: long2}
+	c3 = model.Agent{ShortName: name3, LongName: long3}
 )
 
 func setup() {
@@ -54,7 +54,7 @@ func TestGet(t *testing.T) {
 	}
 
 	if c.ShortName != c1.ShortName || c.LongName != c1.LongName {
-		t.Errorf("Get(%q) returned wrong connector. Expected: %v, Got: %v", name1, c, c1)
+		t.Errorf("Get(%q) returned wrong agent. Expected: %v, Got: %v", name1, c, c1)
 	}
 
 	c, ok = Get(name2)
@@ -63,7 +63,7 @@ func TestGet(t *testing.T) {
 	}
 
 	if c.ShortName != c2.ShortName || c.LongName != c2.LongName {
-		t.Errorf("Get(%q) returned wrong connector. Expected: %v, Got: %v", name1, c, c2)
+		t.Errorf("Get(%q) returned wrong agent. Expected: %v, Got: %v", name1, c, c2)
 	}
 }
 
@@ -78,7 +78,7 @@ func TestRemove(t *testing.T) {
 	Remove(name1)
 
 	if _, ok := registry[name1]; ok {
-		t.Errorf("Remove(%q) did not remove connector", name1)
+		t.Errorf("Remove(%q) did not remove agent", name1)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestStore(t *testing.T) {
 	Store(c1)
 
 	if _, ok := registry[name1]; !ok {
-		t.Errorf("Store(%q) did not store connector", name1)
+		t.Errorf("Store(%q) did not store agent", name1)
 	}
 }
 
@@ -106,7 +106,7 @@ func TestList(t *testing.T) {
 	conns := List()
 
 	if len(conns) != 3 {
-		t.Errorf("Connector count not correct")
+		t.Errorf("Agent count not correct")
 	}
 }
 
@@ -144,7 +144,7 @@ func TestID(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
-	var list = []model.Connector{c3, c2, c1}
+	var list = []model.Agent{c3, c2, c1}
 
 	if list[0].ShortName < list[1].ShortName && list[1].ShortName < list[2].ShortName {
 		t.Errorf("List is sorted to begin with")

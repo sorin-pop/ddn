@@ -6,7 +6,7 @@ $(document).ready(function() {
     })
 
 
-    checkConnector()
+    checkAgent()
 
     $("#dbname").keyup(function() {
         checkInputs()
@@ -17,8 +17,8 @@ $(document).ready(function() {
     })
 })
 
-$(document).on('change', '#connector', function() {
-    checkConnector()
+$(document).on('change', '#agent', function() {
+    checkAgent()
 
     $("#submit").prop("disabled", false)
 });
@@ -48,24 +48,24 @@ function valid(selector) {
     return false
 }
 
-function checkConnector() {
-    var connector = $("#connector")
+function checkAgent() {
+    var agent = $("#agent")
 
-    if (connector && connector.length != 0) {
+    if (agent && agent.length != 0) {
         $("#dbname").prop('disabled', false);
         $("#user").prop('disabled', false);
         $("#password").prop('disabled', false);
         $("#dbnamediv").attr('title', '').attr('data-original-title', '').tooltip('hide');
         $("#userdiv").attr('title', '').attr('data-original-title', '').tooltip('hide');
 
-        connectorVal = connector.val().toLowerCase();
+        agentVal = agent.val().toLowerCase();
 
-        if (connectorVal.includes("oracle")) {
+        if (agentVal.includes("oracle")) {
             msg = 'Not needed for Oracle. Think of the User field below as the "database", as it will also be the Oracle schema that will contain the tables and their data.';
 
             $("#dbname").prop('disabled', true);
             $("#dbnamediv").attr('data-original-title', msg).tooltip('hide');
-        } else if (connectorVal.includes("mssql") || connectorVal.includes("sql server")) {
+        } else if (agentVal.includes("mssql") || agentVal.includes("sql server")) {
             msg = 'User and password not needed for SQL Server.'
 
             $("#user").prop('disabled', true);
