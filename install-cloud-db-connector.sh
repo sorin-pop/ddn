@@ -6,19 +6,19 @@ downloadURL=`curl -s https://api.github.com/repos/djavorszky/ddn/releases/latest
 wget --quiet $downloadURL
 
 echo "extracting"
-tar xzf connector*.tar.gz
+tar xzf agent*.tar.gz
 
 echo "cleaning up"
-rm connector*.tar.gz
+rm agent*.tar.gz
 
 if [[ ! -f ddnc.conf ]]; then
 	echo "downloading default configuration file"
-	wget --quiet https://raw.githubusercontent.com/djavorszky/ddn/master/connector/con.conf
+	wget --quiet https://raw.githubusercontent.com/djavorszky/ddn/master/agent/con.conf
 
 	mv con.conf ddnc.conf
 
-	echo "configuration file downloaded, please configure connector and then start it"
+	echo "configuration file downloaded, please configure agent and then start it"
 	exit 1
 fi
 
-echo "all done. simply run the connector, or add -h for additional information."
+echo "all done. simply run the agent, or add -h for additional information."
