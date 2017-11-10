@@ -25,8 +25,6 @@ type Config struct {
 	ShortName     string `toml:"agent-shortname"`
 	AgentName     string `toml:"agent-longname"`
 	MasterAddress string `toml:"server-address"`
-	MulticastAddr string `toml:"multicast-addr"`
-	MulticastPort string `toml:"multicast-port"`
 }
 
 // Print prints the Config object to the log.
@@ -54,8 +52,6 @@ func (c Config) Print() {
 
 	logger.Info("Short name:\t\t%s", conf.ShortName)
 	logger.Info("Agent name:\t%s", conf.AgentName)
-
-	logger.Info("Multicast Address:\t%s:%s", c.MulticastAddr, c.MulticastPort)
 
 	logger.Info("Master address:\t%s", conf.MasterAddress)
 }
