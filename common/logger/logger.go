@@ -1,13 +1,9 @@
 package logger
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-
-	"github.com/djavorszky/rlog"
-	"google.golang.org/grpc"
 )
 
 // LogLevel is used to determine what to log.
@@ -39,51 +35,12 @@ const (
 	DEBUG LogLevel = 1
 )
 
-var (
-	// Level is to be used to control the log level of the application.
-	Level  = INFO
-	remote = false
-
-	conn   *grpc.ClientConn
-	client rlog.LogClient
-	id     int32
-)
-
-// UseRemoteLogger will try to register the app to the remote
-// logger at the addr endpoint.
-func UseRemoteLogger(addr, app, service string) error {
-	var err error
-
-	conn, err = grpc.Dial(addr, grpc.WithInsecure())
-	if err != nil {
-		return fmt.Errorf("dialing rlog: %v", err)
-	}
-
-	client = rlog.NewLogClient(conn)
-
-	resp, err := client.Register(context.Background(), &rlog.RegisterRequest{App: app, Service: service})
-	if err != nil {
-		return fmt.Errorf("register: %v", err)
-	}
-
-	id = resp.Id
-	remote = true
-
-	return nil
-}
-
-// Close closes the client connection to the remote logger.
-func Close() {
-	conn.Close()
-}
+// Level is to be used to control the log level of the application.
+var Level = INFO
 
 // Fatal should be used to log a critical incident and exit the application
 func Fatal(msg string, args ...interface{}) {
 	defer os.Exit(1)
-
-	if remote {
-		client.Fatal(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-	}
 
 	log.Printf("[%s] %s", FATAL, fmt.Sprintf(msg, args...))
 }
@@ -91,10 +48,6 @@ func Fatal(msg string, args ...interface{}) {
 // Error should be used for application errors that should be resolved
 func Error(msg string, args ...interface{}) {
 	if shouldLog(ERROR) {
-		if remote {
-			client.Error(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-		}
-
 		log.Printf("[%s] %s", ERROR, fmt.Sprintf(msg, args...))
 	}
 }
@@ -102,10 +55,6 @@ func Error(msg string, args ...interface{}) {
 // Warn should be used for events that can be dangerous
 func Warn(msg string, args ...interface{}) {
 	if shouldLog(WARN) {
-		if remote {
-			client.Warn(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-		}
-
 		log.Printf("[%s]  %s", WARN, fmt.Sprintf(msg, args...))
 	}
 }
@@ -113,10 +62,6 @@ func Warn(msg string, args ...interface{}) {
 // Info should be used to share data.
 func Info(msg string, args ...interface{}) {
 	if shouldLog(INFO) {
-		if remote {
-			client.Info(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-		}
-
 		log.Printf("[%s]  %s", INFO, fmt.Sprintf(msg, args...))
 	}
 }
@@ -124,10 +69,6 @@ func Info(msg string, args ...interface{}) {
 // Debug should be used for debugging purposes only.
 func Debug(msg string, args ...interface{}) {
 	if shouldLog(DEBUG) {
-		if remote {
-			client.Debug(context.Background(), &rlog.LogMessage{Id: id, Message: fmt.Sprintf(msg, args...)})
-		}
-
 		log.Printf("[%s] %s", DEBUG, fmt.Sprintf(msg, args...))
 	}
 }

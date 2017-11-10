@@ -16,7 +16,6 @@ import (
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
-	"github.com/djavorszky/disco"
 )
 
 const version = "3"
@@ -80,10 +79,6 @@ func main() {
 
 		log.SetOutput(logOut)
 	}
-	if err = grabRemoteLogger(); err != nil {
-		logger.Warn("Couldn't get remote logger: %v", err)
-	}
-	defer logger.Close()
 
 	usr, err = user.Current()
 	if err != nil {
@@ -149,11 +144,6 @@ func main() {
 
 	go keepAlive()
 
-	// Announce presence
-	if err := announce(); err != nil {
-		logger.Fatal("Failed announcing presence: %v", err)
-	}
-
 	logger.Info("Starting to listen on port %s", conf.AgentPort)
 
 	port = fmt.Sprintf(":%s", conf.AgentPort)
@@ -184,28 +174,4 @@ func loadProperties(filename string) {
 	if _, err := toml.DecodeFile(filename, &conf); err != nil {
 		logger.Fatal("couldn't read configuration file: ", err.Error())
 	}
-}
-
-func grabRemoteLogger() error {
-	logger.Info("Trying to get remote logger")
-
-	mHost := fmt.Sprintf("%s:%s", conf.MulticastAddr, conf.MulticastPort)
-	host := fmt.Sprintf("%s:%s", conf.AgentAddr, conf.AgentPort)
-	service, err := disco.Query(mHost, host, "rlog", 4*time.Second)
-	if err != nil {
-		return fmt.Errorf("query rlog: %v", err)
-	}
-
-	return logger.UseRemoteLogger(service.Addr, "clouddb", conf.ShortName)
-}
-
-func announce() error {
-	mHost := fmt.Sprintf("%s:%s", conf.MulticastAddr, conf.MulticastPort)
-	host := fmt.Sprintf("%s:%s", conf.AgentAddr, conf.AgentPort)
-	err := disco.Announce(mHost, host, conf.ShortName)
-	if err != nil {
-		return fmt.Errorf("announce: %v", err)
-	}
-
-	return nil
 }

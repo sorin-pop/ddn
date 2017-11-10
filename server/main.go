@@ -19,7 +19,6 @@ import (
 	"github.com/djavorszky/ddn/server/database/mysql"
 	"github.com/djavorszky/ddn/server/database/sqlite"
 	"github.com/djavorszky/ddn/server/mail"
-	"github.com/djavorszky/disco"
 )
 
 var (
@@ -79,11 +78,6 @@ func main() {
 
 	loadProperties(*filename)
 
-	if err = grabRemoteLogger(); err != nil {
-		logger.Warn("Couldn't get remote logger: %v", err)
-	}
-	defer logger.Close()
-
 	logger.Info("Starting with properties:")
 
 	config.Print()
@@ -142,11 +136,6 @@ func main() {
 	// Start agent checker goroutine
 	go checkAgents()
 
-	// Announce presence
-	if err := announce(); err != nil {
-		logger.Fatal("Failed announcing presence: %v", err)
-	}
-
 	logger.Info("Starting to listen on port %s", config.ServerPort)
 
 	port := fmt.Sprintf(":%s", config.ServerPort)
@@ -177,30 +166,4 @@ func loadProperties(filename string) {
 		logger.Fatal("couldn't read configuration file: %v", err)
 	}
 
-}
-
-func grabRemoteLogger() error {
-	logger.Info("Trying to get remote logger")
-	mHost := fmt.Sprintf("%s:%s", config.MulticastAddr, config.MulticastPort)
-	logger.Info(mHost)
-
-	host := fmt.Sprintf("%s:%s", config.ServerHost, config.ServerPort)
-
-	service, err := disco.Query(mHost, host, "rlog", 4*time.Second)
-	if err != nil {
-		return fmt.Errorf("query rlog: %v", err)
-	}
-
-	return logger.UseRemoteLogger(service.Addr, "clouddb", "server")
-}
-
-func announce() error {
-	mHost := fmt.Sprintf("%s:%s", config.MulticastAddr, config.MulticastPort)
-	host := fmt.Sprintf("%s:%s", config.ServerHost, config.ServerPort)
-	err := disco.Announce(mHost, host, "ddn-server")
-	if err != nil {
-		return fmt.Errorf("announce: %v", err)
-	}
-
-	return nil
 }
