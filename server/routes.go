@@ -94,7 +94,7 @@ var routes = Routes{
 	route{
 		"browse",
 		"GET",
-		"/browse/{loc:[0-9a-zA-Z-_/ ]+}",
+		"/browse/{loc:[0-9a-zA-Z-_./ ]+}",
 		browse,
 	},
 	route{
