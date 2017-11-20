@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/djavorszky/ddn/common/logger"
-	"github.com/djavorszky/sutils"
 )
 
 // Config to hold the database server and ddn server configuration
@@ -46,14 +45,5 @@ func (c Config) Print() {
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
 		logger.Info("Admin email:\t\t%s", c.AdminEmail)
 		logger.Info("Server configured to send emails.")
-	}
-
-	if c.WebPushEnabled {
-		if !sutils.Present(c.VAPIDPrivateKey) {
-			logger.Error("WebPush is enabled but no private key specified! Disabling WebPush.")
-			c.WebPushEnabled = false
-		} else {
-			logger.Info("WebPush is enabled.")
-		}
 	}
 }

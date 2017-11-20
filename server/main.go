@@ -19,6 +19,7 @@ import (
 	"github.com/djavorszky/ddn/server/database/mysql"
 	"github.com/djavorszky/ddn/server/database/sqlite"
 	"github.com/djavorszky/ddn/server/mail"
+	"github.com/djavorszky/sutils"
 )
 
 var (
@@ -127,6 +128,15 @@ func main() {
 			logger.Warn("Mail failed to initialize: %v", err)
 		} else {
 			logger.Info("Mail initialized")
+		}
+	}
+
+	if config.WebPushEnabled {
+		if !sutils.Present(config.VAPIDPrivateKey, config.WebPushSubscriber) {
+			logger.Error("WebPush is enabled but no private key / subscriber email specified! Disabling WebPush.")
+			config.WebPushEnabled = false
+		} else {
+			logger.Info("WebPush is enabled.")
 		}
 	}
 
