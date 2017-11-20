@@ -2,6 +2,8 @@
 
 'use strict';
 
+const siteHost = 'http://localhost:7010';
+
 self.addEventListener('push', function(event) {
 	//console.log('[Service Worker] Push Received.');
 	//console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
@@ -30,7 +32,7 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
   
   event.waitUntil(
-    clients.openWindow('http://localhost:7010')
+    clients.openWindow(siteHost)
 	);
 	event.notification.close();
 });
