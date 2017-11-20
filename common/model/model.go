@@ -71,10 +71,13 @@ type Agent struct {
 type PushSubscription struct {
 	Endpoint       string      `json:"endpoint"`
 	ExpirationTime interface{} `json:"expirationTime"`
-	Keys           struct {
-		P256Dh string `json:"p256dh"`
-		Auth   string `json:"auth"`
-	} `json:"keys"`
+	Keys           PushKeys    `json:"keys"`
+}
+
+// PushKeys is used to represent the keys used for a PushSubscription
+type PushKeys struct {
+	P256dh string `json:"p256dh"`
+	Auth   string `json:"auth"`
 }
 
 // CreateDatabase sends a request to the agent to create a database.

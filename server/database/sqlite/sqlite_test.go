@@ -7,8 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sherclockholmes/webpush-go"
+
+	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/database/dbutil"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -346,4 +350,203 @@ func TestReadRow(t *testing.T) {
 	}
 
 	testEntry.ID++
+}
+
+func TestInsertPushSubscription(t *testing.T) {
+	type args struct {
+		subscription *model.PushSubscription
+		subscriber   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"Success", args{
+			subscriber: "test@example.com",
+			subscription: &model.PushSubscription{
+				Endpoint:       "testEndpoint",
+				ExpirationTime: "testExpirationTime",
+				Keys: model.PushKeys{
+					P256dh: "randomTestKey",
+					Auth:   "randomTestAuth",
+				},
+			},
+		}, false},
+		{"Missing Subscriber", args{
+			subscription: &model.PushSubscription{
+				Endpoint:       "testEndpoint",
+				ExpirationTime: "testExpirationTime",
+				Keys: model.PushKeys{
+					P256dh: "randomTestKey",
+					Auth:   "randomTestAuth",
+				},
+			},
+		}, true},
+		{"Missing Endpoint", args{
+			subscriber: "test@example.com",
+			subscription: &model.PushSubscription{
+				ExpirationTime: "testExpirationTime",
+				Keys: model.PushKeys{
+					P256dh: "randomTestKey",
+					Auth:   "randomTestAuth",
+				},
+			},
+		}, true},
+		{"Missing ExpirationTime", args{
+			subscriber: "test@example.com",
+			subscription: &model.PushSubscription{
+				Endpoint: "testEndpoint",
+				Keys: model.PushKeys{
+					P256dh: "randomTestKey",
+					Auth:   "randomTestAuth",
+				},
+			},
+		}, true},
+		{"Missing Keys", args{
+			subscriber: "test@example.com",
+			subscription: &model.PushSubscription{
+				Endpoint:       "testEndpoint",
+				ExpirationTime: "testExpirationTime",
+			},
+		}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lite := &DB{
+				DBLocation: testDBFile,
+				conn:       testConn,
+			}
+			if err := lite.InsertPushSubscription(tt.args.subscription, tt.args.subscriber); (err != nil) != tt.wantErr {
+				t.Errorf("DB.InsertPushSubscription() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			read, _ := lite.FetchUserPushSubscriptions(tt.args.subscriber)
+			if len(read) == 0 {
+				t.Errorf("Did not find inserted data after DB.InsertPushSubscription")
+				return
+			}
+
+			s := read[0]
+			if s.Endpoint != tt.args.subscription.Endpoint {
+				t.Errorf("endpoint mismatch; expected %v, got %v", tt.args.subscription.Endpoint, s.Endpoint)
+			}
+
+			if s.Keys.Auth != tt.args.subscription.Keys.Auth {
+				t.Errorf("auth mismatch; expected %v, got %v", tt.args.subscription.Keys.Auth, s.Keys.Auth)
+			}
+
+			if s.Keys.P256dh != tt.args.subscription.Keys.P256dh {
+				t.Errorf("P256Dh mismatch; expected %v, got %v", tt.args.subscription.Keys.P256dh, s.Keys.P256dh)
+			}
+		})
+	}
+}
+
+func TestFetchUserPushSubscriptions(t *testing.T) {
+	testUser := "test@example.com"
+	testSubscription := &model.PushSubscription{
+		Endpoint:       "testEndpoint",
+		ExpirationTime: "testExpirationTime",
+		Keys: model.PushKeys{
+			P256dh: "randomTestKey",
+			Auth:   "randomTestAuth",
+		},
+	}
+
+	tests := []struct {
+		name          string
+		subscriber    string
+		expectedCount int
+		wantErr       bool
+	}{
+		{"Success", testUser, 1, false},
+		{"No subscription for user", "random@user.com", 0, false},
+		{"No user specified", "", 0, true},
+	}
+
+	lite.InsertPushSubscription(testSubscription, testUser)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				read []webpush.Subscription
+				err  error
+			)
+
+			lite := &DB{
+				DBLocation: testDBFile,
+				conn:       testConn,
+			}
+
+			if read, err = lite.FetchUserPushSubscriptions(tt.subscriber); (err != nil) != tt.wantErr {
+				t.Errorf("DB.FetchUserPushSubscriptions() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr || tt.expectedCount == 0 {
+				return
+			}
+
+			if len(read) != tt.expectedCount {
+				t.Errorf("Wrong number of results returned. Expected %v, got %v", tt.expectedCount, len(read))
+				return
+			}
+
+			s := read[0]
+			if s.Endpoint != testSubscription.Endpoint {
+				t.Errorf("endpoint mismatch; expected %v, got %v", testSubscription.Endpoint, s.Endpoint)
+			}
+
+			if s.Keys.Auth != testSubscription.Keys.Auth {
+				t.Errorf("auth mismatch; expected %v, got %v", testSubscription.Keys.Auth, s.Keys.Auth)
+			}
+
+			if s.Keys.P256dh != testSubscription.Keys.P256dh {
+				t.Errorf("P256Dh mismatch; expected %v, got %v", testSubscription.Keys.P256dh, s.Keys.P256dh)
+			}
+		})
+	}
+}
+
+func TestDeleteUserPushNotification(t *testing.T) {
+	testUser := "test@example.com"
+	testSubscription := &model.PushSubscription{
+		Endpoint:       "testEndpoint",
+		ExpirationTime: "testExpirationTime",
+		Keys: model.PushKeys{
+			P256dh: "randomTestKey",
+			Auth:   "randomTestAuth",
+		},
+	}
+
+	tests := []struct {
+		name       string
+		subscriber string
+		endpoint   string
+		wantErr    bool
+	}{
+		{"Success", testUser, testSubscription.Endpoint, false},
+		{"No Subscription for user", "random@user.com", testSubscription.Endpoint, false},
+		{"No User specified", "", testSubscription.Endpoint, true},
+		{"No Endpoint specified", testUser, "", true},
+	}
+
+	lite.InsertPushSubscription(testSubscription, testUser)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lite := &DB{
+				DBLocation: testDBFile,
+				conn:       testConn,
+			}
+
+			tmpSub := &model.PushSubscription{Endpoint: tt.endpoint}
+
+			if err := lite.DeletePushSubscription(tmpSub, tt.subscriber); (err != nil) != tt.wantErr {
+				t.Errorf("DB.FetchUserPushSubscriptions() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }

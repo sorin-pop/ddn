@@ -148,9 +148,14 @@ func (lite *DB) FetchAll() ([]data.Row, error) {
 	return entries, nil
 }
 
+// FetchUserPushSubscriptions fetches the subscriptions for the specified user
 func (lite *DB) FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscription, error) {
 	if err := lite.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	if !sutils.Present(subscriber) {
+		return nil, fmt.Errorf("missing subscriber")
 	}
 
 	var entries []webpush.Subscription
@@ -159,6 +164,7 @@ func (lite *DB) FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscri
 	if err != nil {
 		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
 	}
+	// FetchAll returns all entries.
 
 	for rows.Next() {
 		row, err := dbutil.ReadSubscriptionRows(rows)
@@ -216,10 +222,18 @@ func (lite *DB) Insert(row *data.Row) error {
 	return nil
 }
 
-// adds a record to the push_subscriptions table
+// InsertPushSubscription adds a record to the push_subscriptions table
 func (lite *DB) InsertPushSubscription(subscription *model.PushSubscription, subscriber string) error {
 	if err := lite.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	if !sutils.Present(subscriber) {
+		return fmt.Errorf("missing subscriber")
+	}
+
+	if !sutils.Present(subscription.Endpoint) {
+		return fmt.Errorf("missing endpoint")
 	}
 
 	query := "INSERT INTO `push_subscriptions` (`subscriber`, `endpoint`, `p256dh_key`, `auth_key`) VALUES (?, ?, ?, ?)"
@@ -227,7 +241,7 @@ func (lite *DB) InsertPushSubscription(subscription *model.PushSubscription, sub
 	_, err := lite.conn.Exec(query,
 		subscriber,
 		subscription.Endpoint,
-		subscription.Keys.P256Dh,
+		subscription.Keys.P256dh,
 		subscription.Keys.Auth,
 	)
 	if err != nil {
@@ -292,10 +306,18 @@ func (lite *DB) Delete(entry data.Row) error {
 	return err
 }
 
-// deletes a record from the push_subscriptions table
+// DeletePushSubscription deletes a record from the push_subscriptions table
 func (lite *DB) DeletePushSubscription(subscription *model.PushSubscription, subscriber string) error {
 	if err := lite.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	if !sutils.Present(subscriber) {
+		return fmt.Errorf("missing subscriber")
+	}
+
+	if !sutils.Present(subscription.Endpoint) {
+		return fmt.Errorf("missing endpoint")
 	}
 
 	_, err := lite.conn.Exec("DELETE FROM `push_subscriptions` WHERE subscriber = ? AND endpoint = ?", subscriber, subscription.Endpoint)
