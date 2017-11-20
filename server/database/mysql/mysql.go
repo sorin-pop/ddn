@@ -156,9 +156,14 @@ func (mys *DB) FetchAll() ([]data.Row, error) {
 	return entries, nil
 }
 
+// FetchUserPushSubscriptions fetches the subscriptions for the specified user
 func (mys *DB) FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscription, error) {
 	if err := mys.alive(); err != nil {
 		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	if !sutils.Present(subscriber) {
+		return nil, fmt.Errorf("missing subscriber")
 	}
 
 	var entries []webpush.Subscription
@@ -225,10 +230,18 @@ func (mys *DB) Insert(entry *data.Row) error {
 	return nil
 }
 
-// adds a record to the push_subscriptions table
+// InsertPushSubscription adds a record to the push_subscriptions table
 func (mys *DB) InsertPushSubscription(subscription *model.PushSubscription, subscriber string) error {
 	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	if !sutils.Present(subscriber) {
+		return fmt.Errorf("missing subscriber")
+	}
+
+	if !sutils.Present(subscription.Endpoint) {
+		return fmt.Errorf("missing endpoint")
 	}
 
 	query := "INSERT INTO `push_subscriptions` (`subscriber`, `endpoint`, `p256dh_key`, `auth_key`) VALUES (?, ?, ?, ?)"
@@ -236,7 +249,7 @@ func (mys *DB) InsertPushSubscription(subscription *model.PushSubscription, subs
 	_, err := mys.conn.Exec(query,
 		subscriber,
 		subscription.Endpoint,
-		subscription.Keys.P256Dh,
+		subscription.Keys.P256dh,
 		subscription.Keys.Auth,
 	)
 	if err != nil {
@@ -317,10 +330,18 @@ func (mys *DB) alive() error {
 	return nil
 }
 
-// deletes a record from the push_subscriptions table
+// DeletePushSubscription deletes a record from the push_subscriptions table
 func (mys *DB) DeletePushSubscription(subscription *model.PushSubscription, subscriber string) error {
 	if err := mys.alive(); err != nil {
 		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	if !sutils.Present(subscriber) {
+		return fmt.Errorf("missing subscriber")
+	}
+
+	if !sutils.Present(subscription.Endpoint) {
+		return fmt.Errorf("missing endpoint")
 	}
 
 	_, err := mys.conn.Exec("DELETE FROM `push_subscriptions` WHERE subscriber = ? AND endpoint = ?", subscriber, subscription.Endpoint)
