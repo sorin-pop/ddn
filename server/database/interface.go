@@ -1,6 +1,10 @@
 package database
 
-import "github.com/djavorszky/ddn/server/database/data"
+import (
+	"github.com/djavorszky/ddn/server/database/data"
+	"github.com/djavorszky/ddn/common/model"
+	webpush "github.com/sherclockholmes/webpush-go"
+)
 
 // BackendConnection defines all required methods that is needed
 // in order to fulfill the requirements of backend communication
@@ -18,4 +22,8 @@ type BackendConnection interface {
 	Insert(row *data.Row) error
 	Update(row *data.Row) error
 	Delete(row data.Row) error
+
+	InsertPushSubscription(row *model.PushSubscription, subscriber string) error
+	DeletePushSubscription(row *model.PushSubscription, subscriber string) error
+	FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscription, error)
 }

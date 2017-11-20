@@ -226,3 +226,101 @@ func apiSetLogLevel(w http.ResponseWriter, r *http.Request) {
 	inet.SendResponse(w, http.StatusOK, msg)
 	return
 }
+
+// stores a web push notification subscription to the database
+func apiSaveSubscription(w http.ResponseWriter, r *http.Request) {
+	var (
+		subscription model.PushSubscription
+		err error
+	)
+
+	err = json.NewDecoder(r.Body).Decode(&subscription)
+	if err != nil {
+		logger.Error("couldn't decode json request: %v", err)
+
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  status.InvalidJSON,
+			Message: "There was a problem with the subscription request sent to the server. Server could not decode JSON request."})
+		return
+	}
+
+	if ok := sutils.Present(subscription.Endpoint, subscription.Keys.P256Dh, subscription.Keys.Auth); !ok {
+		logger.Error("Missing or empty subscription parameters were received from the /api/save-subscription API call!")
+		//TODO
+		// log the received request body
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  status.MissingParameters,
+			Message: "There was a problem with the subscription request sent to the server. Either \"endpoint\", \"p256dh\", or \"auth\" is missing, or empty."})
+		return
+	}
+
+	userCookie, err := r.Cookie("user")
+	if err != nil {
+		logger.Error("getting user cookie failed: " + err.Error())
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  status.SaveSubscriptionFailed,
+			Message: fmt.Sprintf("getting user cookie failed: %s", err.Error())})
+		return
+	}
+	
+	err = db.InsertPushSubscription(&subscription, userCookie.Value)
+	if err != nil {
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  status.SaveSubscriptionFailed,
+			Message: fmt.Sprintf("persisting push subscription failed: %s", err.Error())})
+		return
+	}
+
+	msg := inet.Message{Status: status.Success, Message: fmt.Sprintf("Subscription has been saved to back end.")}
+
+	inet.SendResponse(w, http.StatusOK, msg)
+}
+
+// removes a web push notification subscription from the database
+func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
+	var (
+		subscription model.PushSubscription
+		err error
+	)
+
+	err = json.NewDecoder(r.Body).Decode(&subscription)
+	if err != nil {
+		logger.Error("couldn't decode json request: %v", err)
+
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  status.InvalidJSON,
+			Message: "There was a problem with the subscription removal request sent to the server. Server could not decode JSON request."})
+		return
+	}
+
+	if ok := sutils.Present(subscription.Endpoint, subscription.Keys.P256Dh, subscription.Keys.Auth); !ok {
+		logger.Error("Missing or empty subscription parameters were received from the /api/remove-subscription API call!")
+		//TODO
+		// log the received request body
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  status.MissingParameters,
+			Message: "There was a problem with the subscription removal request sent to the server. Either \"endpoint\", \"p256dh\", or \"auth\" is missing, or empty."})
+		return
+	}
+
+	userCookie, err := r.Cookie("user")
+	if err != nil {
+		logger.Error("getting user cookie failed: " + err.Error())
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  status.DeleteSubscriptionFailed,
+			Message: fmt.Sprintf("getting user cookie failed: %s", err.Error())})
+		return
+	}
+	
+	err = db.DeletePushSubscription(&subscription, userCookie.Value)
+	if err != nil {
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  status.DeleteSubscriptionFailed,
+			Message: fmt.Sprintf("deleting push subscription from database failed: %s", err.Error())})
+		return
+	}
+
+	msg := inet.Message{Status: status.Success, Message: fmt.Sprintf("Subscription has been removed from back end.")}
+
+	inet.SendResponse(w, http.StatusOK, msg)
+}

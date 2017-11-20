@@ -25,10 +25,13 @@
       <span class="navbar-text">
         {{.User}} (<a class="link" href="/logout">logout</a>)
       </span>
-    </div>
+      </div>
   </div>
-  </nav>
-  <div class="container">
+  <button disabled class="btn btn-warning btn-sm mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+    Enable Push Notifications
+  </button>
+</nav>
+<div class="container">
   
   {{if .AnyOnline}}
   <ul class="nav nav-pills justify-content-center">
@@ -43,3 +46,5 @@
   <div class="col">None of the agents are online.</div>
   {{end}} 
 </div>
+        
+       

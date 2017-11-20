@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/common/logger"
+	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/database/dbutil"
 	"github.com/djavorszky/sutils"
+	webpush "github.com/sherclockholmes/webpush-go"
 
 	// Db
 	_ "github.com/go-sql-driver/mysql"
@@ -154,6 +156,36 @@ func (mys *DB) FetchAll() ([]data.Row, error) {
 	return entries, nil
 }
 
+func (mys *DB) FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscription, error) {
+	if err := mys.alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var entries []webpush.Subscription
+
+	rows, err := mys.conn.Query("SELECT endpoint, p256dh_key, auth_key FROM `push_subscriptions` WHERE subscriber = ?", subscriber)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		row, err := dbutil.ReadSubscriptionRows(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+		
+		entries = append(entries, row)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+	}
+
+	return entries, nil
+}
+
 // Insert adds an entry to the database, returning its ID
 func (mys *DB) Insert(entry *data.Row) error {
 	if err := mys.alive(); err != nil {
@@ -192,6 +224,28 @@ func (mys *DB) Insert(entry *data.Row) error {
 
 	return nil
 }
+
+// adds a record to the push_subscriptions table
+func (mys *DB) InsertPushSubscription(subscription *model.PushSubscription, subscriber string) error {
+	if err := mys.alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	query := "INSERT INTO `push_subscriptions` (`subscriber`, `endpoint`, `p256dh_key`, `auth_key`) VALUES (?, ?, ?, ?)"
+
+	_, err := mys.conn.Exec(query,
+		subscriber,
+		subscription.Endpoint,
+		subscription.Keys.P256Dh,
+		subscription.Keys.Auth,
+	)
+	if err != nil {
+		return fmt.Errorf("saving push subscription to the database failed: %v", err)
+	}
+
+	return nil
+}
+
 
 // Update updates an already existing entry
 func (mys *DB) Update(entry *data.Row) error {
@@ -264,6 +318,18 @@ func (mys *DB) alive() error {
 	return nil
 }
 
+// deletes a record from the push_subscriptions table
+func (mys *DB) DeletePushSubscription(subscription *model.PushSubscription, subscriber string) error {
+	if err := mys.alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	_, err := mys.conn.Exec("DELETE FROM `push_subscriptions` WHERE subscriber = ? AND endpoint = ?", subscriber, subscription.Endpoint)
+
+	return err
+}
+
+
 type dbUpdate struct {
 	Query   string
 	Comment string
@@ -293,6 +359,14 @@ var queries = []dbUpdate{
 	{
 		Query:   "ALTER TABLE `databases` CHANGE COLUMN `connectorName` `agentName` VARCHAR(255) NULL DEFAULT NULL;",
 		Comment: "Update 'databases' table: connectorName -> agentName",
+	},
+	{
+		Query:   "CREATE TABLE IF NOT EXISTS `push_subscriptions` ( `subscriber` VARCHAR(255) NOT NULL, `endpoint` VARCHAR(255) NOT NULL, `p256dh_key` VARCHAR(255) NOT NULL, `auth_key` VARCHAR(255) NOT NULL);",
+		Comment: "Create the push_subscriptions table",
+	},
+	{
+		Query:   "CREATE UNIQUE INDEX `push_subscription` ON `push_subscriptions` (`subscriber`, `endpoint`);",
+		Comment: "Create unique index on columns (subscriber,endpoint) for table push_subscriptions",
 	},
 }
 

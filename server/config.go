@@ -19,6 +19,7 @@ type Config struct {
 	EmailSender string   `toml:"email-sender"`
 	AdminEmail  []string `toml:"admin-emails"`
 	MountLoc    string   `toml:"mount-loc"`
+	VAPIDPrivateKey    string   `toml:"vapid-private-key"`
 }
 
 // Print prints the configuration to the log.

@@ -169,4 +169,16 @@ var routes = Routes{
 		"/api/safe2restart",
 		apiSafe2Restart,
 	},
+	route{
+		"api/save-subscription",
+		"POST",
+		"/api/save-subscription",
+		apiSaveSubscription,
+	},
+	route{
+		"api/remove-subscription",
+		"POST",
+		"/api/remove-subscription",
+		apiRemoveSubscription,
+	},
 }

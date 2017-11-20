@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/common/logger"
+	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/database/dbutil"
 	"github.com/djavorszky/sutils"
+	webpush "github.com/sherclockholmes/webpush-go"
 
 	// DB
 	_ "github.com/mattn/go-sqlite3"
@@ -146,6 +148,35 @@ func (lite *DB) FetchAll() ([]data.Row, error) {
 	return entries, nil
 }
 
+func (lite *DB) FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscription, error) {
+	if err := lite.alive(); err != nil {
+		return nil, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	var entries []webpush.Subscription
+
+	rows, err := lite.conn.Query("SELECT endpoint, p256dh_key, auth_key FROM `push_subscriptions` WHERE subscriber = ?", subscriber)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't execute query: %s", err.Error())
+	}
+
+	for rows.Next() {
+		row, err := dbutil.ReadSubscriptionRows(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+		}
+		
+		entries = append(entries, row)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error reading result from query: %s", err.Error())
+	}
+
+	return entries, nil
+}
+
 // Insert adds an entry to the database, returning its ID
 func (lite *DB) Insert(row *data.Row) error {
 	if err := lite.alive(); err != nil {
@@ -181,6 +212,27 @@ func (lite *DB) Insert(row *data.Row) error {
 	}
 
 	row.ID = int(id)
+
+	return nil
+}
+
+// adds a record to the push_subscriptions table
+func (lite *DB) InsertPushSubscription(subscription *model.PushSubscription, subscriber string) error {
+	if err := lite.alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	query := "INSERT INTO `push_subscriptions` (`subscriber`, `endpoint`, `p256dh_key`, `auth_key`) VALUES (?, ?, ?, ?)"
+
+	_, err := lite.conn.Exec(query,
+		subscriber,
+		subscription.Endpoint,
+		subscription.Keys.P256Dh,
+		subscription.Keys.Auth,
+	)
+	if err != nil {
+		return fmt.Errorf("saving push subscription to the database failed: %v", err)
+	}
 
 	return nil
 }
@@ -240,6 +292,18 @@ func (lite *DB) Delete(entry data.Row) error {
 	return err
 }
 
+// deletes a record from the push_subscriptions table
+func (lite *DB) DeletePushSubscription(subscription *model.PushSubscription, subscriber string) error {
+	if err := lite.alive(); err != nil {
+		return fmt.Errorf("database down: %s", err.Error())
+	}
+
+	_, err := lite.conn.Exec("DELETE FROM `push_subscriptions` WHERE subscriber = ? AND endpoint = ?", subscriber, subscription.Endpoint)
+
+	return err
+}
+
+
 type dbUpdate struct {
 	Query   string
 	Comment string
@@ -273,6 +337,14 @@ var queries = []dbUpdate{
 	{
 		Query:   "DROP TABLE databases_tmp;",
 		Comment: "Update column in 'databases': Drop temp table",
+	},
+	{
+		Query:   "CREATE TABLE `push_subscriptions` ( `subscriber` VARCHAR(255) NOT NULL, `endpoint` VARCHAR(255) NOT NULL, `p256dh_key` VARCHAR(255) NOT NULL, `auth_key` VARCHAR(255) NOT NULL);",
+		Comment: "Create the push_subscriptions table",
+	},
+	{
+		Query:   "CREATE UNIQUE INDEX IF NOT EXISTS `push_subscription` ON `push_subscriptions` (`subscriber`, `endpoint`);",
+		Comment: "Create unique index on columns (subscriber, endpoint) for table push_subscriptions",
 	},
 }
 

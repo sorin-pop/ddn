@@ -67,6 +67,16 @@ type Agent struct {
 	Up         bool   `json:"agent_up"`
 }
 
+// PushSubscription is used to represent a subscription for web push notifications
+type PushSubscription struct {
+	Endpoint       string      `json:"endpoint"`
+	ExpirationTime interface{} `json:"expirationTime"`
+	Keys           struct {
+		P256Dh string `json:"p256dh"`
+		Auth   string `json:"auth"`
+	} `json:"keys"`
+}
+
 // CreateDatabase sends a request to the agent to create a database.
 func (a Agent) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
 

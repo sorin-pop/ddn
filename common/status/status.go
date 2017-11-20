@@ -91,6 +91,8 @@ const (
 	CreateDatabaseFailed    int = 305 // status.CreateDatabaseFailed
 	ListDatabaseFailed      int = 306 // status.ListDatabaseFailed
 	DropDatabaseFailed      int = 307 // status.DropDatabaseFailed
+	SaveSubscriptionFailed    int = 308 // status.SaveSubscriptionFailed
+	DeleteSubscriptionFailed    int = 309 // status.DeleteSubscriptionFailed
 )
 
 // Warnings are for issuing warnings.

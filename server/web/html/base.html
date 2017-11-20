@@ -19,6 +19,8 @@
   </style>
   {{if .HasUser}}
   {{template "nav.html" .}}
+  <!-- For the web push notifications -->
+  <script src="/res/js/push.js"></script>
   <div class="container my-3">
     {{template "content" .}}
   </div>

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/server/database/data"
+	webpush "github.com/sherclockholmes/webpush-go"
 )
 
 // CompareRows compares the two entries to see if they are the same or not.
@@ -129,5 +130,20 @@ func ReadRows(rows *sql.Rows) (data.Row, error) {
 		return data.Row{}, fmt.Errorf("failed reading row: %v", err)
 	}
 
+	return row, nil
+}
+
+func ReadSubscriptionRows(rows *sql.Rows) (webpush.Subscription, error) {
+	row := webpush.Subscription{}
+
+	err := rows.Scan(
+		&row.Endpoint,
+		&row.Keys.P256dh,
+		&row.Keys.Auth)
+
+	if err != nil {
+		return row, fmt.Errorf("failed reading row: %v", err)
+	}
+	
 	return row, nil
 }
