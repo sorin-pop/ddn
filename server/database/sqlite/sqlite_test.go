@@ -367,7 +367,7 @@ func TestInsertPushSubscription(t *testing.T) {
 			subscription: &model.PushSubscription{
 				Endpoint:       "testEndpoint",
 				ExpirationTime: "testExpirationTime",
-				Keys: model.PushKeys{
+				Keys: webpush.Keys{
 					P256dh: "randomTestKey",
 					Auth:   "randomTestAuth",
 				},
@@ -377,7 +377,7 @@ func TestInsertPushSubscription(t *testing.T) {
 			subscription: &model.PushSubscription{
 				Endpoint:       "testEndpoint",
 				ExpirationTime: "testExpirationTime",
-				Keys: model.PushKeys{
+				Keys: webpush.Keys{
 					P256dh: "randomTestKey",
 					Auth:   "randomTestAuth",
 				},
@@ -387,7 +387,7 @@ func TestInsertPushSubscription(t *testing.T) {
 			subscriber: "test@example.com",
 			subscription: &model.PushSubscription{
 				ExpirationTime: "testExpirationTime",
-				Keys: model.PushKeys{
+				Keys: webpush.Keys{
 					P256dh: "randomTestKey",
 					Auth:   "randomTestAuth",
 				},
@@ -397,7 +397,7 @@ func TestInsertPushSubscription(t *testing.T) {
 			subscriber: "test@example.com",
 			subscription: &model.PushSubscription{
 				Endpoint: "testEndpoint",
-				Keys: model.PushKeys{
+				Keys: webpush.Keys{
 					P256dh: "randomTestKey",
 					Auth:   "randomTestAuth",
 				},
@@ -452,7 +452,7 @@ func TestFetchUserPushSubscriptions(t *testing.T) {
 	testSubscription := &model.PushSubscription{
 		Endpoint:       "testEndpoint",
 		ExpirationTime: "testExpirationTime",
-		Keys: model.PushKeys{
+		Keys: webpush.Keys{
 			P256dh: "randomTestKey",
 			Auth:   "randomTestAuth",
 		},
@@ -516,7 +516,7 @@ func TestDeleteUserPushNotification(t *testing.T) {
 	testSubscription := &model.PushSubscription{
 		Endpoint:       "testEndpoint",
 		ExpirationTime: "testExpirationTime",
-		Keys: model.PushKeys{
+		Keys: webpush.Keys{
 			P256dh: "randomTestKey",
 			Auth:   "randomTestAuth",
 		},

@@ -9,6 +9,7 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/notif"
 	"github.com/djavorszky/sutils"
+	webpush "github.com/sherclockholmes/webpush-go"
 )
 
 // DBRequest is used to represent JSON call about creating, dropping or importing databases
@@ -69,15 +70,9 @@ type Agent struct {
 
 // PushSubscription is used to represent a subscription for web push notifications
 type PushSubscription struct {
-	Endpoint       string      `json:"endpoint"`
-	ExpirationTime interface{} `json:"expirationTime"`
-	Keys           PushKeys    `json:"keys"`
-}
-
-// PushKeys is used to represent the keys used for a PushSubscription
-type PushKeys struct {
-	P256dh string `json:"p256dh"`
-	Auth   string `json:"auth"`
+	Endpoint       string       `json:"endpoint"`
+	ExpirationTime interface{}  `json:"expirationTime"`
+	Keys           webpush.Keys `json:"keys"`
 }
 
 // CreateDatabase sends a request to the agent to create a database.
