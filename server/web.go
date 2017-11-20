@@ -36,17 +36,18 @@ type Page struct {
 	ExtDXP           liferay.JDBC
 	FileList         brwsr.FileList
 	HasMountedFolder bool
+	WebPushEnabled   bool
 	DumpLoc          string
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
-
 	page := Page{
 		Agents:           registry.List(),
 		Title:            getTitle(r.URL.Path),
 		Pages:            getPages(),
 		ActivePage:       r.URL.Path,
 		HasMountedFolder: config.MountLoc != "",
+		WebPushEnabled:   config.WebPushEnabled,
 	}
 
 	for _, conn := range registry.List() {
