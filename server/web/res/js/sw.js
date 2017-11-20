@@ -16,13 +16,13 @@ self.addEventListener('push', function(event) {
 		iconFile = '/res/success.png'
 	}
 
-	if (msg.contains('failed')) {
+	if (msg.includes('failed')) {
 		iconFile = '/res/failure.png'
 	}
 
 	const options = {
-	body: msg,
-	icon: iconFile
+		body: msg,
+		icon: iconFile
 	};
 
 	const notificationPromise = self.registration.showNotification(title, options);
