@@ -144,6 +144,6 @@ func ReadSubscriptionRows(rows *sql.Rows) (webpush.Subscription, error) {
 	if err != nil {
 		return row, fmt.Errorf("failed reading row: %v", err)
 	}
-	
+
 	return row, nil
 }

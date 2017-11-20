@@ -1,8 +1,8 @@
 package database
 
 import (
-	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/ddn/server/database/data"
 	webpush "github.com/sherclockholmes/webpush-go"
 )
 

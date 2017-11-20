@@ -84,15 +84,15 @@ const (
 // Server errors are used to convey that something went wrong
 // on the server.
 const (
-	ServerError             int = 300 // status.ServerError
-	ExtractingArchiveFailed int = 302 // status.ExtractingArchiveFailed
-	ValidationFailed        int = 303 // status.ValidationFailed
-	ImportFailed            int = 304 // status.ImportFailed
-	CreateDatabaseFailed    int = 305 // status.CreateDatabaseFailed
-	ListDatabaseFailed      int = 306 // status.ListDatabaseFailed
-	DropDatabaseFailed      int = 307 // status.DropDatabaseFailed
-	SaveSubscriptionFailed    int = 308 // status.SaveSubscriptionFailed
-	DeleteSubscriptionFailed    int = 309 // status.DeleteSubscriptionFailed
+	ServerError              int = 300 // status.ServerError
+	ExtractingArchiveFailed  int = 302 // status.ExtractingArchiveFailed
+	ValidationFailed         int = 303 // status.ValidationFailed
+	ImportFailed             int = 304 // status.ImportFailed
+	CreateDatabaseFailed     int = 305 // status.CreateDatabaseFailed
+	ListDatabaseFailed       int = 306 // status.ListDatabaseFailed
+	DropDatabaseFailed       int = 307 // status.DropDatabaseFailed
+	SaveSubscriptionFailed   int = 308 // status.SaveSubscriptionFailed
+	DeleteSubscriptionFailed int = 309 // status.DeleteSubscriptionFailed
 )
 
 // Warnings are for issuing warnings.

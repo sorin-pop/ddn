@@ -4,22 +4,22 @@ import "github.com/djavorszky/ddn/common/logger"
 
 // Config to hold the database server and ddn server configuration
 type Config struct {
-	DBProvider  string   `toml:"db-provider"`
-	DBAddress   string   `toml:"db-addr"`
-	DBPort      string   `toml:"db-port"`
-	DBUser      string   `toml:"db-username"`
-	DBPass      string   `toml:"db-userpass"`
-	DBName      string   `toml:"db-name"`
-	ServerHost  string   `toml:"server-host"`
-	ServerPort  string   `toml:"server-port"`
-	SMTPAddr    string   `toml:"smtp-host"`
-	SMTPPort    int      `toml:"smtp-port"`
-	SMTPUser    string   `toml:"smtp-user"`
-	SMTPPass    string   `toml:"smtp-password"`
-	EmailSender string   `toml:"email-sender"`
-	AdminEmail  []string `toml:"admin-emails"`
-	MountLoc    string   `toml:"mount-loc"`
-	VAPIDPrivateKey    string   `toml:"vapid-private-key"`
+	DBProvider      string   `toml:"db-provider"`
+	DBAddress       string   `toml:"db-addr"`
+	DBPort          string   `toml:"db-port"`
+	DBUser          string   `toml:"db-username"`
+	DBPass          string   `toml:"db-userpass"`
+	DBName          string   `toml:"db-name"`
+	ServerHost      string   `toml:"server-host"`
+	ServerPort      string   `toml:"server-port"`
+	SMTPAddr        string   `toml:"smtp-host"`
+	SMTPPort        int      `toml:"smtp-port"`
+	SMTPUser        string   `toml:"smtp-user"`
+	SMTPPass        string   `toml:"smtp-password"`
+	EmailSender     string   `toml:"email-sender"`
+	AdminEmail      []string `toml:"admin-emails"`
+	MountLoc        string   `toml:"mount-loc"`
+	VAPIDPrivateKey string   `toml:"vapid-private-key"`
 }
 
 // Print prints the configuration to the log.

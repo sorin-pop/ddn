@@ -165,7 +165,7 @@ func (lite *DB) FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscri
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
-		
+
 		entries = append(entries, row)
 	}
 
@@ -302,7 +302,6 @@ func (lite *DB) DeletePushSubscription(subscription *model.PushSubscription, sub
 
 	return err
 }
-
 
 type dbUpdate struct {
 	Query   string

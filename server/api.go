@@ -231,7 +231,7 @@ func apiSetLogLevel(w http.ResponseWriter, r *http.Request) {
 func apiSaveSubscription(w http.ResponseWriter, r *http.Request) {
 	var (
 		subscription model.PushSubscription
-		err error
+		err          error
 	)
 
 	err = json.NewDecoder(r.Body).Decode(&subscription)
@@ -262,7 +262,7 @@ func apiSaveSubscription(w http.ResponseWriter, r *http.Request) {
 			Message: fmt.Sprintf("getting user cookie failed: %s", err.Error())})
 		return
 	}
-	
+
 	err = db.InsertPushSubscription(&subscription, userCookie.Value)
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
@@ -280,7 +280,7 @@ func apiSaveSubscription(w http.ResponseWriter, r *http.Request) {
 func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 	var (
 		subscription model.PushSubscription
-		err error
+		err          error
 	)
 
 	err = json.NewDecoder(r.Body).Decode(&subscription)
@@ -311,7 +311,7 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 			Message: fmt.Sprintf("getting user cookie failed: %s", err.Error())})
 		return
 	}
-	
+
 	err = db.DeletePushSubscription(&subscription, userCookie.Value)
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{

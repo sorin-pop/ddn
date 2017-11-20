@@ -48,7 +48,7 @@ func maintain() {
 <p>This is to inform you that the database %q has been dropped.</p>
 <p>Thank you for using <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBName))
 
-				sendUserNotifications(dbe.Creator, fmt.Sprintf("Database %s has been dropped.", dbe.DBName))	
+				sendUserNotifications(dbe.Creator, fmt.Sprintf("Database %s has been dropped.", dbe.DBName))
 
 				continue
 			}

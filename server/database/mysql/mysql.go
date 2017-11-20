@@ -174,7 +174,7 @@ func (mys *DB) FetchUserPushSubscriptions(subscriber string) ([]webpush.Subscrip
 		if err != nil {
 			return nil, fmt.Errorf("error reading result from query: %s", err.Error())
 		}
-		
+
 		entries = append(entries, row)
 	}
 
@@ -245,7 +245,6 @@ func (mys *DB) InsertPushSubscription(subscription *model.PushSubscription, subs
 
 	return nil
 }
-
 
 // Update updates an already existing entry
 func (mys *DB) Update(entry *data.Row) error {
@@ -328,7 +327,6 @@ func (mys *DB) DeletePushSubscription(subscription *model.PushSubscription, subs
 
 	return err
 }
-
 
 type dbUpdate struct {
 	Query   string
