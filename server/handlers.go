@@ -772,12 +772,6 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 <p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBVendor, dbe.DBName, msg.Message))
 
 		sendUserNotifications(dbe.Creator, fmt.Sprintf("Importing %s failed!", dbe.DBName))
-		// send notifications also to the admins (important they get notified of failed imports)
-		if len(config.AdminEmail) != 0 {
-			for _, addr := range config.AdminEmail {
-				sendUserNotifications(addr, fmt.Sprintf("Importing %s by %s failed!", dbe.DBName, dbe.Creator))
-			}
-		}
 
 		// Update dbentry as well
 		dbe.Message = msg.Message
