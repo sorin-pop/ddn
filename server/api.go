@@ -244,7 +244,7 @@ func apiSaveSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := sutils.Present(subscription.Endpoint, subscription.Keys.P256Dh, subscription.Keys.Auth); !ok {
+	if ok := sutils.Present(subscription.Endpoint, subscription.Keys.P256dh, subscription.Keys.Auth); !ok {
 		logger.Error("Missing or empty subscription parameters were received from the /api/save-subscription API call!")
 		//TODO
 		// log the received request body
@@ -293,7 +293,7 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok := sutils.Present(subscription.Endpoint, subscription.Keys.P256Dh, subscription.Keys.Auth); !ok {
+	if ok := sutils.Present(subscription.Endpoint, subscription.Keys.P256dh, subscription.Keys.Auth); !ok {
 		logger.Error("Missing or empty subscription parameters were received from the /api/remove-subscription API call!")
 		//TODO
 		// log the received request body
