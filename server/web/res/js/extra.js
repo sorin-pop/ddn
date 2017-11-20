@@ -58,7 +58,7 @@ function checkAgent() {
         $("#dbnamediv").attr('title', '').attr('data-original-title', '').tooltip('hide');
         $("#userdiv").attr('title', '').attr('data-original-title', '').tooltip('hide');
 
-        agentVal = agent.val().toLowerCase();
+        agentVal = agent.val() == null ? "" : agent.val().toLowerCase();
 
         if (agentVal.includes("oracle")) {
             msg = 'Not needed for Oracle. Think of the User field below as the "database", as it will also be the Oracle schema that will contain the tables and their data.';
