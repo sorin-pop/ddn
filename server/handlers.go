@@ -771,7 +771,10 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 <p>We're sorry for the inconvenience caused.</p>
 <p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBVendor, dbe.DBName, msg.Message))
 
-		sendUserNotifications(dbe.Creator, fmt.Sprintf("Importing %s failed!", dbe.DBName))
+		err = sendUserNotifications(dbe.Creator, fmt.Sprintf("Importing %s failed!", dbe.DBName))
+		if err != nil {
+			logger.Error("failed notifying user: %v", err)
+		}
 
 		// Update dbentry as well
 		dbe.Message = msg.Message
@@ -828,7 +831,10 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 <p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a> for more awesomeness.</p>
 <p>Cheers</p>`, dbe.DBVendor, jdbc62x.Driver, jdbc62x.URL, jdbc62x.User, jdbc62x.Password, jdbcDXP.Driver, jdbcDXP.URL, jdbcDXP.User, jdbcDXP.Password))
 
-		sendUserNotifications(dbe.Creator, fmt.Sprintf("Finished importing %s", dbe.DBName))
+		err = sendUserNotifications(dbe.Creator, fmt.Sprintf("Finished importing %s", dbe.DBName))
+		if err != nil {
+			logger.Error("failed notifying user: %v", err)
+		}
 	}
 }
 

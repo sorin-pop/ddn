@@ -48,7 +48,10 @@ func maintain() {
 <p>This is to inform you that the database %q has been dropped.</p>
 <p>Thank you for using <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>`, dbe.DBName))
 
-				sendUserNotifications(dbe.Creator, fmt.Sprintf("Database %s has been dropped.", dbe.DBName))
+				err = sendUserNotifications(dbe.Creator, fmt.Sprintf("Database %s has been dropped.", dbe.DBName))
+				if err != nil {
+					logger.Error("failed notifying user: %v", err)
+				}
 
 				continue
 			}
@@ -87,7 +90,10 @@ func maintain() {
 <p>If you'd like to extend it, please visit <a href="http://cloud-db.liferay.int">Cloud DB</a>.</p>
 <p>Cheers</p>`, dbe.DBName))
 
-				sendUserNotifications(dbe.Creator, fmt.Sprintf("Database %s to be removed in one week.", dbe.DBName))
+				err = sendUserNotifications(dbe.Creator, fmt.Sprintf("Database %s to be removed in one week.", dbe.DBName))
+				if err != nil {
+					logger.Error("failed notifying user: %v", err)
+				}
 			}
 		}
 	}
