@@ -28,6 +28,12 @@ _testmain.go
 
 *.db
 
+.vscode
+
+dist
+!dist/deploy.sh
+!dist/Dockerfile
+
 !srv.conf
 !con.conf
 
