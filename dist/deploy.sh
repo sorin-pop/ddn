@@ -4,7 +4,7 @@ rootloc="`pwd`/.."
 
 echo "building binary of server.."
 cd $rootloc/server
-go build
+go build -ldflags "-X main.version=`date -u +%Y%m%d.%H%M%S`"
 
 echo "updating libraries"
 cd $rootloc/server/web

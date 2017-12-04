@@ -28,7 +28,7 @@ var (
 	db      database.BackendConnection
 )
 
-const version = "3"
+var version = ""
 
 func main() {
 	path, _ := filepath.Abs(os.Args[0])
@@ -78,6 +78,8 @@ func main() {
 	}
 
 	loadProperties(*filename)
+
+	logger.Info("Version: %s", version)
 
 	logger.Info("Starting with properties:")
 
