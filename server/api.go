@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/djavorszky/ddn/common/visibility"
 
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
@@ -323,4 +326,76 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 	msg := inet.Message{Status: status.Success, Message: fmt.Sprintf("Subscription has been removed from back end.")}
 
 	inet.SendResponse(w, http.StatusOK, msg)
+}
+
+func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
+	user := getUser(r)
+	if user == "" {
+		logger.Error("Visiblity change attempted without valid user")
+
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  http.StatusBadRequest,
+			Message: "ERR_ACCESS_DENIED",
+		})
+
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	ID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  http.StatusBadRequest,
+			Message: "ERR_INVALID_URL",
+		})
+		return
+	}
+
+	dbe, err := db.FetchByID(ID)
+	if err != nil {
+		logger.Error("Failed database fetch: %v", err)
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  http.StatusInternalServerError,
+			Message: "ERR_DATABASE_GONE",
+		})
+		return
+	}
+
+	if dbe.Creator != user {
+		logger.Error("User %q tried changing visibility of database owned by user %q", user, dbe.Creator)
+
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  http.StatusBadRequest,
+			Message: "ERR_ACCESS_DENIED",
+		})
+		return
+	}
+
+	visibility := vars["visibility"]
+
+	if visibility == "public" {
+		dbe.Public = vis.Public
+	} else {
+		dbe.Public = vis.Private
+	}
+
+	err = db.Update(&dbe)
+	if err != nil {
+		logger.Error("Failed database update: %v", err)
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  http.StatusInternalServerError,
+			Message: "ERR_DATABASE_GONE",
+		})
+		return
+	}
+
+	logger.Debug("Updated visibility of database %q to %q successfully", dbe.DBName, visibility)
+
+	inet.SendResponse(w, http.StatusOK, inet.Message{
+		Status:  http.StatusOK,
+		Message: fmt.Sprintf("Successfully updated visibility to %s", visibility),
+	})
 }

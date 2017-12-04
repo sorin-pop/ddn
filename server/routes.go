@@ -164,6 +164,12 @@ var routes = Routes{
 		apiSetLogLevel,
 	},
 	route{
+		"api/visibility/",
+		"GET",
+		"/api/visibility/{id:[0-9]+}/{visibility:public|private}",
+		apiSetVisibility,
+	},
+	route{
 		"safe2restart",
 		"GET",
 		"/api/safe2restart",
