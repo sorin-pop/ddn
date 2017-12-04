@@ -38,6 +38,7 @@ type Page struct {
 	HasMountedFolder bool
 	WebPushEnabled   bool
 	DumpLoc          string
+	Version          string
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
@@ -48,6 +49,7 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		ActivePage:       r.URL.Path,
 		HasMountedFolder: config.MountLoc != "",
 		WebPushEnabled:   config.WebPushEnabled,
+		Version:          version,
 	}
 
 	for _, conn := range registry.List() {
