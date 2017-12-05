@@ -197,7 +197,7 @@ func (mys *DB) Insert(entry *data.Row) error {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
-	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `agentName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?)"
+	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `agentName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`, `comment`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	res, err := mys.conn.Exec(query,
 		entry.DBName,
@@ -215,6 +215,7 @@ func (mys *DB) Insert(entry *data.Row) error {
 		entry.Status,
 		entry.Message,
 		entry.Public,
+		entry.Comment,
 	)
 	if err != nil {
 		return fmt.Errorf("insert failed: %v", err)
@@ -276,7 +277,7 @@ func (mys *DB) Update(entry *data.Row) error {
 		return mys.Insert(entry)
 	}
 
-	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `agentName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ? WHERE id = ?"
+	query := "UPDATE `databases` SET `dbname`= ?, `dbuser`= ?, `dbpass`= ?, `dbsid`= ?, `dumpfile`= ?, `createDate`= ?, `expiryDate`= ?, `creator`= ?, `agentName`= ?, `dbAddress`= ?, `dbPort`= ?, `dbvendor`= ?, `status`= ?, `message`= ?, `visibility`= ?, `comment` = ? WHERE id = ?"
 
 	_, err = mys.conn.Exec(query,
 		entry.DBName,
@@ -294,8 +295,8 @@ func (mys *DB) Update(entry *data.Row) error {
 		entry.Status,
 		entry.Message,
 		entry.Public,
-		entry.ID,
-	)
+		entry.Comment,
+		entry.ID)
 	if err != nil {
 		return fmt.Errorf("failed update: %v", err)
 	}
@@ -386,6 +387,14 @@ var queries = []dbUpdate{
 	{
 		Query:   "CREATE UNIQUE INDEX `push_subscription` ON `push_subscriptions` (`subscriber`, `endpoint`);",
 		Comment: "Create unique index on columns (subscriber,endpoint) for table push_subscriptions",
+	},
+	{
+		Query:   "ALTER TABLE `databases` ADD COLUMN `comment` LONGTEXT;",
+		Comment: "Add 'comment' column",
+	},
+	{
+		Query:   "UPDATE `databases` SET `comment` = '' WHERE `comment` IS NULL;",
+		Comment: "Update 'comment' columns to empty where null",
 	},
 }
 

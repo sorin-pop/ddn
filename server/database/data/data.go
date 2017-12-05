@@ -22,6 +22,7 @@ type Row struct {
 	DBAddress  string    `json:"dbaddress"`
 	DBPort     string    `json:"dbport"`
 	Status     int       `json:"status"`
+	Comment    string    `json:"comment"`
 	Message    string    `json:"message"`
 	Public     int       `json:"public"`
 }

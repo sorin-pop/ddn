@@ -65,6 +65,10 @@ func CompareRows(first, second data.Row) error {
 		return fmt.Errorf("DBPort mismatch. First: %q vs Second: %q", first.DBPort, second.DBPort)
 	}
 
+	if first.Comment != second.Comment {
+		return fmt.Errorf("Comment mismatch. First: %q vs Second: %q", first.Comment, second.Comment)
+	}
+
 	if first.Status != second.Status {
 		return fmt.Errorf("Status mismatch. First: %q vs Second: %q", first.Status, second.Status)
 
@@ -97,7 +101,8 @@ func ReadRow(result *sql.Row) (data.Row, error) {
 		&row.DBVendor,
 		&row.Status,
 		&row.Message,
-		&row.Public)
+		&row.Public,
+		&row.Comment)
 	if err != nil {
 		return data.Row{}, fmt.Errorf("failed reading row: %v", err)
 	}
@@ -125,7 +130,8 @@ func ReadRows(rows *sql.Rows) (data.Row, error) {
 		&row.DBVendor,
 		&row.Status,
 		&row.Message,
-		&row.Public)
+		&row.Public,
+		&row.Comment)
 	if err != nil {
 		return data.Row{}, fmt.Errorf("failed reading row: %v", err)
 	}

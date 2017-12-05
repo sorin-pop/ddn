@@ -45,6 +45,7 @@ var (
 		DBAddress:  "localhost",
 		DBPort:     "3306",
 		DBVendor:   "mysql",
+		Comment:    "This is just a comment somewhere",
 		Message:    "",
 		Status:     100,
 	}
@@ -267,6 +268,7 @@ func TestUpdate(t *testing.T) {
 		DBAddress:  "updatedlocalhost",
 		DBPort:     "updated3306",
 		DBVendor:   "updatedmysql",
+		Comment:    "This is just a comment somewhere",
 		Message:    "updated",
 		Status:     200,
 	}

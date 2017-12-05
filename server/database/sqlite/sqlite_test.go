@@ -7,12 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sherclockholmes/webpush-go"
-
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/database/dbutil"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/sherclockholmes/webpush-go"
 )
 
 const (
@@ -41,6 +40,7 @@ var (
 		DBVendor:   "mysql",
 		Message:    "",
 		Status:     100,
+		Comment:    "Just some random comment",
 	}
 )
 
@@ -284,6 +284,7 @@ func TestUpdate(t *testing.T) {
 		DBVendor:   "updatedsqlite",
 		Message:    "updated",
 		Status:     200,
+		Comment:    "Something else I suppose",
 	}
 
 	err = lite.Update(&updatedEntry)
