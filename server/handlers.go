@@ -158,6 +158,11 @@ func doPrepImport(creator, agent, dumpfile, dbname, dbuser, dbpass, public strin
 		dbname = dbuser
 	}
 
+	if dbname == "" && dbuser == "" &&  conn.DBVendor == "oracle" {
+		dbuser = sutils.RandName()
+		dbname = dbuser
+	}
+
 	ensureValues(&dbname, &dbuser, &dbpass)
 
 	entry := data.Row{
@@ -284,6 +289,11 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		dbname = dbuser
 	}
 
+	if dbname == "" && dbuser == "" &&  conn.DBVendor == "oracle" {
+		dbuser = sutils.RandName()
+		dbname = dbuser
+	}
+
 	ensureValues(&dbname, &dbuser, &dbpass)
 
 	entry := data.Row{
@@ -358,6 +368,11 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 
 	ID := registry.ID()
 	if dbname == "" && dbuser != "" {
+		dbname = dbuser
+	}
+
+	if dbname == "" && dbuser == "" &&  conn.DBVendor == "oracle" {
+		dbuser = sutils.RandName()
 		dbname = dbuser
 	}
 
