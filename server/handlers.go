@@ -796,6 +796,9 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		case "mysql":
 			jdbc62x = liferay.MysqlJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
 			jdbcDXP = liferay.MysqlJDBCDXP(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+		case "mariadb":
+			jdbc62x = liferay.MariaDBJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+			jdbcDXP = jdbc62x
 		case "postgres":
 			jdbc62x = liferay.PostgreJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
 			jdbcDXP = jdbc62x

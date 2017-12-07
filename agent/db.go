@@ -7,7 +7,7 @@ import (
 	"github.com/djavorszky/ddn/common/model"
 )
 
-var vendors = []string{"mysql", "oracle", "postgres", "mssql"}
+var vendors = []string{"mysql", "mariadb", "oracle", "postgres", "mssql"}
 
 const (
 	createDB int = iota
@@ -75,7 +75,7 @@ func GetDB(vendor string) (Database, error) {
 
 	var db Database
 	switch strings.ToLower(vendor) {
-	case "mysql":
+	case "mysql", "mariadb":
 		db = new(mysql)
 	case "postgres":
 		db = new(postgres)

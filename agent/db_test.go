@@ -3,7 +3,7 @@ package main
 import "testing"
 
 var (
-	passingCases = []string{"mysql", "oracle", "postgres", "MySQL", "Oracle", "PostgrEs"}
+	passingCases = []string{"mysql", "mariadb", "oracle", "postgres", "MySQL", "Oracle", "PostgrEs"}
 	failingCases = []string{"asd", "mysqla", "posgres"}
 )
 

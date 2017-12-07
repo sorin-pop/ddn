@@ -103,6 +103,9 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 				case "mysql":
 					page.Ext62 = liferay.MysqlJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
 					page.ExtDXP = liferay.MysqlJDBCDXP(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+				case "mariadb":
+					page.Ext62 = liferay.MariaDBJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
+					page.ExtDXP = page.Ext62
 				case "postgres":
 					page.Ext62 = liferay.PostgreJDBC(entry.DBAddress, entry.DBPort, entry.DBName, entry.DBUser, entry.DBPass)
 					page.ExtDXP = page.Ext62
