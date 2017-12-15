@@ -78,8 +78,7 @@ function checkAgent() {
 
 $(document).ready( function () {
     $('.table').DataTable({
-        stateSave: true,
-        paging: false
+        stateSave: true
     });
     var privateHeader = document.getElementById('private_dbs_wrapper'),
         publicHeader  = document.getElementById('public_dbs_wrapper');
