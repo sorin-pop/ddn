@@ -206,6 +206,19 @@ func TestFetchByID(t *testing.T) {
 	}
 }
 
+func TestFetchByAgentDBName(t *testing.T) {
+	mys.Insert(&testEntry)
+
+	res, err := mys.FetchByAgentDBName(testEntry.DBName, testEntry.AgentName)
+	if err != nil {
+		t.Errorf("FetchByAgentDBName(%s, %s) failed with error: %v", testEntry.DBName, testEntry.AgentName, err)
+	}
+
+	if err := dbutil.CompareRows(res, testEntry); err != nil {
+		t.Errorf("Fetched result not the same as queried: %v", err)
+	}
+}
+
 func TestFetchByCreator(t *testing.T) {
 	creator := "someone@somewhere.com"
 

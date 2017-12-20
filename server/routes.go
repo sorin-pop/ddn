@@ -187,4 +187,10 @@ var routes = Routes{
 		"/api/remove-subscription",
 		apiRemoveSubscription,
 	},
+	route{
+		"/api/dbaccess/",
+		"GET",
+		"/api/dbaccess/{requester:[a-zA-Z0-9-_.@]+}/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9-_]+}",
+		apiDBAccess,
+	},
 }
