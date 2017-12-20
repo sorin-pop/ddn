@@ -23,8 +23,8 @@ import (
 // apiList will list all available agents in a JSON format.
 func apiList(w http.ResponseWriter, r *http.Request) {
 	list := make(map[string]string, 10)
-	for _, con := range registry.List() {
-		list[con.ShortName] = con.LongName
+	for _, agent := range registry.List() {
+		list[agent.ShortName] = agent.DBVendor
 	}
 
 	msg := inet.MapMessage{Status: status.Success, Message: list}
