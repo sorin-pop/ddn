@@ -164,6 +164,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestFetchByID(t *testing.T) {
+	testEntry.DBName = "fetchByID"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
@@ -181,22 +182,35 @@ func TestFetchByID(t *testing.T) {
 	}
 }
 
-func TestFetchByCreator(t *testing.T) {
-	creator := "someone@somewhere.com"
-
-	testEntry.Creator = creator
-
+func TestFetchByDBNameAgent(t *testing.T) {
+	testEntry.DBName = "fetchByDBNameAgent"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
 		return
 	}
 
-	err = lite.Insert(&testEntry)
+	res, err := lite.FetchByDBNameAgent(testEntry.DBName, testEntry.AgentName)
 	if err != nil {
-		t.Errorf("Insert failed: %v", err)
+		t.Errorf("FetchByDBNameAgent(%s, %s) failed with error: %v", testEntry.DBName, testEntry.AgentName, err)
 		return
 	}
+
+	if err := dbutil.CompareRows(res, testEntry); err != nil {
+		t.Errorf("Fetched result not the same as queried: %v", err)
+	}
+}
+
+func TestFetchByCreator(t *testing.T) {
+	creator := "someone@somewhere.com"
+
+	testEntry.Creator = creator
+
+	testEntry.DBName = "fetchByCreator_1"
+	lite.Insert(&testEntry)
+
+	testEntry.DBName = "fetchByCreator_2"
+	lite.Insert(&testEntry)
 
 	results, err := lite.FetchByCreator(creator)
 	if err != nil {
@@ -220,19 +234,22 @@ func TestFetchPublic(t *testing.T) {
 	res, err := lite.FetchPublic()
 	if err != nil {
 		t.Errorf("FetchPublic() error: %v", err)
+		return
 	}
 
 	if len(res) != 0 {
 		t.Errorf("FetchPublic() returned with entries, shouldn't have")
+		return
 	}
 
 	testEntry.Public = 1
-
+	testEntry.DBName = "fetchByPublic"
 	lite.Insert(&testEntry)
 
 	res, err = lite.FetchPublic()
 	if err != nil {
 		t.Errorf("FetchPublic() error: %v", err)
+		return
 	}
 
 	if len(res) != 1 {
@@ -254,6 +271,7 @@ func TestFetchAll(t *testing.T) {
 	entries, err := lite.FetchAll()
 	if err != nil {
 		t.Errorf("FetchAll() encountered error: %v", err)
+		return
 	}
 
 	if len(entries) != count {
@@ -262,9 +280,11 @@ func TestFetchAll(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	testEntry.DBName = "update"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
+		return
 	}
 
 	// We're updating by ID - this should updated the row for "testEntry"
@@ -301,6 +321,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	testEntry.DBName = "delete"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
@@ -320,6 +341,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestReadRow(t *testing.T) {
+	testEntry.DBName = "readRow"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Failed adding an entry: %s", err.Error())

@@ -16,6 +16,7 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
+	"github.com/djavorszky/liferay"
 	"github.com/djavorszky/sutils"
 	"github.com/gorilla/mux"
 )
@@ -398,4 +399,60 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 		Status:  http.StatusOK,
 		Message: fmt.Sprintf("Successfully updated visibility to %s", visibility),
 	})
+}
+
+// apiDBAccess will list useful information for connecting to the specified database (JDBC driver, url, etc.)
+func apiDBAccess(w http.ResponseWriter, r *http.Request) {
+	var jdbcParams liferay.JDBC
+
+	list := make(map[string]string, 5)
+	vars := mux.Vars(r)
+	requester, dbname, agent := vars["requester"], vars["dbname"], vars["agent"]
+
+	if ok := sutils.Present(requester, dbname, agent); !ok {
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  status.MissingParameters,
+			Message: fmt.Sprintf("Need values for 'requester', 'dbname' and 'agent', but got: %q, %q and %q", requester, dbname, agent)})
+		return
+	}
+
+	dbe, err := db.FetchByDBNameAgent(dbname, agent)
+	if err != nil {
+		logger.Error("FetchByAgentDBName: %v", err)
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  status.ServerError,
+			Message: fmt.Sprintf("Failed querying database: %q", err)})
+		return
+	}
+
+	if dbe.Public == vis.Private && dbe.Creator != requester {
+		logger.Error("User %q tried to get portalext of db created by %q.", requester, dbe.Creator)
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  status.MissingParameters,
+			Message: "Failed fetching db access parameters: You can only fetch those of public databases or private ones that you created."})
+		return
+	}
+
+	switch dbe.DBVendor {
+	case "mysql":
+		jdbcParams = liferay.MysqlJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	case "mariadb":
+		jdbcParams = liferay.MariaDBJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	case "postgres":
+		jdbcParams = liferay.PostgreJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	case "oracle":
+		jdbcParams = liferay.OracleJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBSID, dbe.DBUser, dbe.DBPass)
+	case "mssql":
+		jdbcParams = liferay.MSSQLJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	}
+
+	list["jdbc-driver"] = jdbcParams.Driver
+	list["jdbc-url"] = jdbcParams.URL
+	list["user"] = dbe.DBUser
+	list["password"] = dbe.DBPass
+	list["url"] = dbe.DBAddress + ":" + dbe.DBPort
+
+	msg := inet.MapMessage{Status: status.Success, Message: list}
+
+	inet.SendResponse(w, http.StatusOK, msg)
 }

@@ -65,6 +65,22 @@ func (lite *DB) FetchByID(ID int) (data.Row, error) {
 	return res, nil
 }
 
+// FetchByDBNameAgent returns the entry for the database with the given name, from the given agent,
+// or an error if it does not exist
+func (lite *DB) FetchByDBNameAgent(dbname, agent string) (data.Row, error) {
+	if err := lite.alive(); err != nil {
+		return data.Row{}, fmt.Errorf("database down: %s", err.Error())
+	}
+
+	row := lite.conn.QueryRow("SELECT * FROM `databases` WHERE dbname = ? AND agentName = ?", dbname, agent)
+	res, err := dbutil.ReadRow(row)
+	if err != nil {
+		return data.Row{}, fmt.Errorf("failed reading result: %v", err)
+	}
+
+	return res, nil
+}
+
 // FetchByCreator returns public entries that were created by the
 // specified user, an empty list if it's not the user does
 // not have any entries, or an error if something went
@@ -376,6 +392,10 @@ var queries = []dbUpdate{
 	{
 		Query:   "UPDATE databases SET comment = '' WHERE comment IS NULL;",
 		Comment: "Update 'comment' columns to empty where null",
+	},
+	{
+		Query:   "CREATE UNIQUE INDEX IF NOT EXISTS `agent_db_idx` ON `databases` (`dbname`, `agentName`);",
+		Comment: "Create unique index on columns (dbname, agentName) for table databases",
 	},
 }
 

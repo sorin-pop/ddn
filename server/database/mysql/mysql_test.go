@@ -194,6 +194,7 @@ func TestInitTables(t *testing.T) {
 }
 
 func TestFetchByID(t *testing.T) {
+	testEntry.DBName = "fetchByID"
 	mys.Insert(&testEntry)
 
 	res, err := mys.FetchByID(testEntry.ID)
@@ -206,12 +207,28 @@ func TestFetchByID(t *testing.T) {
 	}
 }
 
+func TestFetchByDBNameAgent(t *testing.T) {
+	mys.Insert(&testEntry)
+
+	res, err := mys.FetchByDBNameAgent(testEntry.DBName, testEntry.AgentName)
+	if err != nil {
+		t.Errorf("FetchByDBNameAgent(%s, %s) failed with error: %v", testEntry.DBName, testEntry.AgentName, err)
+	}
+
+	if err := dbutil.CompareRows(res, testEntry); err != nil {
+		t.Errorf("Fetched result not the same as queried: %v", err)
+	}
+}
+
 func TestFetchByCreator(t *testing.T) {
 	creator := "someone@somewhere.com"
 
 	testEntry.Creator = creator
 
+	testEntry.DBName = "fetchByCreator_1"
 	mys.Insert(&testEntry)
+
+	testEntry.DBName = "fetchByCreator_2"
 	mys.Insert(&testEntry)
 
 	results, err := mys.FetchByCreator(creator)
@@ -231,6 +248,7 @@ func TestFetchByCreator(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
+	testEntry.DBName = "insert"
 	err := mys.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("mys.Insert(testEntry) failed with error: %v", err)
@@ -345,6 +363,7 @@ func TestFetchAll(t *testing.T) {
 }
 
 func TestReadRow(t *testing.T) {
+	testEntry.DBName = "readRow"
 	err := mys.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Failed adding a entry: %s", err.Error())
