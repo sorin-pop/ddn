@@ -73,9 +73,9 @@ func (mys *DB) FetchByID(ID int) (data.Row, error) {
 	return res, nil
 }
 
-// FetchByAgentDBName returns the entry for the database with the given name, from the given agent,
+// FetchByDBNameAgent returns the entry for the database with the given name, from the given agent,
 // or an error if it does not exist
-func (mys *DB) FetchByAgentDBName(dbname, agent string) (data.Row, error) {
+func (mys *DB) FetchByDBNameAgent(dbname, agent string) (data.Row, error) {
 	if err := mys.alive(); err != nil {
 		return data.Row{}, fmt.Errorf("database down: %s", err.Error())
 	}

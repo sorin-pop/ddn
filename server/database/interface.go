@@ -15,7 +15,7 @@ type BackendConnection interface {
 	Close() error
 
 	FetchByID(ID int) (data.Row, error)
-	FetchByAgentDBName(dbname, agent string) (data.Row, error)
+	FetchByDBNameAgent(dbname, agent string) (data.Row, error)
 	FetchByCreator(creator string) ([]data.Row, error)
 	FetchPublic() ([]data.Row, error)
 	FetchAll() ([]data.Row, error)

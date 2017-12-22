@@ -16,8 +16,8 @@ import (
 	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
-	"github.com/djavorszky/sutils"
 	"github.com/djavorszky/liferay"
+	"github.com/djavorszky/sutils"
 	"github.com/gorilla/mux"
 )
 
@@ -416,7 +416,7 @@ func apiDBAccess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbe, err := db.FetchByAgentDBName(dbname, agent)
+	dbe, err := db.FetchByDBNameAgent(dbname, agent)
 	if err != nil {
 		logger.Error("FetchByAgentDBName: %v", err)
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
@@ -451,7 +451,6 @@ func apiDBAccess(w http.ResponseWriter, r *http.Request) {
 	list["user"] = dbe.DBUser
 	list["password"] = dbe.DBPass
 	list["url"] = dbe.DBAddress + ":" + dbe.DBPort
-	
 
 	msg := inet.MapMessage{Status: status.Success, Message: list}
 
