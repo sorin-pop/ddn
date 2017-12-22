@@ -182,6 +182,7 @@ func TestFetchByID(t *testing.T) {
 }
 
 func TestFetchByDBNameAgent(t *testing.T) {
+	testEntry.DBName = "fetchByDBNameAgent"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
@@ -191,6 +192,7 @@ func TestFetchByDBNameAgent(t *testing.T) {
 	res, err := lite.FetchByDBNameAgent(testEntry.DBName, testEntry.AgentName)
 	if err != nil {
 		t.Errorf("FetchByDBNameAgent(%s, %s) failed with error: %v", testEntry.DBName, testEntry.AgentName, err)
+		return
 	}
 
 	if err := dbutil.CompareRows(res, testEntry); err != nil {
@@ -237,10 +239,12 @@ func TestFetchPublic(t *testing.T) {
 	res, err := lite.FetchPublic()
 	if err != nil {
 		t.Errorf("FetchPublic() error: %v", err)
+		return
 	}
 
 	if len(res) != 0 {
 		t.Errorf("FetchPublic() returned with entries, shouldn't have")
+		return
 	}
 
 	testEntry.Public = 1
@@ -250,6 +254,7 @@ func TestFetchPublic(t *testing.T) {
 	res, err = lite.FetchPublic()
 	if err != nil {
 		t.Errorf("FetchPublic() error: %v", err)
+		return
 	}
 
 	if len(res) != 1 {
@@ -271,6 +276,7 @@ func TestFetchAll(t *testing.T) {
 	entries, err := lite.FetchAll()
 	if err != nil {
 		t.Errorf("FetchAll() encountered error: %v", err)
+		return
 	}
 
 	if len(entries) != count {
@@ -282,6 +288,7 @@ func TestUpdate(t *testing.T) {
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
+		return
 	}
 
 	// We're updating by ID - this should updated the row for "testEntry"
