@@ -76,7 +76,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		req.DatabaseName = req.Username
 	}
 
-	ensureValues(&req.DatabaseName, &req.Username, &req.Password)
+	ensureValues(&req.DatabaseName, &req.Username, &req.Password, conn.DBVendor)
 
 	_, err = conn.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
 	if err != nil {

@@ -149,21 +149,7 @@ func doPrepImport(creator, agent, dumpfile, dbname, dbuser, dbpass, public strin
 		return 0, fmt.Errorf("agent went offline")
 	}
 
-	if conn.DBVendor == "mssql" {
-		dbuser = "clouddb"
-		dbpass = "password"
-	}
-
-	if dbname == "" && dbuser != "" {
-		dbname = dbuser
-	}
-
-	if dbname == "" && dbuser == "" &&  conn.DBVendor == "oracle" {
-		dbuser = sutils.RandName()
-		dbname = dbuser
-	}
-
-	ensureValues(&dbname, &dbuser, &dbpass)
+	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
 
 	entry := data.Row{
 		DBName:     dbname,
@@ -280,21 +266,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if conn.DBVendor == "mssql" {
-		dbuser = "clouddb"
-		dbpass = "password"
-	}
-
-	if dbname == "" && dbuser != "" {
-		dbname = dbuser
-	}
-
-	if dbname == "" && dbuser == "" &&  conn.DBVendor == "oracle" {
-		dbuser = sutils.RandName()
-		dbname = dbuser
-	}
-
-	ensureValues(&dbname, &dbuser, &dbpass)
+	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
 
 	entry := data.Row{
 		DBName:     dbname,
@@ -361,23 +333,9 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if conn.DBVendor == "mssql" {
-		dbuser = "clouddb"
-		dbpass = "password"
-	}
+	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
 
 	ID := registry.ID()
-	if dbname == "" && dbuser != "" {
-		dbname = dbuser
-	}
-
-	if dbname == "" && dbuser == "" &&  conn.DBVendor == "oracle" {
-		dbuser = sutils.RandName()
-		dbname = dbuser
-	}
-
-	ensureValues(&dbname, &dbuser, &dbpass)
-
 	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
 	if err != nil {
 		session.AddFlash(err.Error(), "fail")
@@ -856,12 +814,24 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ensureValues(vals ...*string) {
-	for _, v := range vals {
-		if *v == "" {
-			*v = sutils.RandName()
-		}
+func ensureValues(dbname, dbuser, dbpass *string, vendor string) {
+	if vendor == "mssql" {
+		*dbuser = "clouddb"
+		*dbpass = "password"
 	}
+
+	if *dbuser == "" {
+		*dbuser = sutils.RandName()
+	}
+
+	if *dbpass == "" {
+		*dbpass = sutils.RandPassword()
+	}
+
+	if *dbname == "" {
+		dbname = dbuser
+	}
+
 }
 
 func doCreateDatabase(req model.ClientRequest) (model.Agent, error) {
