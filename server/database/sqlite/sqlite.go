@@ -393,6 +393,10 @@ var queries = []dbUpdate{
 		Query:   "UPDATE databases SET comment = '' WHERE comment IS NULL;",
 		Comment: "Update 'comment' columns to empty where null",
 	},
+	{
+		Query:   "CREATE UNIQUE INDEX IF NOT EXISTS `agent_db_idx` ON `databases` (`dbname`, `agentName`);",
+		Comment: "Create unique index on columns (dbname, agentName) for table databases",
+	},
 }
 
 func (lite *DB) initTables() error {

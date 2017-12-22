@@ -164,6 +164,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestFetchByID(t *testing.T) {
+	testEntry.DBName = "fetchByID"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
@@ -205,17 +206,11 @@ func TestFetchByCreator(t *testing.T) {
 
 	testEntry.Creator = creator
 
-	err := lite.Insert(&testEntry)
-	if err != nil {
-		t.Errorf("Insert failed: %v", err)
-		return
-	}
+	testEntry.DBName = "fetchByCreator_1"
+	lite.Insert(&testEntry)
 
-	err = lite.Insert(&testEntry)
-	if err != nil {
-		t.Errorf("Insert failed: %v", err)
-		return
-	}
+	testEntry.DBName = "fetchByCreator_2"
+	lite.Insert(&testEntry)
 
 	results, err := lite.FetchByCreator(creator)
 	if err != nil {
@@ -248,7 +243,7 @@ func TestFetchPublic(t *testing.T) {
 	}
 
 	testEntry.Public = 1
-
+	testEntry.DBName = "fetchByPublic"
 	lite.Insert(&testEntry)
 
 	res, err = lite.FetchPublic()
@@ -285,6 +280,7 @@ func TestFetchAll(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	testEntry.DBName = "update"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
@@ -325,6 +321,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	testEntry.DBName = "delete"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Insert failed: %v", err)
@@ -344,6 +341,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestReadRow(t *testing.T) {
+	testEntry.DBName = "readRow"
 	err := lite.Insert(&testEntry)
 	if err != nil {
 		t.Errorf("Failed adding an entry: %s", err.Error())

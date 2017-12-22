@@ -414,7 +414,7 @@ var queries = []dbUpdate{
 	},
 	{
 		Query:   "CREATE UNIQUE INDEX `agent_db_idx` ON `databases` (`dbname`, `agentName`);",
-		Comment: "Create unique index on columns (dbname,agentName) for table databases",
+		Comment: "Create unique index on columns (dbname, agentName) for table databases",
 	},
 }
 
