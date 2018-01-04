@@ -18,7 +18,7 @@
             <div class="form-group row">
                 <label for="dbname" class="col-sm-3 col-form-label">Database name</label>
                 <div class="col-sm-9" id="dbnamediv" data-toggle="tooltip" data-placement="right" title="">
-                    <input type="text" class="form-control" id="dbname" name="dbname" placeholder="Database name (optional)">
+                    <input type="text" class="form-control" id="dbname" name="dbname" placeholder="Database name (optional)" pattern="^[a-zA-Z][a-zA-Z0-9_]+$" title="Only alphanumeric characters and underscore, no whitespace. Must begin with a letter of the alphabet.">
                 </div>
             </div>
             <div class="form-group row">
