@@ -31,7 +31,7 @@
             <div class="form-group row">
                 <label for="user" class="col-sm-3 col-form-label">Database user</label>
                 <div class="col-sm-9" id="userdiv" data-toggle="tooltip" data-placement="right" title="">
-                    <input type="text" class="form-control" id="user" name="user" placeholder="Database user (optional)">
+                    <input type="text" class="form-control" id="user" name="user" placeholder="Database user (optional)" pattern="^[a-zA-Z][a-zA-Z0-9_]+$" title="Only alphanumeric characters and underscore, no whitespace. Must begin with a letter of the alphabet.">
                 </div>
             </div>
             <div class="form-group row">
