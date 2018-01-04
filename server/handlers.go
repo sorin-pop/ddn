@@ -829,7 +829,7 @@ func ensureValues(dbname, dbuser, dbpass *string, vendor string) {
 	}
 
 	if *dbname == "" {
-		dbname = dbuser
+		*dbname = *dbuser
 	}
 
 }

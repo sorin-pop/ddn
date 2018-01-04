@@ -113,7 +113,7 @@ func (a Agent) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string) (s
 func (a Agent) DropDatabase(id int, dbname, dbuser string) (string, error) {
 
 	if ok := sutils.Present(dbname, dbuser); !ok {
-		return "", fmt.Errorf("asked to create database with missing values: dbname: %q, dbuser: %q", dbname, dbuser)
+		return "", fmt.Errorf("asked to drop database with missing values: dbname: %q, dbuser: %q", dbname, dbuser)
 	}
 
 	dbreq := DBRequest{
