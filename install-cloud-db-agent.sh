@@ -13,7 +13,7 @@ rm agent*.tar.gz
 
 if [[ ! -f ddnc.conf ]]; then
 	echo "downloading default configuration file"
-	wget --quiet https://raw.githubusercontent.com/djavorszky/ddn/master/agent/con.conf
+	wget --quiet https://raw.githubusercontent.com/djavorszky/ddn/master/agent/default.conf
 
 	mv default.conf ddnc.conf
 
