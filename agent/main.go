@@ -161,7 +161,7 @@ func loadProperties(filename string) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		logger.Warn("Couldn't find properties file, trying to download one.")
 
-		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/agent/con.conf")
+		tmpConfig, err := inet.DownloadFile(".", "https://raw.githubusercontent.com/djavorszky/ddn/master/agent/default.conf")
 		if err != nil {
 			logger.Fatal("Could not fetch configuration file, please download it manually from https://github.com/djavorszky/ddn")
 		}

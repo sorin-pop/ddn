@@ -15,7 +15,7 @@ if [[ ! -f ddnc.conf ]]; then
 	echo "downloading default configuration file"
 	wget --quiet https://raw.githubusercontent.com/djavorszky/ddn/master/agent/con.conf
 
-	mv con.conf ddnc.conf
+	mv default.conf ddnc.conf
 
 	echo "configuration file downloaded, please configure agent and then start it"
 	exit 1
