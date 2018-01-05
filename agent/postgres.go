@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -200,11 +202,6 @@ func (db *postgres) DropDatabase(dbRequest model.DBRequest) error {
 // ImportDatabase imports the dumpfile to the database or returns an error
 // if it failed for some reason.
 func (db *postgres) ImportDatabase(dbreq model.DBRequest) error {
-	err := db.CreateDatabase(dbreq)
-	if err != nil {
-		return fmt.Errorf("could not create database: %v", err)
-	}
-
 	userArg := fmt.Sprintf("-U%s", dbreq.Username)
 
 	cmd := exec.Command(conf.Exec, userArg, dbreq.DatabaseName)
@@ -260,6 +257,41 @@ func (db *postgres) RequiredFields(dbreq model.DBRequest, reqType int) []string 
 }
 
 func (db *postgres) ValidateDump(path string) (string, error) {
+	toRemove := []string{"ALTER TABLE", "alter table"}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("could not open dumpfile '%s': %s", path, err.Error())
+	}
+	defer file.Close()
+
+	lines, err := sutils.OccursWith(strings.HasPrefix, file, toRemove)
+	if err != nil {
+		return path, fmt.Errorf("couldn't find occurrences: %v", err)
+	}
+
+	// Rewind file
+	file.Seek(0, 0)
+
+	if len(lines) > 0 {
+		tmpFile, err := ioutil.TempFile(os.TempDir(), "ddnc")
+		if err != nil {
+			return path, fmt.Errorf("could not create tempfile: %s", err.Error())
+		}
+
+		err = sutils.CopyWithoutLines(file, lines, tmpFile)
+		if err != nil {
+			return path, fmt.Errorf("removing extra lines from dump failed: %s", err.Error())
+		}
+
+		tmpFilePath, _ := filepath.Abs(tmpFile.Name())
+
+		os.Rename(tmpFilePath, path)
+	}
+
+	// Rewind file
+	file.Seek(0, 0)
+
 	return path, nil
 }
 
