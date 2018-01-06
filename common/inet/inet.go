@@ -13,6 +13,7 @@ import (
 // UTF-8. Additionally, it also adds the http status to it.
 func WriteHeader(w http.ResponseWriter, status int) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(status)
 }
 
