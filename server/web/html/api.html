@@ -1,5 +1,286 @@
-<html>
-<body>
-<h1> YOOOO </h1>
-</body>
+<!DOCTYPE html>
+<html lang="en">
+  <title>CloudDB - API</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/node_modules/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/node_modules/datatables.net-bs4/css/dataTables.bootstrap4.css">
+  <link rel="icon" href="/res/icon-32.png" sizes="32x32"/>
+  <link rel="icon" href="/res/icon-192.png" sizes="192x192"/>
+  <link rel="apple-touch-icon-precomposed" href="/res/apple-touch-icon.png"/>
+  <meta name="msapplication-TileImage" content="/res/tileimage.png"/>
+  <link rel="shortcut icon" href="/res/favicon.ico">
+  <!-- For the web push notifications -->
+  <script src="/res/js/push.js"></script>
+  <div class="container my-3">
+        <body>
+                <h1 id="apiendpointsofclouddb">API endpoints of CloudDB</h1>
+            
+                <p>All API endpoints return json objects with a status and a named payload of either string, list or map.</p>
+                
+                <h2 id="getapilist">GET api/list</h2>
+                
+                <p>Example <code>curl http://localhost:7010/api/list</code></p>
+                
+                <h3 id="payload">Payload</h3>
+                
+                <p>none</p>
+                
+                <h3 id="returns">Returns</h3>
+                
+                <p>Map of agents, shortName being the key, database vendor being the value.</p>
+                
+                <p>Example return:</p>
+                
+                <pre><code>
+                {
+                    "status":100,
+                    "map":{
+                        "mariadb-10":"mariadb"
+                    }
+                }
+                </code></pre>
+                
+                <h3 id="notes">Notes</h3>
+                
+                <p>Deprecated in favour of <code>api/list-agents</code></p>
+                
+                <h2 id="getapilistagents">GET api/list-agents</h2>
+                
+                <p>Example call: <code>curl http://localhost:7010/api/list-agents</code></p>
+                
+                <h3 id="payload-1">Payload</h3>
+                
+                <p>none</p>
+                
+                <h3 id="returns-1">Returns</h3>
+                
+                <p>Map of agents, shortName being the key, the value being an object containing all known information.</p>
+                
+                <p>Example return:</p>
+                
+                <pre><code>
+                {
+                    "mariadb-10":{
+                        "id":1,
+                        "vendor":"mariadb",
+                        "dbport":"3309",
+                        "dbaddress":"localhost",
+                        "sid":"",
+                        "agent":"mariadb-10",
+                        "agent_long":"mariadb 10.2.11",
+                        "agent_identifier":"myhostname-mariadb-10",
+                        "agent_port":"7005",
+                        "agent_version":"3",
+                        "agent_address":"http://localhost",
+                        "agent_token":"",
+                        "agent_up":true
+                    }
+                }
+                </code></pre>
+                
+                <h2 id="getapiagentsdagent_identifier">GET api/agents/${agent_identifier}</h2>
+                
+                <p>Returns all information about a specific agent, similarly to how <code>api/list-agents</code> returns them for all of them. Agent identifiers are alphanumeric with dashes or underscores (<code>[a-zA-Z0-9-_]+</code>).</p>
+                
+                <p>Example call:
+                <code>curl http://localhost:7010/api/agents/mariadb-10</code></p>
+                
+                <h3 id="payload-2">Payload</h3>
+                
+                <p>none</p>
+                
+                <h3 id="returns-2">Returns</h3>
+                
+                <p>If agent is found, returns all known information:</p>
+                
+                <pre><code>
+                {
+                    "id":3,
+                    "vendor":"mariadb",
+                    "dbport":"3309",
+                    "dbaddress":"172.17.0.2",
+                    "sid":"",
+                    "agent":"mariadb-10",
+                    "agent_long":"mariadb 10.2.11",
+                    "agent_identifier":"myhostname-mariadb-10",
+                    "agent_port":"7005",
+                    "agent_version":"3",
+                    "agent_address":"http://172.17.0.2",
+                    "agent_token":"",
+                    "agent_up":true
+                }
+                </code></pre>
+                
+                <p>If failed, error message returned:</p>
+                
+                <pre><code>
+                {
+                    "status":503,
+                    "message":"ERR_AGENT_NOT_FOUND"
+                }
+                </code></pre>
+                
+                <h2 id="postapicreate">POST api/create</h2>
+                
+                <p>API JSON call to create a database. There are two required fields: <code>agent_identifier</code> and <code>requester_email</code>, the rest are optional. The <code>id</code> field is autogenerated even when set, as it's used for internal communication and housekeeping. As such, the response may contain a different <code>id</code> then a request. </p>
+                
+                <p>Example call:</p>
+                
+                <pre><code>curl -H "Content-Type: application/json" -X POST -d '{"agent_identifier":"mariadb-10","requester_email":"daniel.javorszky@liferay.com"}' http://localhost:7010/api/create
+                </code></pre>
+                
+                <h3 id="payload-3">Payload</h3>
+                
+                <p>The following fields can be sent in the JSON call:</p>
+                
+                <pre><code>
+                "id" // ignored
+                "database_name" // name of the database to be set. Ignored in case of oracle.
+                "dumpfile_location" // ignored in case of create database
+                "username" // user to be created along with the database. Ignored in case of mssql.
+                "password" // user's password. Ignored in case of mssql.
+                "agent_identifier" // Agent's identifier. See `api/list-agents`
+                "requester_email" // requester's email address
+                </code></pre>
+                
+                <h3 id="returns-3">Returns</h3>
+                
+                <p>If successful, returns JSON object with all necessary information:</p>
+                
+                <pre><code>
+                {
+                    "id":16,
+                    "vendor":"mariadb",
+                    "dbname":"electric_adapter",
+                    "dbuser":"electric_adapter",
+                    "dbpass":"tag_tuner",
+                    "sid":"",
+                    "dumplocation":"",
+                    "createdate":"2018-01-07T13:25:46.148399484Z",
+                    "expirydate":"2018-02-07T13:25:46.148399558Z",
+                    "creator":"daniel.javorszky@liferay.com",
+                    "agent":"mariadb-10",
+                    "dbaddress":"172.17.0.2",
+                    "dbport":"3309",
+                    "status":100,
+                    "comment":"",
+                    "message":"",
+                    "public":0
+                }
+                </code></pre>
+                
+                <p>If failed, returns a failure message containing a <code>status</code> and a <code>message</code>:</p>
+                
+                <pre><code>
+                {
+                    "status":305,
+                    "message":"creating database failed: sending json message failed: got non-200 response '500' and message: {\"status\":305,\"message\":\"creating database \\\"electric_adapter\\\" failed: database 'electric_adapter' already exists\"}"
+                }
+                </code></pre>
+                
+                <h2 id="getapilogleveldlevel">GET api/loglevel/${level}</h2>
+                
+                <p>Change the loglevel of the server. Possible values are:</p>
+                
+                <p>Example call:
+                <code>curl http://localhost:7010/api/loglevel/debug</code></p>
+                
+                <h3 id="payload-4">Payload</h3>
+                
+                <p>Possible values for ${level}:</p>
+                
+                <pre><code>
+                fatal
+                error
+                warn
+                info
+                debug
+                </code></pre>
+                
+                <h3 id="response">Response</h3>
+                
+                <p>If successful:</p>
+                
+                <pre><code>
+                {
+                    "status":200,
+                    "message":"Loglevel changed from info to debug"
+                }
+                </code></pre>
+                
+                <p>If failed:</p>
+                
+                <pre><code>
+                {
+                    "status":400,
+                    "message":"ERR_UNRECOGNIZED_LOGLEVEL"
+                }
+                </code></pre>
+                
+                <h2 id="getapivisibilitydiddlevel">GET api/visibility/${id}/${level}</h2>
+                
+                <p>Change the visibility of a database.</p>
+                
+                <p>Currently broken, needs fix.</p>
+                
+                <h2 id="getapisafe2restart">GET api/safe2restart</h2>
+                
+                <p>Returns a map that says whether the server and agents are safe to be restarted. At the moment, it only checks if there are any imports happening.</p>
+                
+                <p>Example call:</p>
+                
+                <h3 id="payload-5">Payload</h3>
+                
+                <p>none</p>
+                
+                <h3 id="response-1">Response</h3>
+                
+                <pre><code>
+                {
+                    "status":200,
+                    "map":{
+                        "mariadb-10":"yes",
+                        "server":"yes"
+                    }
+                }
+                </code></pre>
+                
+                <h2 id="getapidbaccessdrequesterdagent_identifierddbname">GET api/dbaccess/${requester}/${agent_identifier}/${dbname}</h2>
+                
+                <p>Returns a map of database access details.
+                Example call:
+                <code>curl localhost:7010/api/dbaccess/daniel.javorszky@liferay.com/mariadb-10/electric_adapter</code></p>
+                
+                <h3 id="payload-6">Payload</h3>
+                
+                <p><code>requester</code> is an email address</p>
+                
+                <p><code>agent_identifier</code> identifies the agent</p>
+                
+                <p><code>dbname</code> is the name of the database</p>
+                
+                <h3 id="response-2">Response</h3>
+                
+                <pre><code>
+                {
+                    "status":100,
+                    "map":{
+                        "jdbc-driver":"jdbc.default.driverClassName=org.mariadb.jdbc.Driver",
+                        "jdbc-url":"jdbc.default.url=jdbc:mariadb://172.17.0.2:3309/electric_adapter?useUnicode=true\u0026characterEncoding=UTF-8\u0026useFastDateParsing=false",
+                        "password":"tag_tuner",
+                        "url":"172.17.0.2:3309",
+                        "user":"electric_adapter"
+                    }
+                }
+                </code></pre></body>
+  </div>
+  <!-- Third party -->
+  <script src="/node_modules/jquery/dist/jquery.slim.min.js"></script>
+  <script src="/node_modules/popper.js/dist/umd/popper.min.js"></script>
+  <script src="/node_modules/bootstrap/dist//js/bootstrap.min.js"></script>
+  <script src="/node_modules/datatables.net/js/jquery.dataTables.js"></script>
+  <script src="/node_modules/datatables.net-bs4/js/dataTables.bootstrap4.js"></script>
+  <script src="/res/js/extra.js"></script>
 </html>

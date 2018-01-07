@@ -93,9 +93,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.ID == 0 {
-		req.ID = registry.ID()
-	}
+	req.ID = registry.ID()
 
 	if req.DatabaseName == "" && req.Username != "" {
 		req.DatabaseName = req.Username
@@ -354,6 +352,7 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 	inet.SendResponse(w, http.StatusOK, msg)
 }
 
+// TODO: broken, need fix.
 func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 	user := getUser(r)
 	if user == "" {
