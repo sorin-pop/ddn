@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,7 +22,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// apiList will list all available agents in a JSON format.
+func apiPage(w http.ResponseWriter, r *http.Request) {
+	api := fmt.Sprintf("%s/web/html/api.html", workdir)
+
+	t, err := template.ParseFiles(api)
+	if err != nil {
+		logger.Error("Failed parsing files: %v", err)
+		return
+	}
+
+	t.Execute(w, nil)
+}
+
+// apiList will list all available agents in a shortname:dbvendor mapping format.
 func apiList(w http.ResponseWriter, r *http.Request) {
 	list := make(map[string]string, 10)
 	for _, agent := range registry.List() {
@@ -29,6 +42,18 @@ func apiList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg := inet.MapMessage{Status: status.Success, Message: list}
+
+	inet.SendResponse(w, http.StatusOK, msg)
+}
+
+// apiList will list all available agents in a JSON format.
+func apiListAgents(w http.ResponseWriter, r *http.Request) {
+	list := make(map[string]model.Agent, 10)
+	for _, agent := range registry.List() {
+		list[agent.ShortName] = agent
+	}
+
+	msg := inet.StructMessage{Status: status.Success, Message: list}
 
 	inet.SendResponse(w, http.StatusOK, msg)
 }

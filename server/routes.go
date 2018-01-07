@@ -140,6 +140,12 @@ var routes = Routes{
 		recreate,
 	},
 	route{
+		"api",
+		"GET",
+		"/api",
+		apiPage,
+	},
+	route{
 		"api/create",
 		"POST",
 		"/api/create",
@@ -150,6 +156,12 @@ var routes = Routes{
 		"GET",
 		"/api/list",
 		apiList,
+	},
+	route{
+		"api/listAgents",
+		"GET",
+		"/api/list-agents",
+		apiListAgents,
 	},
 	route{
 		"api/agents/byName",

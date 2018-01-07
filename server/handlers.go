@@ -257,8 +257,6 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Could not removeall multipartform: %v", err)
 	}
 
-	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
-
 	conn, ok := registry.Get(agent)
 	if !ok {
 		session.AddFlash(fmt.Sprintf("Failed importing database, agent %s went offline", agent), "fail")
@@ -268,6 +266,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 
 	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
 
+	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
 	entry := data.Row{
 		DBName:     dbname,
 		DBUser:     dbuser,
