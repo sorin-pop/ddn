@@ -10,12 +10,11 @@ import (
 	"time"
 
 	"github.com/djavorszky/ddn/common/errs"
-	"github.com/djavorszky/ddn/common/visibility"
-
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/djavorszky/liferay"
@@ -61,32 +60,50 @@ func apiListAgents(w http.ResponseWriter, r *http.Request) {
 
 // apiListDatabases will list all databases
 func apiListDatabases(w http.ResponseWriter, r *http.Request) {
-	requester := struct{ email string }{}
+	requester := struct {
+		Email string `json:"requester"`
+	}{}
 
 	err := json.NewDecoder(r.Body).Decode(&requester)
 	if err != nil {
 		logger.Error("couldn't decode json request: %v", err)
 
-		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  http.StatusInternalServerError,
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  http.StatusBadRequest,
 			Message: errs.JSONDecodeFailed,
 		})
 		return
 	}
 
+	// Get private ones
+	dbs, err := db.FetchByCreator(requester.Email)
+	if err != nil {
+		if err != nil {
+			inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+				Status:  http.StatusInternalServerError,
+				Message: errs.QueryFailed,
+			})
+
+			logger.Error("Fetching private dbs failed: %v", err)
+			return
+		}
+	}
+
 	databases := make(map[int]data.Row)
 
-	// Get private ones
+	for _, db := range dbs {
+		databases[db.ID] = db
+	}
 
 	// Get public ones
-	dbs, err := db.FetchPublic()
+	dbs, err = db.FetchPublic()
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
 			Status:  http.StatusInternalServerError,
 			Message: errs.QueryFailed,
 		})
 
-		logger.Error("Fetching public failed: %v", err)
+		logger.Error("Fetching public dbs failed: %v", err)
 		return
 	}
 
@@ -110,8 +127,8 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("couldn't decode json request: %v", err)
 
-		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  http.StatusInternalServerError,
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  http.StatusBadRequest,
 			Message: errs.JSONDecodeFailed,
 		})
 		return
@@ -226,6 +243,7 @@ func apiSafe2Restart(w http.ResponseWriter, r *http.Request) {
 	// Check if server and agents are restartable
 	entries, err := db.FetchAll()
 	if err != nil {
+		logger.Error("failed FetchAll: %v", err)
 		msg := inet.Message{
 			Status:  http.StatusInternalServerError,
 			Message: errs.QueryFailed,

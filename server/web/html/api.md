@@ -54,6 +54,53 @@ Example return:
 }
 ```
 
+## POST api/list-databases
+Returns with the list of databases the user has and all the public ones. POST JSON request requires `requester` field.
+
+If requester does not have private databases, the public ones are still returned.
+
+example call:
+`curl -H "Content-Type: application/json" -X POST -d '{"requester":"daniel.javorszky@liferay.com"}' http://localhost:7010/api/list-databases`
+
+### Payload
+`requester` - email address of the user in question.
+
+### Returns
+Returns a map of objects, where the "id" of the database is the key and the object itself is the value.
+
+Example return:
+```
+{
+   "15":{
+      "id":15,
+      "vendor":"mariadb",
+      "dbname":"gel_component",
+      "dbuser":"performance_air",
+      "dbpass":"gel_gel",
+      "sid":"",
+      "dumplocation":"",
+      "createdate":"2017-12-11T15:14:27.03707071Z",
+      "expirydate":"2018-01-11T15:14:27.037070856Z",
+      "creator":"daniel.javorszky@liferay.com",
+      "agent":"mariadb-10",
+      "dbaddress":"172.17.0.2",
+      "dbport":"3309",
+      "status":100,
+      "comment":"",
+      "message":"",
+      "public":0
+   },
+}
+```
+
+Failing can happen if JSON request is malformed:
+```
+{
+   "status":400,
+   "message":"ERR_JSON_DECODE_FAILED"
+}
+```
+
 ## GET api/agents/${agent_identifier}
 Returns all information about a specific agent, similarly to how `api/list-agents` returns them for all of them. Agent identifiers are alphanumeric with dashes or underscores (`[a-zA-Z0-9-_]+`).
 
