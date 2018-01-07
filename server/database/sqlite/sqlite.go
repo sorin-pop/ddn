@@ -81,7 +81,7 @@ func (lite *DB) FetchByDBNameAgent(dbname, agent string) (data.Row, error) {
 	return res, nil
 }
 
-// FetchByCreator returns public entries that were created by the
+// FetchByCreator returns private entries that were created by the
 // specified user, an empty list if it's not the user does
 // not have any entries, or an error if something went
 // wrong

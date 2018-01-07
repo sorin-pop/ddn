@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/djavorszky/ddn/common/errs"
 	"github.com/djavorszky/ddn/common/visibility"
 
 	"github.com/djavorszky/ddn/common/inet"
@@ -46,7 +47,7 @@ func apiList(w http.ResponseWriter, r *http.Request) {
 	inet.SendResponse(w, http.StatusOK, msg)
 }
 
-// apiList will list all available agents in a JSON format.
+// apiListAgents will list all available agents in a JSON format.
 func apiListAgents(w http.ResponseWriter, r *http.Request) {
 	list := make(map[string]model.Agent, 10)
 	for _, agent := range registry.List() {
@@ -54,6 +55,46 @@ func apiListAgents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg := inet.StructMessage{Status: status.Success, Message: list}
+
+	inet.SendResponse(w, http.StatusOK, msg)
+}
+
+// apiListDatabases will list all databases
+func apiListDatabases(w http.ResponseWriter, r *http.Request) {
+	requester := struct{ email string }{}
+
+	err := json.NewDecoder(r.Body).Decode(&requester)
+	if err != nil {
+		logger.Error("couldn't decode json request: %v", err)
+
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  http.StatusInternalServerError,
+			Message: errs.JSONDecodeFailed,
+		})
+		return
+	}
+
+	databases := make(map[int]data.Row)
+
+	// Get private ones
+
+	// Get public ones
+	dbs, err := db.FetchPublic()
+	if err != nil {
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  http.StatusInternalServerError,
+			Message: errs.QueryFailed,
+		})
+
+		logger.Error("Fetching public failed: %v", err)
+		return
+	}
+
+	for _, db := range dbs {
+		databases[db.ID] = db
+	}
+
+	msg := inet.StructMessage{Status: http.StatusOK, Message: databases}
 
 	inet.SendResponse(w, http.StatusOK, msg)
 }
@@ -69,14 +110,18 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("couldn't decode json request: %v", err)
 
-		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  http.StatusInternalServerError,
+			Message: errs.JSONDecodeFailed,
+		})
 		return
 	}
 
 	if ok := sutils.Present(req.AgentIdentifier, req.RequesterEmail); !ok {
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.MissingParameters,
-			Message: fmt.Sprintf("Need values for 'agent_identifier' and 'requester_email', but got: %q and %q", req.AgentIdentifier, req.RequesterEmail)})
+			Status:  http.StatusBadRequest,
+			Message: errs.MissingParameters,
+		})
 		return
 	}
 
@@ -87,9 +132,11 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 
 	conn, ok = registry.Get(req.AgentIdentifier)
 	if !ok {
+		logger.Error("Agent %q not found", req.AgentIdentifier)
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
 			Status:  status.MissingParameters,
-			Message: fmt.Sprintf("Agent '%s' not found in registry", req.AgentIdentifier)})
+			Message: errs.AgentNotFound,
+		})
 		return
 	}
 
@@ -104,8 +151,9 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 	_, err = conn.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  status.CreateDatabaseFailed,
-			Message: fmt.Sprintf("creating database failed: %s", err.Error())})
+			Status:  http.StatusInternalServerError,
+			Message: fmt.Sprintf("creating database failed: %v", err),
+		})
 		return
 	}
 
@@ -126,17 +174,22 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 
 	err = db.Insert(&dbe)
 	if err != nil {
+		logger.Error("failed inserting database: %v", err)
+
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  status.CreateDatabaseFailed,
-			Message: fmt.Sprintf("persisting database locally failed: %s", err.Error())})
+			Status:  http.StatusInternalServerError,
+			Message: errs.PersistFailed,
+		})
 		return
 	}
 
 	resp, err := json.Marshal(dbe)
 	if err != nil {
+		logger.Error("json marshal failed: %v", err)
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  status.CreateDatabaseFailed,
-			Message: fmt.Sprintf("failed to marshal response: %s", err.Error())})
+			Status:  http.StatusInternalServerError,
+			Message: errs.JSONEncodeFailed,
+		})
 		return
 	}
 
@@ -153,7 +206,10 @@ func apiAgentByName(w http.ResponseWriter, r *http.Request) {
 
 	conn, ok := registry.Get(shortname)
 	if !ok {
-		msg := inet.Message{Status: http.StatusServiceUnavailable, Message: "ERR_AGENT_NOT_FOUND"}
+		msg := inet.Message{
+			Status:  http.StatusServiceUnavailable,
+			Message: errs.AgentNotFound,
+		}
 
 		inet.SendResponse(w, http.StatusServiceUnavailable, msg)
 		return
@@ -170,7 +226,10 @@ func apiSafe2Restart(w http.ResponseWriter, r *http.Request) {
 	// Check if server and agents are restartable
 	entries, err := db.FetchAll()
 	if err != nil {
-		msg := inet.Message{Status: http.StatusInternalServerError, Message: "ERR_QUERY_FAILED"}
+		msg := inet.Message{
+			Status:  http.StatusInternalServerError,
+			Message: errs.QueryFailed,
+		}
 
 		inet.SendResponse(w, http.StatusInternalServerError, msg)
 		return
@@ -229,7 +288,10 @@ func apiSetLogLevel(w http.ResponseWriter, r *http.Request) {
 	case "debug":
 		lvl = logger.DEBUG
 	default:
-		msg := inet.Message{Status: http.StatusBadRequest, Message: "ERR_UNRECOGNIZED_LOGLEVEL"}
+		msg := inet.Message{
+			Status:  http.StatusBadRequest,
+			Message: errs.UnknownParameter,
+		}
 
 		inet.SendResponse(w, http.StatusBadRequest, msg)
 		return
@@ -266,8 +328,9 @@ func apiSaveSubscription(w http.ResponseWriter, r *http.Request) {
 		logger.Error("couldn't decode json request: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.InvalidJSON,
-			Message: "There was a problem with the subscription request sent to the server. Server could not decode JSON request."})
+			Status:  http.StatusBadRequest,
+			Message: errs.JSONDecodeFailed,
+		})
 		return
 	}
 
@@ -276,25 +339,28 @@ func apiSaveSubscription(w http.ResponseWriter, r *http.Request) {
 		//TODO
 		// log the received request body
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.MissingParameters,
-			Message: "There was a problem with the subscription request sent to the server. Either \"endpoint\", \"p256dh\", or \"auth\" is missing, or empty."})
+			Status:  http.StatusBadRequest,
+			Message: errs.MissingParameters,
+		})
 		return
 	}
 
 	userCookie, err := r.Cookie("user")
 	if err != nil {
-		logger.Error("getting user cookie failed: " + err.Error())
-		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  status.SaveSubscriptionFailed,
-			Message: fmt.Sprintf("getting user cookie failed: %s", err.Error())})
+		logger.Error("getting user cookie failed: %v", err)
+		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
+			Status:  http.StatusBadRequest,
+			Message: errs.MissingUserCookie,
+		})
 		return
 	}
 
 	err = db.InsertPushSubscription(&subscription, userCookie.Value)
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  status.SaveSubscriptionFailed,
-			Message: fmt.Sprintf("persisting push subscription failed: %s", err.Error())})
+			Status:  http.StatusInternalServerError,
+			Message: errs.PersistFailed,
+		})
 		return
 	}
 
@@ -315,8 +381,9 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 		logger.Error("couldn't decode json request: %v", err)
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.InvalidJSON,
-			Message: "There was a problem with the subscription removal request sent to the server. Server could not decode JSON request."})
+			Status:  http.StatusBadRequest,
+			Message: errs.JSONDecodeFailed,
+		})
 		return
 	}
 
@@ -325,8 +392,9 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 		//TODO
 		// log the received request body
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.MissingParameters,
-			Message: "There was a problem with the subscription removal request sent to the server. Either \"endpoint\", \"p256dh\", or \"auth\" is missing, or empty."})
+			Status:  http.StatusBadRequest,
+			Message: errs.MissingParameters,
+		})
 		return
 	}
 
@@ -334,16 +402,20 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("getting user cookie failed: " + err.Error())
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  status.DeleteSubscriptionFailed,
-			Message: fmt.Sprintf("getting user cookie failed: %s", err.Error())})
+			Status:  http.StatusBadRequest,
+			Message: errs.MissingUserCookie,
+		})
 		return
 	}
 
 	err = db.DeletePushSubscription(&subscription, userCookie.Value)
 	if err != nil {
+		logger.Error("failed deleting push subscription: %v", err)
+
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  status.DeleteSubscriptionFailed,
-			Message: fmt.Sprintf("deleting push subscription from database failed: %s", err.Error())})
+			Status:  http.StatusInternalServerError,
+			Message: errs.DeleteFailed,
+		})
 		return
 	}
 
@@ -360,7 +432,7 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
 			Status:  http.StatusBadRequest,
-			Message: "ERR_ACCESS_DENIED",
+			Message: errs.AccessDenied,
 		})
 
 		return
@@ -374,17 +446,17 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
 			Status:  http.StatusBadRequest,
-			Message: "ERR_INVALID_URL",
+			Message: errs.InvalidURL,
 		})
 		return
 	}
 
 	dbe, err := db.FetchByID(ID)
 	if err != nil {
-		logger.Error("Failed database fetch: %v", err)
+		logger.Error("failed database fetch: %v", err)
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
 			Status:  http.StatusInternalServerError,
-			Message: "ERR_DATABASE_GONE",
+			Message: errs.QueryFailed,
 		})
 		return
 	}
@@ -394,7 +466,7 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
 			Status:  http.StatusBadRequest,
-			Message: "ERR_ACCESS_DENIED",
+			Message: errs.AccessDenied,
 		})
 		return
 	}
@@ -412,7 +484,7 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Failed database update: %v", err)
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
 			Status:  http.StatusInternalServerError,
-			Message: "ERR_DATABASE_GONE",
+			Message: errs.UpdateFailed,
 		})
 		return
 	}
@@ -434,9 +506,11 @@ func apiDBAccess(w http.ResponseWriter, r *http.Request) {
 	requester, dbname, agent := vars["requester"], vars["dbname"], vars["agent"]
 
 	if ok := sutils.Present(requester, dbname, agent); !ok {
+		logger.Error("Missing parameters: requester: %q, dbname: %q, agent: %q", requester, dbname, agent)
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.MissingParameters,
-			Message: fmt.Sprintf("Need values for 'requester', 'dbname' and 'agent', but got: %q, %q and %q", requester, dbname, agent)})
+			Status:  http.StatusBadRequest,
+			Message: errs.MissingParameters,
+		})
 		return
 	}
 
@@ -444,16 +518,17 @@ func apiDBAccess(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("FetchByAgentDBName: %v", err)
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.ServerError,
-			Message: fmt.Sprintf("Failed querying database: %q", err)})
+			Status:  http.StatusInternalServerError,
+			Message: errs.QueryFailed,
+		})
 		return
 	}
 
 	if dbe.Public == vis.Private && dbe.Creator != requester {
 		logger.Error("User %q tried to get portalext of db created by %q.", requester, dbe.Creator)
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  status.MissingParameters,
-			Message: "Failed fetching db access parameters: You can only fetch those of public databases or private ones that you created."})
+			Status:  http.StatusForbidden,
+			Message: errs.AccessDenied})
 		return
 	}
 

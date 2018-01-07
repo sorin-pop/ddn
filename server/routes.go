@@ -163,6 +163,13 @@ var routes = Routes{
 		"/api/list-agents",
 		apiListAgents,
 	},
+
+	route{
+		"api/listDatabases",
+		http.MethodPost,
+		"/api/list-databases",
+		apiListDatabases,
+	},
 	route{
 		"api/agents/byName",
 		http.MethodGet,
