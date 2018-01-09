@@ -17,39 +17,43 @@ import (
 
 // Page is a struct holding the data to be displayed on the welcome page.
 type Page struct {
-	UseCDN           bool
-	Agents           []model.Agent
-	AnyOnline        bool
-	Title            string
-	Pages            map[string]string
-	ActivePage       string
-	Message          string
-	MessageType      string
-	User             string
-	HasUser          bool
-	HasEntry         bool
-	PrivateDatabases []data.Row
-	PublicDatabases  []data.Row
-	HasPrivateDBs    bool
-	HasPublicDBs     bool
-	Ext62            liferay.JDBC
-	ExtDXP           liferay.JDBC
-	FileList         brwsr.FileList
-	HasMountedFolder bool
-	WebPushEnabled   bool
-	DumpLoc          string
-	Version          string
+	UseCDN                 bool
+	Agents                 []model.Agent
+	AnyOnline              bool
+	Title                  string
+	Pages                  map[string]string
+	ActivePage             string
+	Message                string
+	MessageType            string
+	User                   string
+	HasUser                bool
+	HasEntry               bool
+	PrivateDatabases       []data.Row
+	PublicDatabases        []data.Row
+	HasPrivateDBs          bool
+	HasPublicDBs           bool
+	Ext62                  liferay.JDBC
+	ExtDXP                 liferay.JDBC
+	FileList               brwsr.FileList
+	HasMountedFolder       bool
+	WebPushEnabled         bool
+	DumpLoc                string
+	Version                string
+	GoogleAnalyticsEnabled bool
+	GoogleAnalyticsID      string
 }
 
 func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 	page := Page{
-		Agents:           registry.List(),
-		Title:            getTitle(r.URL.Path),
-		Pages:            getPages(),
-		ActivePage:       r.URL.Path,
-		HasMountedFolder: config.MountLoc != "",
-		WebPushEnabled:   config.WebPushEnabled,
-		Version:          version,
+		Agents:                 registry.List(),
+		Title:                  getTitle(r.URL.Path),
+		Pages:                  getPages(),
+		ActivePage:             r.URL.Path,
+		HasMountedFolder:       config.MountLoc != "",
+		WebPushEnabled:         config.WebPushEnabled,
+		Version:                version,
+		GoogleAnalyticsEnabled: config.GoogleAnalyticsID != "",
+		GoogleAnalyticsID:      config.GoogleAnalyticsID,
 	}
 
 	for _, conn := range registry.List() {

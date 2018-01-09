@@ -24,6 +24,7 @@ type Config struct {
 	WebPushEnabled    bool     `toml:"webpush-enabled"`
 	WebPushSubscriber string   `toml:"webpush-subscriber"`
 	VAPIDPrivateKey   string   `toml:"vapid-private-key"`
+	GoogleAnalyticsID string   `toml:"google-analytics-id"`
 }
 
 // Print prints the configuration to the log.
@@ -45,5 +46,9 @@ func (c Config) Print() {
 	if c.SMTPAddr != "" && c.SMTPPort != 0 && c.EmailSender != "" {
 		logger.Info("Admin email:\t\t%s", c.AdminEmail)
 		logger.Info("Server configured to send emails.")
+	}
+
+	if c.GoogleAnalyticsID != "" {
+		logger.Info("Google analytics enabled.")
 	}
 }
