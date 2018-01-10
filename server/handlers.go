@@ -290,7 +290,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	err = db.Insert(&entry)
 	if err != nil {
 		logger.Error("persist: %v", err)
-		session.AddFlash(fmt.Sprintf("failed persisting database locally: %v", err))
+		session.AddFlash(fmt.Sprintf("failed persisting database locally: %v", err), "fail")
 		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 		return
 	}
@@ -334,13 +334,6 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 
 	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
 
-	ID := registry.ID()
-	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
-	if err != nil {
-		session.AddFlash(err.Error(), "fail")
-		return
-	}
-
 	entry := data.Row{
 		DBName:     dbname,
 		DBUser:     dbuser,
@@ -363,6 +356,16 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	err = db.Insert(&entry)
 	if err != nil {
 		logger.Error("persist: %v", err)
+
+		session.AddFlash(err.Error(), "fail")
+		return
+	}
+
+	ID := registry.ID()
+	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
+	if err != nil {
+		session.AddFlash(err.Error(), "fail")
+		return
 	}
 
 	session.Values["id"] = entry.ID
@@ -565,7 +568,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 func dropAsync(conn model.Agent, ID int, dbname, dbuser string) {
 	dbe, err := db.FetchByID(ID)
 	if err != nil {
-		logger.Error("Couldn't drop database %q on agent %q: %v", dbname, conn.ShortName, err)
+		logger.Error("couldn't fetch DB: %v", err)
 		return
 	}
 
@@ -576,7 +579,7 @@ func dropAsync(conn model.Agent, ID int, dbname, dbuser string) {
 
 		db.Update(&dbe)
 
-		logger.Error("Couldn't drop database %q on agent %q: %s", dbname, conn.ShortName, err)
+		logger.Error("couldn't drop database %q on agent %q: %s", dbname, conn.ShortName, err)
 		return
 	}
 
@@ -831,48 +834,6 @@ func ensureValues(dbname, dbuser, dbpass *string, vendor string) {
 		*dbname = *dbuser
 	}
 
-}
-
-func doCreateDatabase(req model.ClientRequest) (model.Agent, error) {
-	con, ok := registry.Get(req.AgentIdentifier)
-	if !ok {
-		return model.Agent{}, fmt.Errorf("requested identifier %q not in registry", req.AgentIdentifier)
-	}
-
-	dest := fmt.Sprintf("http://%s:%s/create-database", con.Address, con.AgentPort)
-
-	resp, err := notif.SndLoc(req, dest)
-	if err != nil {
-		return model.Agent{}, fmt.Errorf("couldn't create database on agent: %v", err)
-	}
-
-	var msg inet.Message
-	respBytes := bytes.NewBufferString(resp)
-
-	err = json.NewDecoder(respBytes).Decode(&msg)
-	if err != nil {
-		return model.Agent{}, fmt.Errorf("malformed response from agent: %v", err)
-	}
-
-	if msg.Status != status.Success {
-		return model.Agent{}, fmt.Errorf("creating database failed: %s", msg.Message)
-	}
-
-	dbentry := data.Row{
-		DBName:     req.DatabaseName,
-		DBUser:     req.Username,
-		DBPass:     req.Password,
-		Creator:    req.RequesterEmail,
-		CreateDate: time.Now(),
-		ExpiryDate: time.Now().AddDate(0, 1, 0),
-		Dumpfile:   req.DumpLocation,
-		AgentName:  req.AgentIdentifier,
-		Status:     status.Success,
-	}
-
-	db.Insert(&dbentry)
-
-	return con, nil
 }
 
 func getUser(r *http.Request) string {

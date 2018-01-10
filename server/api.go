@@ -157,22 +157,13 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.ID = registry.ID()
-
 	if req.DatabaseName == "" && req.Username != "" {
 		req.DatabaseName = req.Username
 	}
 
 	ensureValues(&req.DatabaseName, &req.Username, &req.Password, conn.DBVendor)
 
-	_, err = conn.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
-	if err != nil {
-		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
-			Status:  http.StatusInternalServerError,
-			Message: fmt.Sprintf("creating database failed: %v", err),
-		})
-		return
-	}
+	req.ID = registry.ID()
 
 	dbe := data.Row{
 		DBName:     req.DatabaseName,
@@ -197,6 +188,17 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 			Status:  http.StatusInternalServerError,
 			Message: errs.PersistFailed,
 		})
+		return
+	}
+
+	_, err = conn.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
+	if err != nil {
+		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
+			Status:  http.StatusInternalServerError,
+			Message: fmt.Sprintf("creating database failed: %v", err),
+		})
+
+		db.Delete(dbe)
 		return
 	}
 
