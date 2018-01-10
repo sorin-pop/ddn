@@ -135,7 +135,9 @@ func (db *postgres) CreateDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("starting transaction failed: %s", err.Error())
 	}
 
-	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %s ENCODING 'utf-8';", dbRequest.DatabaseName))
+	logger.Info(fmt.Sprintf("CREATE DATABASE %q ENCODING 'utf-8';", dbRequest.DatabaseName))
+
+	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %q ENCODING 'utf-8';", dbRequest.DatabaseName))
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("executing create database query failed: %s", err.Error())
@@ -147,7 +149,7 @@ func (db *postgres) CreateDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("executing create user '%s' failed: %s", dbRequest.Username, err.Error())
 	}
 
-	_, err = db.conn.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON DATABASE %s TO %s;", dbRequest.DatabaseName, dbRequest.Username))
+	_, err = db.conn.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON DATABASE %q TO %s;", dbRequest.DatabaseName, dbRequest.Username))
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("executing grant privileges to user '%s' on database '%s' failed: %s", dbRequest.Username, dbRequest.DatabaseName, err.Error())
