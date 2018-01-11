@@ -135,8 +135,6 @@ func (db *postgres) CreateDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("starting transaction failed: %s", err.Error())
 	}
 
-	logger.Info(fmt.Sprintf("CREATE DATABASE %q ENCODING 'utf-8';", dbRequest.DatabaseName))
-
 	_, err = db.conn.Exec(fmt.Sprintf("CREATE DATABASE %q ENCODING 'utf-8';", dbRequest.DatabaseName))
 	if err != nil {
 		tx.Rollback()
@@ -180,7 +178,7 @@ func (db *postgres) DropDatabase(dbRequest model.DBRequest) error {
 		return fmt.Errorf("starting transaction failed: %s", err.Error())
 	}
 
-	_, err = db.conn.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbRequest.DatabaseName))
+	_, err = db.conn.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %q", dbRequest.DatabaseName))
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("dropping database '%s' failed: %s", dbRequest.DatabaseName, err.Error())
