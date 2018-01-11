@@ -2,6 +2,7 @@
 package inet
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -88,4 +89,42 @@ func SendResponse(w http.ResponseWriter, status int, msg JSONMessage) {
 	WriteHeader(w, status)
 
 	w.Write(b)
+}
+
+// Response represents a
+type Response struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   interface{} `json:"error,omitempty"`
+}
+
+// Marshal marshals the response into json
+func (r Response) Marshal() []byte {
+	b, _ := json.Marshal(r)
+
+	return b
+}
+
+// SendSuccess creates a JSON response of a successful API call
+func SendSuccess(w http.ResponseWriter, status int, data interface{}) {
+	WriteHeader(w, status)
+
+	r := Response{
+		Success: true,
+		Data:    data,
+	}
+
+	w.Write(r.Marshal())
+}
+
+// SendFailure creates a JSON response of a failed API call
+func SendFailure(w http.ResponseWriter, status int, err interface{}) {
+	WriteHeader(w, status)
+
+	r := Response{
+		Success: false,
+		Error:   err,
+	}
+
+	w.Write(r.Marshal())
 }

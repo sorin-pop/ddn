@@ -212,4 +212,29 @@ var routes = Routes{
 		"/api/dbaccess/{requester:[a-zA-Z0-9-_.@]+}/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9-_]+}",
 		apiDBAccess,
 	},
+	// v2 APIs
+	route{
+		"/api/agents",
+		http.MethodGet,
+		"/api/agents",
+		getAPIAgents,
+	},
+	route{
+		"api/agents/$agent-name",
+		http.MethodGet,
+		"/api/agents/{shortname:[a-zA-Z0-9-_]+}",
+		getAPIAgentByName,
+	},
+	route{
+		"api/databases",
+		http.MethodGet,
+		"/api/databases",
+		getAPIDatabases,
+	},
+	route{
+		"api/databases/id",
+		http.MethodGet,
+		"/api/databases/{id:[0-9]+}",
+		getAPIDatabaseByID,
+	},
 }

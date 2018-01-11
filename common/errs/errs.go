@@ -13,8 +13,9 @@ const (
 	AgentNotFound     = "ERR_AGENT_NOT_FOUND"
 
 	// Database related
-	PersistFailed = "ERR_DATABASE_PERSIST_FAILED"
-	DeleteFailed  = "ERR_DATABASE_DELETE_FAILED"
-	QueryFailed   = "ERR_DATABASE_QUERY_FAILED"
-	UpdateFailed  = "ERR_DATABASE_UPDATE_FAILED"
+	PersistFailed  = "ERR_DATABASE_PERSIST_FAILED"
+	DeleteFailed   = "ERR_DATABASE_DELETE_FAILED"
+	QueryFailed    = "ERR_DATABASE_QUERY_FAILED"
+	UpdateFailed   = "ERR_DATABASE_UPDATE_FAILED"
+	QueryNoResults = "ERR_NO_RESULT"
 )

@@ -60,23 +60,17 @@ func apiListAgents(w http.ResponseWriter, r *http.Request) {
 
 // apiListDatabases will list all databases
 func apiListDatabases(w http.ResponseWriter, r *http.Request) {
-	requester := struct {
-		Email string `json:"requester"`
-	}{}
-
-	err := json.NewDecoder(r.Body).Decode(&requester)
+	user, err := getAPIUser(r)
 	if err != nil {
-		logger.Error("couldn't decode json request: %v", err)
-
-		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
-			Status:  http.StatusBadRequest,
-			Message: errs.JSONDecodeFailed,
+		inet.SendResponse(w, http.StatusForbidden, inet.Message{
+			Status:  http.StatusForbidden,
+			Message: errs.AccessDenied,
 		})
 		return
 	}
 
 	// Get private ones
-	dbs, err := db.FetchByCreator(requester.Email)
+	dbs, err := db.FetchByCreator(user)
 	if err != nil {
 		if err != nil {
 			inet.SendResponse(w, http.StatusInternalServerError, inet.Message{

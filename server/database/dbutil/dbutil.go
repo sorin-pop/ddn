@@ -103,8 +103,8 @@ func ReadRow(result *sql.Row) (data.Row, error) {
 		&row.Message,
 		&row.Public,
 		&row.Comment)
-	if err != nil {
-		return data.Row{}, fmt.Errorf("failed reading row: %v", err)
+	if err != nil && err != sql.ErrNoRows {
+		return row, fmt.Errorf("failed reading row: %v", err)
 	}
 
 	return row, nil
@@ -132,8 +132,8 @@ func ReadRows(rows *sql.Rows) (data.Row, error) {
 		&row.Message,
 		&row.Public,
 		&row.Comment)
-	if err != nil {
-		return data.Row{}, fmt.Errorf("failed reading row: %v", err)
+	if err != nil && err != sql.ErrNoRows {
+		return row, fmt.Errorf("failed reading row: %v", err)
 	}
 
 	return row, nil
