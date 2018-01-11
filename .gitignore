@@ -30,6 +30,8 @@ _testmain.go
 
 .vscode
 
+client_secret*
+
 dist
 !dist/deploy.sh
 !dist/Dockerfile
