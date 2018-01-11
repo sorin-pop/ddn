@@ -311,9 +311,9 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Delete failed: %v", err)
 	}
 
-	_, err = mys.FetchByID(testEntry.ID)
-	if err == nil {
-		t.Errorf("Row not deleted")
+	row, _ := mys.FetchByID(testEntry.ID)
+	if row.ID == testEntry.ID {
+		t.Errorf("Row was not deleted, managed to fetch it back")
 	}
 }
 

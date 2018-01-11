@@ -334,9 +334,9 @@ func TestDelete(t *testing.T) {
 		return
 	}
 
-	_, err = lite.FetchByID(testEntry.ID)
-	if err == nil {
-		t.Errorf("Row not deleted")
+	row, _ := lite.FetchByID(testEntry.ID)
+	if row.ID == testEntry.ID {
+		t.Errorf("Row was not deleted, managed to fetch it back")
 	}
 }
 
