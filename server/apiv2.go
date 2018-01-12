@@ -1,13 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/djavorszky/ddn/common/errs"
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
+	"github.com/djavorszky/ddn/common/model"
+	"github.com/djavorszky/ddn/common/status"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/gorilla/mux"
@@ -23,8 +27,8 @@ import (
 
 	POST /api/database	-> Creates or imports a new database (json body)
 
-	DELETE /api/database/${id:int} 							-> drops a database
-	DELETE /api/database/${agent:string}/${dbname:string} 	-> drops a database
+	DELETE /api/database/${id:int} 							-> drops a database - done
+	DELETE /api/database/${agent:string}/${dbname:string} 	-> drops a database - done
 */
 
 func getAPIAgents(w http.ResponseWriter, r *http.Request) {
@@ -68,12 +72,10 @@ func getAPIDatabases(w http.ResponseWriter, r *http.Request) {
 	// Get private ones
 	metas, err := db.FetchByCreator(user)
 	if err != nil {
-		if err != nil {
-			inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
 
-			logger.Error("Fetching private dbs failed: %v", err)
-			return
-		}
+		logger.Error("Fetching private dbs failed: %v", err)
+		return
 	}
 
 	databases := make([]data.Row, 0, len(metas))
@@ -85,7 +87,7 @@ func getAPIDatabases(w http.ResponseWriter, r *http.Request) {
 	// Get public ones
 	metas, err = db.FetchPublic()
 	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
 
 		logger.Error("Fetching public dbs failed: %v", err)
 		return
@@ -108,7 +110,7 @@ func getAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL)
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
 
 		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
 		return
@@ -148,7 +150,7 @@ func getAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 
 	meta, err := db.FetchByDBNameAgent(dbname, agent)
 	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
 
 		logger.Error("Fetching database failed: %v", err)
 		return
@@ -178,7 +180,7 @@ func dropAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL)
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
 
 		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
 		return
@@ -186,7 +188,7 @@ func dropAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 
 	meta, err := db.FetchByID(id)
 	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
 
 		logger.Error("Fetching database failed: %v", err)
 		return
@@ -224,7 +226,7 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 	// Get private ones
 	meta, err := db.FetchByDBNameAgent(dbname, agent)
 	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
 
 		logger.Error("Fetching database failed: %v", err)
 		return
@@ -247,6 +249,73 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inet.SendSuccess(w, http.StatusOK, "Delete successful")
+}
+
+func createAPIDB(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	var req model.ClientRequest
+
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
+
+		logger.Error("couldn't decode json request: %v", err)
+		return
+	}
+
+	if req.AgentIdentifier == "" {
+		inet.SendFailure(w, http.StatusBadRequest, errs.MissingParameters, "agent_identifier")
+
+		return
+	}
+
+	agent, ok := registry.Get(req.AgentIdentifier)
+	if !ok {
+		inet.SendFailure(w, http.StatusBadRequest, errs.AgentNotFound, req.AgentIdentifier)
+
+		return
+	}
+
+	ensureValues(&req.DatabaseName, &req.Username, &req.Password, agent.DBVendor)
+
+	req.ID = registry.ID()
+	dbe := data.Row{
+		DBName:     req.DatabaseName,
+		DBUser:     req.Username,
+		DBPass:     req.Password,
+		DBSID:      agent.DBSID,
+		AgentName:  req.AgentIdentifier,
+		Creator:    req.RequesterEmail,
+		CreateDate: time.Now(),
+		ExpiryDate: time.Now().AddDate(0, 1, 0),
+		DBAddress:  agent.DBAddr,
+		DBPort:     agent.DBPort,
+		DBVendor:   agent.DBVendor,
+		Status:     status.Success,
+	}
+
+	err = db.Insert(&dbe)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.PersistFailed, err)
+
+		logger.Error("failed inserting database: %v", err)
+		return
+	}
+
+	_, err = agent.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.CreateFailed, err)
+
+		db.Delete(dbe)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, dbe)
 }
 
 func getAPIUser(r *http.Request) (string, error) {

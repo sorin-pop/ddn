@@ -255,4 +255,10 @@ var routes = Routes{
 		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9_]+}",
 		dropAPIDatabaseByAgentDBName,
 	},
+	route{
+		"api/databases",
+		http.MethodPost,
+		"/api/databases",
+		createAPIDB,
+	},
 }

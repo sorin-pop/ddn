@@ -118,12 +118,12 @@ func SendSuccess(w http.ResponseWriter, status int, data interface{}) {
 }
 
 // SendFailure creates a JSON response of a failed API call
-func SendFailure(w http.ResponseWriter, status int, err interface{}) {
+func SendFailure(w http.ResponseWriter, status int, errs ...interface{}) {
 	WriteHeader(w, status)
 
 	r := Response{
 		Success: false,
-		Error:   err,
+		Error:   errs,
 	}
 
 	w.Write(r.Marshal())
