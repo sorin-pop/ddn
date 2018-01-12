@@ -8,7 +8,6 @@ import (
 	"github.com/djavorszky/ddn/common/errs"
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
-	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/gorilla/mux"
@@ -35,12 +34,7 @@ func getAPIAgents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := make(map[string]model.Agent, 10)
-	for _, agent := range registry.List() {
-		list[agent.ShortName] = agent
-	}
-
-	inet.SendSuccess(w, http.StatusOK, list)
+	inet.SendSuccess(w, http.StatusOK, registry.List())
 }
 
 // apiAgentByName returns an agent by its shortname
@@ -82,10 +76,10 @@ func getAPIDatabases(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	databases := make(map[int]data.Row)
+	databases := make([]data.Row, 0, len(metas))
 
 	for _, meta := range metas {
-		databases[meta.ID] = meta
+		databases = append(databases, meta)
 	}
 
 	// Get public ones
@@ -98,7 +92,7 @@ func getAPIDatabases(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, meta := range metas {
-		databases[meta.ID] = meta
+		databases = append(databases, meta)
 	}
 
 	inet.SendSuccess(w, http.StatusOK, databases)
@@ -120,7 +114,6 @@ func getAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get private ones
 	meta, err := db.FetchByID(id)
 	if err != nil {
 		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
@@ -153,7 +146,6 @@ func getAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	agent, dbname := vars["agent"], vars["dbname"]
 
-	// Get private ones
 	meta, err := db.FetchByDBNameAgent(dbname, agent)
 	if err != nil {
 		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
@@ -192,7 +184,6 @@ func dropAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get private ones
 	meta, err := db.FetchByID(id)
 	if err != nil {
 		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
@@ -211,7 +202,13 @@ func dropAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inet.SendSuccess(w, http.StatusOK, meta)
+	err = db.Delete(meta)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.DeleteFailed)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, "Delete successful")
 }
 
 func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
@@ -223,8 +220,6 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	agent, dbname := vars["agent"], vars["dbname"]
-
-	logger.Info("Agent: %s, DBname: %s", agent, dbname)
 
 	// Get private ones
 	meta, err := db.FetchByDBNameAgent(dbname, agent)
@@ -245,7 +240,13 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inet.SendSuccess(w, http.StatusOK, meta)
+	err = db.Delete(meta)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.DeleteFailed)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, "Delete successful")
 }
 
 func getAPIUser(r *http.Request) (string, error) {

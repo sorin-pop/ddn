@@ -243,4 +243,16 @@ var routes = Routes{
 		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9_]+}",
 		getAPIDatabaseByAgentDBName,
 	},
+	route{
+		"api/databases/id",
+		http.MethodDelete,
+		"/api/databases/{id:[0-9]+}",
+		dropAPIDatabaseByID,
+	},
+	route{
+		"api/databases/agent/dbname",
+		http.MethodDelete,
+		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9_]+}",
+		dropAPIDatabaseByAgentDBName,
+	},
 }
