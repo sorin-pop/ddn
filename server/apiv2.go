@@ -19,8 +19,8 @@ import (
 	GET /api/agents/${agent-name:string} 	-> gets all info of specific agent - done
 
 	GET /api/database 									-> lists databases - done
-	GET /api/database/${id:int} 						-> gets all info of a specific database
-	GET /api/database/${agent:string}/${dbname:string} 	-> gets all info of a specific database
+	GET /api/database/${id:int} 						-> gets all info of a specific database - done
+	GET /api/database/${agent:string}/${dbname:string} 	-> gets all info of a specific database - done
 
 	POST /api/database	-> Creates or imports a new database (json body)
 
@@ -53,7 +53,7 @@ func getAPIAgentByName(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	shortname := vars["shortname"]
+	shortname := vars["agent"]
 
 	agent, ok := registry.Get(shortname)
 	if !ok {
@@ -153,8 +153,10 @@ func getAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	agent, dbname := vars["agent"], vars["dbname"]
 
+	logger.Info("Agent: %s, DBname: %s", agent, dbname)
+
 	// Get private ones
-	db, err := db.FetchByDBNameAgent(agent, dbname)
+	db, err := db.FetchByDBNameAgent(dbname, agent)
 	if err != nil {
 		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
 

@@ -222,7 +222,7 @@ var routes = Routes{
 	route{
 		"api/agents/$agent-name",
 		http.MethodGet,
-		"/api/agents/{shortname:[a-zA-Z0-9-_]+}",
+		"/api/agents/{agent:[a-zA-Z0-9-_]+}",
 		getAPIAgentByName,
 	},
 	route{
@@ -236,5 +236,11 @@ var routes = Routes{
 		http.MethodGet,
 		"/api/databases/{id:[0-9]+}",
 		getAPIDatabaseByID,
+	},
+	route{
+		"api/databases/agent/dbname",
+		http.MethodGet,
+		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9_]+}",
+		getAPIDatabaseByAgentDBName,
 	},
 }
