@@ -290,7 +290,7 @@ func createAPIDB(w http.ResponseWriter, r *http.Request) {
 		DBPass:     req.Password,
 		DBSID:      agent.DBSID,
 		AgentName:  req.AgentIdentifier,
-		Creator:    req.RequesterEmail,
+		Creator:    user,
 		CreateDate: time.Now(),
 		ExpiryDate: time.Now().AddDate(0, 1, 0),
 		DBAddress:  agent.DBAddr,
