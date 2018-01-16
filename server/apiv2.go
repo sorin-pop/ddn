@@ -12,6 +12,7 @@ import (
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
 	"github.com/gorilla/mux"
@@ -384,6 +385,35 @@ func recreateAPIDB(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inet.SendSuccess(w, http.StatusOK, meta)
+}
+
+func browseAPI(w http.ResponseWriter, r *http.Request) {
+	_, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	if config.MountLoc == "" {
+		inet.SendFailure(w, http.StatusFailedDependency, errs.NoFoldersMounted)
+		return
+	}
+
+	vars := mux.Vars(r)
+	loc, ok := vars["loc"]
+	if !ok {
+		loc = "/"
+	}
+
+	files, err := brwsr.List(loc)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.FailedListingDirectory, err.Error())
+
+		logger.Error("failed listing folder: %v", err)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, files)
 }
 
 func getAPIUser(r *http.Request) (string, error) {

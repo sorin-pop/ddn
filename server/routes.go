@@ -269,4 +269,17 @@ var routes = Routes{
 		"/api/databases/{id:[0-9]+}",
 		recreateAPIDB,
 	},
+
+	route{
+		"api/browse",
+		http.MethodGet,
+		"/api/browse",
+		browseAPI,
+	},
+	route{
+		"api/browse/loc",
+		http.MethodGet,
+		"/api/browse/{loc:[0-9a-zA-Z-_./ ]+}",
+		browseAPI,
+	},
 }

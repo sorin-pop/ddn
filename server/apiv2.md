@@ -444,3 +444,57 @@ Example failed return:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
+
+## GET /api/browse/${loc}
+Examples:
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/browse`
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/browse/somefolder`
+
+### Payload
+`${loc}` - Relative path on the server. Can be empty (e.g. `api/browse`) or a valid path (`api/browse/folder`)
+
+### Returns
+Returns a directory listing, containing all files and folders, as well as some information about the folder that was queried.
+
+Example success return:
+```
+{
+   "success":true,
+   "data":{
+      "OnRoot":true,
+      "Path":"/",
+      "Parent":"",
+      "Entries":[
+         {
+            "Name":"a",
+            "Path":"/a",
+            "Size":12345,
+            "Folder":false
+         },
+         {
+            "Name":"hello",
+            "Path":"/hello",
+            "Size":4096,
+            "Folder":true
+         }
+      ]
+   }
+}
+```
+
+Example failed returns:
+```
+{
+   "success":false,
+   "error":[
+      "ERR_DIR_LIST_FAILED",
+      "failed reading dir: open /ddn/ftp/asd: no such file or directory"
+   ]
+   // or
+   "error":[
+       "ERR_DIR_LIST_FAILED",
+       "failed reading dir: readdirent: not a directory"
+   ]
+}
+```
+
