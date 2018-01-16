@@ -34,7 +34,9 @@ If the Authorization header is not specified, an error will be returned:
 
 
 ## GET /api/agents
-Example `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents`
+Example
+
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents`
 
 ### Payload
 none
@@ -75,7 +77,9 @@ Failed return:
 ```
 
 ## GET /api/agents/${agentName}
-Example `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents/mariadb-10`
+Example
+
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents/mariadb-10`
 
 ### Payload
 `${agentName}` - the shortname of the agent (`agent` field in response)
@@ -114,7 +118,9 @@ Failed returns:
 ```
 
 ## GET /api/databases
-Example `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases`
+Example
+
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases`
 
 ### Payload
 none
@@ -151,7 +157,9 @@ Example success return:
 ```
 
 ## GET /api/databases/${id}
-Example `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/15`
+Example
+
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/15`
 
 ### Payload
 `${id}` - the id of the metadata itself.
@@ -194,7 +202,9 @@ Example failed return:
 ```
 
 ## GET /api/databases/${agent}/${dbname}
-Example `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/mariadb-10/gel_component`
+Example
+
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/mariadb-10/gel_component`
 
 ### Payload
 `${agent}` - Shortname of the agent
@@ -240,7 +250,9 @@ Example failed return:
 
 
 ## DELETE /api/databases/${id}
-Example `curl -X DELETE -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/15`
+Example
+
+`curl -X DELETE -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/15`
 
 ### Payload
 `${id}` - the id of the metadata itself.
@@ -265,7 +277,9 @@ Example failed return:
 ```
 
 ## DELETE /api/databases/${agent}/${dbname}
-Example `curl -X DELETE -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/mariadb-10/gel_component`
+Example
+
+`curl -X DELETE -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/mariadb-10/gel_component`
 
 ### Payload
 `${agent}` - Shortname of the agent
@@ -292,7 +306,9 @@ Example failed return:
 ```
 
 ## POST /api/databases/create
-Example `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10"}' http://localhost:7010/api/databases/create`
+Example
+
+`curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10"}' http://localhost:7010/api/databases/create`
 
 ### Payload
 #### Required
@@ -352,7 +368,9 @@ Example failed returns:
 `agent_identifier` - Shortname of the agent
 #### Optional
 `database_name` - Name of the database to be created.
+
 `username` - Name of the user to be created.
+
 `password` - Password to set for the created user
 
 ### Returns
@@ -401,7 +419,9 @@ Example failed returns:
 ```
 
 ## PUT /api/databases/${id}/recreate
-Example `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/recreate`
+Example
+
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/recreate`
 
 ### Payload
 `${id}` - the id of the metadata itself.
@@ -449,7 +469,9 @@ Example failed return:
 List the files and folders in the mounted folder
 
 Examples:
+
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/browse`
+
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/browse/somefolder`
 
 ### Payload
@@ -503,7 +525,9 @@ Example failed returns:
 ## PUT /api/databases/${id}/visibility/${vis}
 Change the visibility of database `${id}` to private or public
 Examples:
+
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/visibility/public`
+
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/visibility/private`
 
 ### Payload
@@ -534,9 +558,13 @@ Example failed returns:
 ## PUT /api/databases/${id}/expiry/extend/${amount}/${unit}
 Extend the expiry of database `${id}` by `${amount}` `${unit}`
 Examples:
+
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/expiry/extend/13/days`
+
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/expiry/extend/4/months`
+
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/expiry/extend/1/years`
+
 
 ### Payload
 `${id}` - the id of the metadata itself.
