@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/djavorszky/liferay"
+
 	"github.com/djavorszky/ddn/common/errs"
 	"github.com/djavorszky/ddn/common/inet"
 	"github.com/djavorszky/ddn/common/logger"
@@ -446,7 +448,27 @@ func apiExtendExpiry(w http.ResponseWriter, r *http.Request) {
 	inet.SendSuccess(w, http.StatusOK, meta.ExpiryDate)
 }
 
-func apiAccessInfoByAgentDB(w http.ResponseWriter, r *http.Request) {}
+func apiAccessInfoByAgentDB(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	vars := mux.Vars(r)
+	meta, errr := getDatabaseByAgentDBNameFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
+		return
+	}
+
+	if !hasAccess(meta, user) {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, getDBAccess(meta))
+}
 
 func apiAccessInfoByID(w http.ResponseWriter, r *http.Request) {
 	user, err := getAPIUser(r)
@@ -465,6 +487,40 @@ func apiAccessInfoByID(w http.ResponseWriter, r *http.Request) {
 	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, getDBAccess(meta))
+}
+
+type dbAccess struct {
+	JDBCDriver string `json:"jdbc-driver"`
+	JDBCUrl    string `json:"jdbc-url"`
+	User       string `json:"user"`
+	Password   string `json:"password"`
+	URL        string `json:"url"`
+}
+
+func getDBAccess(meta data.Row) dbAccess {
+	var jdbc liferay.JDBC
+	switch meta.DBVendor {
+	case "mysql":
+		jdbc = liferay.MysqlJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
+	case "mariadb":
+		jdbc = liferay.MariaDBJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
+	case "postgres":
+		jdbc = liferay.PostgreJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
+	case "oracle":
+		jdbc = liferay.OracleJDBC(meta.DBAddress, meta.DBPort, meta.DBSID, meta.DBUser, meta.DBPass)
+	case "mssql":
+		jdbc = liferay.MSSQLJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
+	}
+
+	return dbAccess{
+		JDBCDriver: jdbc.Driver,
+		JDBCUrl:    jdbc.URL,
+		User:       meta.DBUser,
+		Password:   meta.DBPass,
+		URL:        meta.DBAddress + ":" + meta.DBPort,
 	}
 }
 
@@ -535,7 +591,6 @@ func getDatabaseByAgentDBNameFrom(vars map[string]string) (data.Row, errResult) 
 			httpStatus: http.StatusInternalServerError,
 			errors:     []string{errs.QueryFailed, err.Error()},
 		}
-
 	}
 
 	if !hasResult(meta) {

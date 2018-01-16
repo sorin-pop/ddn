@@ -590,3 +590,76 @@ Example failed returns:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
+
+## GET /api/databases/${id}/accessinfo
+Get accesss info for the database denoted by meta id `${id}`
+Examples:
+
+`curl -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/accessinfo`
+
+
+### Payload
+`${id}` - the id of the metadata itself.
+
+
+### Returns
+Returns the database access information
+
+Example success return:
+```
+{  
+   "success":true,
+   "data":{  
+      "jdbc-driver":"jdbc.default.driverClassName=org.mariadb.jdbc.Driver",
+      "jdbc-url":"jdbc.default.url=jdbc:mariadb://172.17.0.2:3309/electric_adapter?useUnicode=true\u0026characterEncoding=UTF-8\u0026useFastDateParsing=false",
+      "user":"electric_adapter",
+      "password":"tag_tuner",
+      "url":"172.17.0.2:3309"
+   }
+}
+```
+
+Example failed returns:
+```
+{
+    "success":false,
+    "error":["ERR_DATABASE_NO_RESULT"]
+}
+```
+
+## GET /api/databases/${agent}/${dbname}/accessinfo
+Get accesss info for the database `${agent}` and `${dbname}`
+Examples:
+
+`curl -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/mariadb-10/electric_adapter/accessinfo`
+
+
+### Payload
+`${agent}` - Shortname of the agent
+
+`${dbname}` - Database name (or in some cases like Oracle, the name of the user)
+
+### Returns
+Returns the database access information
+
+Example success return:
+```
+{  
+   "success":true,
+   "data":{  
+      "jdbc-driver":"jdbc.default.driverClassName=org.mariadb.jdbc.Driver",
+      "jdbc-url":"jdbc.default.url=jdbc:mariadb://172.17.0.2:3309/electric_adapter?useUnicode=true\u0026characterEncoding=UTF-8\u0026useFastDateParsing=false",
+      "user":"electric_adapter",
+      "password":"tag_tuner",
+      "url":"172.17.0.2:3309"
+   }
+}
+```
+
+Example failed returns:
+```
+{
+    "success":false,
+    "error":["ERR_DATABASE_NO_RESULT"]
+}
+```

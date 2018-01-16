@@ -242,7 +242,7 @@ var routes = Routes{
 	route{
 		"api/databases/agent/dbname",
 		http.MethodGet,
-		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9_]+}",
+		"/api/databases/{agent:[a-zA-Z][a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9_]+}",
 		getAPIDatabaseByAgentDBName,
 	},
 	route{
@@ -250,12 +250,6 @@ var routes = Routes{
 		http.MethodDelete,
 		"/api/databases/{id:[0-9]+}",
 		dropAPIDatabaseByID,
-	},
-	route{
-		"api/databases/agent/dbname",
-		http.MethodDelete,
-		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9_]+}",
-		dropAPIDatabaseByAgentDBName,
 	},
 	route{
 		"api/databases/create",
@@ -294,15 +288,15 @@ var routes = Routes{
 		apiExtendExpiry,
 	},
 	route{
-		"/api/dbaccess/",
+		"/api/databases/id/accessinfo/",
 		http.MethodGet,
-		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9-_]+}/accessinfo",
-		apiAccessInfoByAgentDB,
+		"/api/databases/{id:[0-9]+}/accessinfo",
+		apiAccessInfoByID,
 	},
 	route{
 		"/api/dbaccess/",
 		http.MethodGet,
-		"/api/databases/{id:[0-9]+}/accessinfo",
-		apiAccessInfoByID,
+		"/api/databases/{agent:[a-zA-Z][a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9-_]+}/accessinfo",
+		apiAccessInfoByAgentDB,
 	},
 }
