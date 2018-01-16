@@ -170,12 +170,14 @@ var routes = Routes{
 		"/api/list-databases",
 		apiListDatabases,
 	},
-	route{
-		"api/agents/byName",
-		http.MethodGet,
-		"/api/agents/{shortname:[a-zA-Z0-9-_]+}",
-		apiAgentByName,
-	},
+	/*
+		route{
+			"api/agents/byName",
+			http.MethodGet,
+			"/api/agents/{shortname:[a-zA-Z0-9-_]+}",
+			apiAgentByName,
+		},
+	*/
 	route{
 		"api/loglevel",
 		http.MethodGet,

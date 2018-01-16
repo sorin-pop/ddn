@@ -11,6 +11,7 @@ const (
 	InvalidURL        = "ERR_INVALID_URL"
 	UnknownParameter  = "ERR_UNKNOWN_PARAMETER"
 	AgentNotFound     = "ERR_AGENT_NOT_FOUND"
+	NoAgentsAvailable = "ERR_NO_AGENTS_AVAILABLE"
 
 	// Database related
 	PersistFailed  = "ERR_DATABASE_PERSIST_FAILED"

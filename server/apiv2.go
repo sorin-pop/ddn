@@ -38,7 +38,14 @@ func getAPIAgents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inet.SendSuccess(w, http.StatusOK, registry.List())
+	agents := registry.List()
+
+	if len(agents) == 0 {
+		inet.SendFailure(w, http.StatusNotFound, errs.NoAgentsAvailable)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, agents)
 }
 
 // apiAgentByName returns an agent by its shortname
