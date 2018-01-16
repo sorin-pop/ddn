@@ -400,8 +400,8 @@ Example failed returns:
 }
 ```
 
-## PUT /api/databases/${id}
-Example `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16`
+## PUT /api/databases/${id}/recreate
+Example `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/recreate`
 
 ### Payload
 `${id}` - the id of the metadata itself.
@@ -446,6 +446,8 @@ Example failed return:
 ```
 
 ## GET /api/browse/${loc}
+List the files and folders in the mounted folder
+
 Examples:
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/browse`
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/browse/somefolder`
@@ -499,6 +501,7 @@ Example failed returns:
 ```
 
 ## PUT /api/databases/${id}/visibility/${vis}
+Change the visibility of database `${id}` to private or public
 Examples:
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/visibility/public`
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/visibility/private`
@@ -528,3 +531,34 @@ Example failed returns:
 }
 ```
 
+## PUT /api/databases/${id}/expiry/extend/${amount}/${unit}
+Extend the expiry of database `${id}` by `${amount}` `${unit}`
+Examples:
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/expiry/extend/13/days`
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/expiry/extend/4/months`
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/expiry/extend/1/years`
+
+### Payload
+`${id}` - the id of the metadata itself.
+`${amount}` - integer
+`${unit}` - can be `days`, `months` or `years`
+
+
+### Returns
+Returns the new expiry date if successful, or error message if something went wrong.
+
+Example success return:
+```
+{
+    "success":true,
+    "data":"2018-03-16T13:25:46.148399558Z"
+}
+```
+
+Example failed returns:
+```
+{
+    "success":false,
+    "error":["ERR_DATABASE_NO_RESULT"]
+}
+```

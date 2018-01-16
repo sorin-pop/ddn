@@ -264,12 +264,11 @@ var routes = Routes{
 		createAPIDB,
 	},
 	route{
-		"api/databases/id",
+		"api/databases/id/recreate",
 		http.MethodPut,
-		"/api/databases/{id:[0-9]+}",
+		"/api/databases/{id:[0-9]+}/recreate",
 		recreateAPIDB,
 	},
-
 	route{
 		"api/browse",
 		http.MethodGet,
@@ -283,9 +282,15 @@ var routes = Routes{
 		browseAPI,
 	},
 	route{
-		"api/visibility",
+		"api/databases/visibility",
 		http.MethodPut,
 		"/api/databases/{id:[0-9]+}/visibility/{visibility:public|private}",
 		apiSetVisibility,
+	},
+	route{
+		"api/databases/expiry",
+		http.MethodPut,
+		"/api/databases/{id:[0-9]+}/expiry/extend/{amount:[0-9]+}/{unit:days|months|years}",
+		apiExtendExpiry,
 	},
 }

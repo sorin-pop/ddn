@@ -483,6 +483,74 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 	inet.SendSuccess(w, http.StatusOK, "Visibility updated successfully")
 }
 
+func apiExtendExpiry(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
+
+		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+		return
+	}
+
+	meta, err := db.FetchByID(id)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
+
+		logger.Error("Fetching database failed: %v", err)
+		return
+	}
+
+	if meta.Creator == "" {
+		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
+		return
+	}
+
+	if meta.Public == vis.Private && meta.Creator != user {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	amount, err := strconv.Atoi(vars["amount"])
+	if err != nil {
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
+
+		logger.Error("Failed converting 'amount' to integer from URL: %s, %v", r.URL, err)
+		return
+	}
+
+	var newExpiry time.Time
+	switch vars["unit"] {
+	case "days":
+		newExpiry = meta.ExpiryDate.AddDate(0, 0, amount)
+	case "months":
+		newExpiry = meta.ExpiryDate.AddDate(0, amount, 0)
+	case "year":
+		newExpiry = meta.ExpiryDate.AddDate(amount, 0, 0)
+	default:
+		inet.SendFailure(w, http.StatusBadRequest, errs.UnknownParameter, vars["unit"])
+		return
+	}
+
+	meta.ExpiryDate = newExpiry
+
+	err = db.Update(&meta)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.UpdateFailed, err.Error())
+
+		logger.Error("failed listing folder: %v", err)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, meta.ExpiryDate)
+}
+
 func getAPIUser(r *http.Request) (string, error) {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {
