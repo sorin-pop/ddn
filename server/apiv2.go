@@ -325,6 +325,67 @@ func createAPIDB(w http.ResponseWriter, r *http.Request) {
 	inet.SendSuccess(w, http.StatusOK, dbe)
 }
 
+func recreateAPIDB(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
+
+		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+		return
+	}
+
+	meta, err := db.FetchByID(id)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
+
+		logger.Error("Fetching database failed: %v", err)
+		return
+	}
+
+	if meta.Creator == "" {
+		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
+		return
+	}
+
+	if meta.Creator != user {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	agent, ok := registry.Get(meta.AgentName)
+	if !ok {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.AgentNotFound, meta.AgentName)
+		return
+	}
+
+	_, err = agent.DropDatabase(meta.ID, meta.DBName, meta.DBUser)
+	if err != nil {
+		meta.Status = status.DropDatabaseFailed
+		db.Update(&meta)
+
+		inet.SendFailure(w, http.StatusInternalServerError, errs.AgentNotFound, meta.AgentName)
+		return
+	}
+
+	_, err = agent.CreateDatabase(meta.ID, meta.DBName, meta.DBUser, meta.DBPass)
+	if err != nil {
+		meta.Status = status.CreateDatabaseFailed
+		db.Update(&meta)
+
+		inet.SendFailure(w, http.StatusInternalServerError, errs.AgentNotFound, meta.AgentName)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, meta)
+}
+
 func getAPIUser(r *http.Request) (string, error) {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {

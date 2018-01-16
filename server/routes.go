@@ -263,4 +263,10 @@ var routes = Routes{
 		"/api/databases",
 		createAPIDB,
 	},
+	route{
+		"api/databases/id",
+		http.MethodPut,
+		"/api/databases/{id:[0-9]+}",
+		recreateAPIDB,
+	},
 }

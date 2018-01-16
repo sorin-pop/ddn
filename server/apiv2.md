@@ -292,7 +292,7 @@ Example failed return:
 ```
 
 ## POST /api/databases
-Example `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d "asd:d" http://localhost:7010/api/databases`
+Example `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10"}' http://localhost:7010/api/databases`
 
 ### Payload
 #### Required
@@ -344,5 +344,103 @@ Example failed returns:
 {
     "success":false,
     "error":["ERR_AGENT_NOT_FOUND","nonexistent_agent"]
+}
+```
+
+### Payload
+#### Required
+`agent_identifier` - Shortname of the agent
+#### Optional
+`database_name` - Name of the database to be created.
+`username` - Name of the user to be created.
+`password` - Password to set for the created user
+
+### Returns
+All data about the created database.
+
+
+Example success return:
+```
+{
+   "success":true,
+   "data":{
+      "id":34,
+      "vendor":"mariadb",
+      "dbname":"gps_video",
+      "dbuser":"gps_video",
+      "dbpass":"air_viewer",
+      "sid":"",
+      "dumplocation":"",
+      "createdate":"2018-01-16T01:14:33.41554638Z",
+      "expirydate":"2018-02-16T01:14:33.415546478Z",
+      "creator":"daniel.javorszky@liferay.com",
+      "agent":"mariadb-10",
+      "dbaddress":"172.17.0.2",
+      "dbport":"3309",
+      "status":100,
+      "comment":"",
+      "message":"",
+      "public":0
+   }
+}
+```
+
+Example failed returns:
+```
+{
+    "success":false,
+    "error":["ERR_MISSING_PARAMETERS","agent_identifier"]
+}
+
+// or
+
+{
+    "success":false,
+    "error":["ERR_AGENT_NOT_FOUND","nonexistent_agent"]
+}
+```
+
+## PUT /api/databases/${id}
+Example `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16`
+
+### Payload
+`${id}` - the id of the metadata itself.
+
+### Returns
+Recreates the database with the given ID. Basically drops the database and creates a new one with the same information
+
+Returns all information on the recreated database.
+
+Example success return:
+```
+{
+   "success":true,
+   "data":{
+      "id":15,
+      "vendor":"mariadb",
+      "dbname":"gel_component",
+      "dbuser":"performance_air",
+      "dbpass":"gel_gel",
+      "sid":"",
+      "dumplocation":"",
+      "createdate":"2017-12-11T15:14:27.03707071Z",
+      "expirydate":"2018-01-11T15:14:27.037070856Z",
+      "creator":"daniel.javorszky@liferay.com",
+      "agent":"mariadb-10",
+      "dbaddress":"172.17.0.2",
+      "dbport":"3309",
+      "status":100,
+      "comment":"",
+      "message":"",
+      "public":0
+   }
+}
+```
+
+Example failed return:
+```
+{
+    "success":false,
+    "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
