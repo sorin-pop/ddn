@@ -498,3 +498,33 @@ Example failed returns:
 }
 ```
 
+## PUT /api/databases/${id}/visibility/${vis}
+Examples:
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/visibility/public`
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/visibility/private`
+
+### Payload
+`${id}` - the id of the metadata itself.
+`${vis}` - either public or private.
+
+### Returns
+Returns a success message if successful, or an error if not. If no change needed to take effect (e.g. public->public), it is still considered to be a success.
+
+Example success return:
+```
+{
+   "success":true,
+   "data":"Visibility updated successfully"
+   // or
+   "data":"Visibility already set to public"
+}
+```
+
+Example failed returns:
+```
+{
+    "success":false,
+    "error":["ERR_DATABASE_NO_RESULT"]
+}
+```
+

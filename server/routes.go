@@ -282,4 +282,10 @@ var routes = Routes{
 		"/api/browse/{loc:[0-9a-zA-Z-_./ ]+}",
 		browseAPI,
 	},
+	route{
+		"api/visibility",
+		http.MethodPut,
+		"/api/databases/{id:[0-9]+}/visibility/{visibility:public|private}",
+		apiSetVisibility,
+	},
 }

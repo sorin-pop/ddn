@@ -12,6 +12,7 @@ import (
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	vis "github.com/djavorszky/ddn/common/visibility"
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
@@ -414,6 +415,72 @@ func browseAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inet.SendSuccess(w, http.StatusOK, files)
+}
+
+func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
+
+		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+		return
+	}
+
+	meta, err := db.FetchByID(id)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
+
+		logger.Error("Fetching database failed: %v", err)
+		return
+	}
+
+	if meta.Creator == "" {
+		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
+		return
+	}
+
+	if meta.Creator != user {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	visibility := vars["visibility"]
+
+	var visibilityNum int
+	switch visibility {
+	case "public":
+		visibilityNum = vis.Public
+	case "private":
+		visibilityNum = vis.Private
+	default:
+		inet.SendFailure(w, http.StatusBadRequest, errs.MissingParameters, visibility)
+		return
+	}
+
+	// If no change needed
+	if visibilityNum == meta.Public {
+		inet.SendSuccess(w, http.StatusOK, "Visibility already set to "+visibility)
+		return
+	}
+
+	meta.Public = visibilityNum
+
+	err = db.Update(&meta)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.UpdateFailed, err.Error())
+
+		logger.Error("failed listing folder: %v", err)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, "Visibility updated successfully")
 }
 
 func getAPIUser(r *http.Request) (string, error) {
