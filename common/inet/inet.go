@@ -95,7 +95,7 @@ func SendResponse(w http.ResponseWriter, status int, msg JSONMessage) {
 type Response struct {
 	Success bool        `json:"success"`
 	Data    interface{} `json:"data,omitempty"`
-	Error   interface{} `json:"error,omitempty"`
+	Error   []string    `json:"error,omitempty"`
 }
 
 // Marshal marshals the response into json
@@ -118,7 +118,7 @@ func SendSuccess(w http.ResponseWriter, status int, data interface{}) {
 }
 
 // SendFailure creates a JSON response of a failed API call
-func SendFailure(w http.ResponseWriter, status int, errs ...interface{}) {
+func SendFailure(w http.ResponseWriter, status int, errs ...string) {
 	WriteHeader(w, status)
 
 	r := Response{

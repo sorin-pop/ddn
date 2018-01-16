@@ -19,20 +19,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-/*
-	GET /api/agents 						-> lists agents - done
-	GET /api/agents/${agent-name:string} 	-> gets all info of specific agent - done
-
-	GET /api/database 									-> lists databases - done
-	GET /api/database/${id:int} 						-> gets all info of a specific database - done
-	GET /api/database/${agent:string}/${dbname:string} 	-> gets all info of a specific database - done
-
-	POST /api/database	-> Creates or imports a new database (json body) - create done
-
-	DELETE /api/database/${id:int} 							-> drops a database - done
-	DELETE /api/database/${agent:string}/${dbname:string} 	-> drops a database - done
-*/
-
 func getAPIAgents(w http.ResponseWriter, r *http.Request) {
 	_, err := getAPIUser(r)
 	if err != nil {
@@ -117,29 +103,13 @@ func getAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
-
-		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+	meta, errr := getDatabaseByIDFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
 		return
 	}
 
-	meta, err := db.FetchByID(id)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed)
-
-		logger.Error("Fetching database failed: %v", err)
-		return
-
-	}
-
-	if meta.Creator == "" {
-		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
-		return
-	}
-
-	if meta.Creator != user {
+	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -155,23 +125,13 @@ func getAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	agent, dbname := vars["agent"], vars["dbname"]
-
-	meta, err := db.FetchByDBNameAgent(dbname, agent)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
-
-		logger.Error("Fetching database failed: %v", err)
-		return
-
-	}
-
-	if meta.Creator == "" {
-		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
+	meta, errr := getDatabaseByAgentDBNameFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
 		return
 	}
 
-	if meta.Creator != user {
+	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -187,28 +147,13 @@ func dropAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
-
-		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+	meta, errr := getDatabaseByIDFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
 		return
 	}
 
-	meta, err := db.FetchByID(id)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
-
-		logger.Error("Fetching database failed: %v", err)
-		return
-	}
-
-	if meta.Creator == "" {
-		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
-		return
-	}
-
-	if meta.Creator != user {
+	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -241,12 +186,7 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if meta.Creator == "" {
-		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
-		return
-	}
-
-	if meta.Creator != user {
+	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -310,7 +250,7 @@ func createAPIDB(w http.ResponseWriter, r *http.Request) {
 
 	err = db.Insert(&dbe)
 	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.PersistFailed, err)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.PersistFailed, err.Error())
 
 		logger.Error("failed inserting database: %v", err)
 		return
@@ -318,7 +258,7 @@ func createAPIDB(w http.ResponseWriter, r *http.Request) {
 
 	_, err = agent.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
 	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.CreateFailed, err)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.CreateFailed, err.Error())
 
 		db.Delete(dbe)
 		return
@@ -335,28 +275,13 @@ func recreateAPIDB(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
-
-		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+	meta, errr := getDatabaseByIDFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
 		return
 	}
 
-	meta, err := db.FetchByID(id)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
-
-		logger.Error("Fetching database failed: %v", err)
-		return
-	}
-
-	if meta.Creator == "" {
-		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
-		return
-	}
-
-	if meta.Creator != user {
+	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -425,28 +350,13 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
-
-		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+	meta, errr := getDatabaseByIDFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
 		return
 	}
 
-	meta, err := db.FetchByID(id)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
-
-		logger.Error("Fetching database failed: %v", err)
-		return
-	}
-
-	if meta.Creator == "" {
-		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
-		return
-	}
-
-	if meta.Creator != user {
+	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -491,28 +401,13 @@ func apiExtendExpiry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
-
-		logger.Error("Failed converting id to integer from URL: %s, %v", r.URL, err)
+	meta, errr := getDatabaseByIDFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
 		return
 	}
 
-	meta, err := db.FetchByID(id)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
-
-		logger.Error("Fetching database failed: %v", err)
-		return
-	}
-
-	if meta.Creator == "" {
-		inet.SendFailure(w, http.StatusNotFound, errs.QueryNoResults)
-		return
-	}
-
-	if meta.Public == vis.Private && meta.Creator != user {
+	if !hasAccess(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -551,6 +446,28 @@ func apiExtendExpiry(w http.ResponseWriter, r *http.Request) {
 	inet.SendSuccess(w, http.StatusOK, meta.ExpiryDate)
 }
 
+func apiAccessInfoByAgentDB(w http.ResponseWriter, r *http.Request) {}
+
+func apiAccessInfoByID(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	vars := mux.Vars(r)
+	meta, errr := getDatabaseByIDFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
+		return
+	}
+
+	if !hasAccess(meta, user) {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+}
+
 func getAPIUser(r *http.Request) (string, error) {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {
@@ -558,6 +475,77 @@ func getAPIUser(r *http.Request) (string, error) {
 	}
 
 	return auth, nil
+}
+
+func hasResult(meta data.Row) bool {
+	if meta.Creator == "" {
+		return false
+	}
+	return true
+}
+
+func hasAccess(meta data.Row, user string) bool {
+	if meta.Public == vis.Private && meta.Creator != user {
+		return false
+	}
+	return true
+}
+
+type errResult struct {
+	httpStatus int
+	errors     []string
+}
+
+func getDatabaseByIDFrom(vars map[string]string) (data.Row, errResult) {
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		return data.Row{}, errResult{
+			httpStatus: http.StatusBadRequest,
+			errors:     []string{errs.InvalidURL},
+		}
+	}
+
+	meta, err := db.FetchByID(id)
+	if err != nil {
+		logger.Error("Fetching database failed: %v", err)
+
+		return data.Row{}, errResult{
+			httpStatus: http.StatusInternalServerError,
+			errors:     []string{errs.QueryFailed, err.Error()},
+		}
+	}
+
+	if !hasResult(meta) {
+		return data.Row{}, errResult{
+			httpStatus: http.StatusNotFound,
+			errors:     []string{errs.QueryNoResults},
+		}
+	}
+
+	return meta, errResult{}
+}
+
+func getDatabaseByAgentDBNameFrom(vars map[string]string) (data.Row, errResult) {
+	agent, dbname := vars["agent"], vars["dbname"]
+	meta, err := db.FetchByDBNameAgent(dbname, agent)
+	if err != nil {
+		logger.Error("Fetching database failed: %v", err)
+
+		return data.Row{}, errResult{
+			httpStatus: http.StatusInternalServerError,
+			errors:     []string{errs.QueryFailed, err.Error()},
+		}
+
+	}
+
+	if !hasResult(meta) {
+		return data.Row{}, errResult{
+			httpStatus: http.StatusNotFound,
+			errors:     []string{errs.QueryNoResults},
+		}
+	}
+
+	return meta, errResult{}
 }
 
 /*

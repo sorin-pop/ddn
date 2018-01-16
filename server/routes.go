@@ -293,4 +293,16 @@ var routes = Routes{
 		"/api/databases/{id:[0-9]+}/expiry/extend/{amount:[0-9]+}/{unit:days|months|years}",
 		apiExtendExpiry,
 	},
+	route{
+		"/api/dbaccess/",
+		http.MethodGet,
+		"/api/databases/{agent:[a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9-_]+}/accessinfo",
+		apiAccessInfoByAgentDB,
+	},
+	route{
+		"/api/dbaccess/",
+		http.MethodGet,
+		"/api/databases/{id:[0-9]+}/accessinfo",
+		apiAccessInfoByID,
+	},
 }
