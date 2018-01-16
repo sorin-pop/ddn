@@ -258,9 +258,9 @@ var routes = Routes{
 		dropAPIDatabaseByAgentDBName,
 	},
 	route{
-		"api/databases",
+		"api/databases/create",
 		http.MethodPost,
-		"/api/databases",
+		"/api/databases/create",
 		createAPIDB,
 	},
 	route{

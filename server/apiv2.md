@@ -291,8 +291,8 @@ Example failed return:
 }
 ```
 
-## POST /api/databases
-Example `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10"}' http://localhost:7010/api/databases`
+## POST /api/databases/create
+Example `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10"}' http://localhost:7010/api/databases/create`
 
 ### Payload
 #### Required
