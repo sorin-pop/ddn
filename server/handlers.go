@@ -410,17 +410,17 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func unregister(w http.ResponseWriter, r *http.Request) {
-	var conn model.Agent
+	var agent model.Agent
 
-	err := json.NewDecoder(r.Body).Decode(&conn)
+	err := json.NewDecoder(r.Body).Decode(&agent)
 	if err != nil {
 		logger.Error("json encode: %v", err)
 		return
 	}
 
-	registry.Remove(conn.ShortName)
+	registry.Remove(agent.ShortName)
 
-	logger.Info("Unregistered: %s", conn.Identifier)
+	logger.Info("Unregistered: %s", agent.Identifier)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -565,21 +565,21 @@ func drop(w http.ResponseWriter, r *http.Request) {
 	session.AddFlash("Started to drop the database.", "msg")
 }
 
-func dropAsync(conn model.Agent, ID int, dbname, dbuser string) {
+func dropAsync(agent model.Agent, ID int, dbname, dbuser string) {
 	dbe, err := db.FetchByID(ID)
 	if err != nil {
 		logger.Error("couldn't fetch DB: %v", err)
 		return
 	}
 
-	_, err = conn.DropDatabase(ID, dbname, dbuser)
+	_, err = agent.DropDatabase(ID, dbname, dbuser)
 	if err != nil {
 		dbe.Status = status.DropDatabaseFailed
 		dbe.Message = err.Error()
 
 		db.Update(&dbe)
 
-		logger.Error("couldn't drop database %q on agent %q: %s", dbname, conn.ShortName, err)
+		logger.Error("couldn't drop database %q on agent %q: %s", dbname, agent.ShortName, err)
 		return
 	}
 

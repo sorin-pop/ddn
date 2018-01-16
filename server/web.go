@@ -56,8 +56,8 @@ func loadPage(w http.ResponseWriter, r *http.Request, pages ...string) {
 		GoogleAnalyticsID:      config.GoogleAnalyticsID,
 	}
 
-	for _, conn := range registry.List() {
-		if conn.Up {
+	for _, agent := range registry.List() {
+		if agent.Up {
 			page.AnyOnline = true
 			break
 		}

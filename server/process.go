@@ -33,13 +33,13 @@ func maintain() {
 
 			// if expired
 			if (dbe.ExpiryDate.Year() == now.Year()) && (dbe.ExpiryDate.YearDay() == now.YearDay()) {
-				conn, ok := registry.Get(dbe.AgentName)
+				agent, ok := registry.Get(dbe.AgentName)
 				if !ok {
 					logger.Error("drop database %q - agent %q offline", dbe.DBName, dbe.AgentName)
 					continue
 				}
 
-				conn.DropDatabase(registry.ID(), dbe.DBName, dbe.DBUser)
+				agent.DropDatabase(registry.ID(), dbe.DBName, dbe.DBUser)
 				db.Delete(dbe)
 
 				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
@@ -105,26 +105,26 @@ func checkAgents() {
 	ticker := time.NewTicker(30 * time.Second)
 
 	for range ticker.C {
-		for _, conn := range registry.List() {
-			addr := fmt.Sprintf("%s:%s/heartbeat", conn.Address, conn.AgentPort)
+		for _, agent := range registry.List() {
+			addr := fmt.Sprintf("%s:%s/heartbeat", agent.Address, agent.AgentPort)
 
-			if !inet.AddrExists(addr) && conn.Up {
-				conn.Up = false
+			if !inet.AddrExists(addr) && agent.Up {
+				agent.Up = false
 
-				registry.Store(conn)
+				registry.Store(agent)
 
 				for _, addr := range config.AdminEmail {
 					mail.Send(addr, "[Cloud DB] Agent disappeared without trace",
-						fmt.Sprintf("Agent %q at %q no longer exists.", conn.ShortName, conn.Address))
+						fmt.Sprintf("Agent %q at %q no longer exists.", agent.ShortName, agent.Address))
 				}
 
 				continue
 			}
 
-			if !conn.Up && inet.AddrExists(addr) {
-				conn.Up = true
+			if !agent.Up && inet.AddrExists(addr) {
+				agent.Up = true
 
-				registry.Store(conn)
+				registry.Store(agent)
 			}
 		}
 	}

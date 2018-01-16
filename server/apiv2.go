@@ -25,7 +25,7 @@ import (
 	GET /api/database/${id:int} 						-> gets all info of a specific database - done
 	GET /api/database/${agent:string}/${dbname:string} 	-> gets all info of a specific database - done
 
-	POST /api/database	-> Creates or imports a new database (json body)
+	POST /api/database	-> Creates or imports a new database (json body) - create done
 
 	DELETE /api/database/${id:int} 							-> drops a database - done
 	DELETE /api/database/${agent:string}/${dbname:string} 	-> drops a database - done

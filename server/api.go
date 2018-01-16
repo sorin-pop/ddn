@@ -136,12 +136,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var (
-		conn model.Agent
-		ok   bool
-	)
-
-	conn, ok = registry.Get(req.AgentIdentifier)
+	agent, ok := registry.Get(req.AgentIdentifier)
 	if !ok {
 		logger.Error("Agent %q not found", req.AgentIdentifier)
 		inet.SendResponse(w, http.StatusBadRequest, inet.Message{
@@ -155,7 +150,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		req.DatabaseName = req.Username
 	}
 
-	ensureValues(&req.DatabaseName, &req.Username, &req.Password, conn.DBVendor)
+	ensureValues(&req.DatabaseName, &req.Username, &req.Password, agent.DBVendor)
 
 	req.ID = registry.ID()
 
@@ -163,14 +158,14 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		DBName:     req.DatabaseName,
 		DBUser:     req.Username,
 		DBPass:     req.Password,
-		DBSID:      conn.DBSID,
+		DBSID:      agent.DBSID,
 		AgentName:  req.AgentIdentifier,
 		Creator:    req.RequesterEmail,
 		CreateDate: time.Now(),
 		ExpiryDate: time.Now().AddDate(0, 1, 0),
-		DBAddress:  conn.DBAddr,
-		DBPort:     conn.DBPort,
-		DBVendor:   conn.DBVendor,
+		DBAddress:  agent.DBAddr,
+		DBPort:     agent.DBPort,
+		DBVendor:   agent.DBVendor,
 		Status:     status.Success,
 	}
 
@@ -185,7 +180,7 @@ func apiCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = conn.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
+	_, err = agent.CreateDatabase(req.ID, req.DatabaseName, req.Username, req.Password)
 	if err != nil {
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
 			Status:  http.StatusInternalServerError,

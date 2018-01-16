@@ -21,9 +21,9 @@ func init() {
 
 // Store registers the agent in the registry, or overwrites
 // if agent already in.
-func Store(conn model.Agent) {
+func Store(agent model.Agent) {
 	rw.Lock()
-	registry[conn.ShortName] = conn
+	registry[agent.ShortName] = agent
 	rw.Unlock()
 }
 
@@ -31,10 +31,10 @@ func Store(conn model.Agent) {
 // an error if no agent are registered with that name
 func Get(shortName string) (model.Agent, bool) {
 	rw.RLock()
-	conn, ok := registry[shortName]
+	agent, ok := registry[shortName]
 	rw.RUnlock()
 
-	return conn, ok
+	return agent, ok
 }
 
 // Remove removes the agent added with shortName. Does not error
@@ -47,17 +47,17 @@ func Remove(shortName string) {
 
 // List returns the list of agents as a slice
 func List() []model.Agent {
-	var conns []model.Agent
+	var agents []model.Agent
 
 	rw.RLock()
 	for _, c := range registry {
-		conns = append(conns, c)
+		agents = append(agents, c)
 	}
 	rw.RUnlock()
 
-	sort.Sort(ByName(conns))
+	sort.Sort(ByName(agents))
 
-	return conns
+	return agents
 }
 
 // Exists checks the registry for the existence of
