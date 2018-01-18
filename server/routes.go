@@ -179,12 +179,6 @@ var routes = Routes{
 		},
 	*/
 	route{
-		"api/loglevel",
-		http.MethodGet,
-		"/api/loglevel/{level:[a-zA-Z]+}",
-		apiSetLogLevel,
-	},
-	route{
 		"api/visibility/",
 		http.MethodGet,
 		"/api/visibility/{id:[0-9]+}/{visibility:public|private}",
@@ -298,5 +292,11 @@ var routes = Routes{
 		http.MethodGet,
 		"/api/databases/{agent:[a-zA-Z][a-zA-Z0-9-_]+}/{dbname:[a-zA-Z0-9-_]+}/accessinfo",
 		apiAccessInfoByAgentDB,
+	},
+	route{
+		"api/loglevel",
+		http.MethodPut,
+		"/api/loglevel/{level:[a-zA-Z]+}",
+		apiSetLogLevel,
 	},
 }

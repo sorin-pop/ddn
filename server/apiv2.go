@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
-
-	"github.com/djavorszky/liferay"
 
 	"github.com/djavorszky/ddn/common/errs"
 	"github.com/djavorszky/ddn/common/inet"
@@ -18,8 +17,50 @@ import (
 	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/ddn/server/database/data"
 	"github.com/djavorszky/ddn/server/registry"
+	"github.com/djavorszky/liferay"
 	"github.com/gorilla/mux"
 )
+
+func apiSetLogLevel(w http.ResponseWriter, r *http.Request) {
+	_, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	var lvl logger.LogLevel
+
+	level := mux.Vars(r)["level"]
+	switch strings.ToLower(level) {
+	case "fatal":
+		lvl = logger.FATAL
+	case "error":
+		lvl = logger.ERROR
+	case "warn":
+		lvl = logger.WARN
+	case "info":
+		lvl = logger.INFO
+	case "debug":
+		lvl = logger.DEBUG
+	default:
+		inet.SendFailure(w, http.StatusBadRequest, errs.UnknownParameter, level)
+		return
+	}
+
+	if logger.Level == lvl {
+		inet.SendSuccess(w, http.StatusOK, "Loglevel already at "+level)
+		return
+	}
+
+	logger.Info("Changing loglevel: %s->%s", logger.Level, lvl)
+
+	msg := fmt.Sprintf("Loglevel changed from %s to %s", logger.Level, lvl)
+
+	logger.Level = lvl
+
+	inet.SendSuccess(w, http.StatusOK, msg)
+	return
+}
 
 func getAPIAgents(w http.ResponseWriter, r *http.Request) {
 	_, err := getAPIUser(r)

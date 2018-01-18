@@ -663,3 +663,30 @@ Example failed returns:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
+
+## PUT /api/loglevel/${level}
+Updates the loglevel of the server.
+
+Example
+
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/loglevel/debug`
+
+### Payload
+`${level}` - loglevel. Can be either `fatal`, `error`, `warn`, `info` or `debug`
+
+### Returns
+Example success return:
+```
+{
+   "success":true,
+   "data":"Loglevel changed from info to debug"
+}
+```
+
+Example failed return:
+```
+{
+    "success":false,
+    "error":["ERR_UNKNOWN_PARAMETER","debugz"]
+}
+```
