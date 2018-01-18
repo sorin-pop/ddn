@@ -14,6 +14,7 @@ const (
 	NoAgentsAvailable      = "ERR_NO_AGENTS_AVAILABLE"
 	FailedListingDirectory = "ERR_DIR_LIST_FAILED"
 	NoFoldersMounted       = "ERR_NO_FOLDER_MOUNTED"
+	FileIOFailed           = "ERR_FILE_IO_FAILED"
 
 	// Database related
 	PersistFailed  = "ERR_DATABASE_PERSIST_FAILED"

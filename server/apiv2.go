@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -241,6 +244,107 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inet.SendSuccess(w, http.StatusOK, "Delete successful")
+}
+
+func importAPIDB(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	var req model.ClientRequest
+
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		inet.SendFailure(w, http.StatusBadRequest, errs.InvalidURL, err.Error())
+
+		logger.Error("couldn't decode json request: %v", err)
+		return
+	}
+
+	if req.AgentIdentifier == "" {
+		inet.SendFailure(w, http.StatusBadRequest, errs.MissingParameters, "agent_identifier")
+		return
+	}
+
+	if req.DumpLocation == "" {
+		inet.SendFailure(w, http.StatusBadRequest, errs.MissingParameters, "dumpfile_location")
+		return
+	}
+
+	agent, ok := registry.Get(req.AgentIdentifier)
+	if !ok {
+		inet.SendFailure(w, http.StatusBadRequest, errs.AgentNotFound, req.AgentIdentifier)
+
+		return
+	}
+
+	ensureValues(&req.DatabaseName, &req.Username, &req.Password, agent.DBVendor)
+
+	req.ID = registry.ID()
+	dbe := data.Row{
+		DBName:     req.DatabaseName,
+		DBUser:     req.Username,
+		DBPass:     req.Password,
+		DBSID:      agent.DBSID,
+		AgentName:  req.AgentIdentifier,
+		Dumpfile:   req.DumpLocation,
+		Creator:    user,
+		CreateDate: time.Now(),
+		ExpiryDate: time.Now().AddDate(0, 1, 0),
+		DBAddress:  agent.DBAddr,
+		DBPort:     agent.DBPort,
+		DBVendor:   agent.DBVendor,
+		Status:     status.Success,
+	}
+
+	err = db.Insert(&dbe)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.PersistFailed, err.Error())
+
+		logger.Error("failed inserting database: %v", err)
+		return
+	}
+
+	if strings.HasPrefix(dbe.Dumpfile, "/") {
+		_, filename := filepath.Split(dbe.Dumpfile)
+		dst, err := os.OpenFile(fmt.Sprintf("%s/web/dumps/%s", workdir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
+
+			logger.Error("Failed creating file at web/dumps: %v", err)
+			return
+		}
+		defer dst.Close()
+
+		src, err := os.Open(dbe.Dumpfile)
+		if err != nil {
+			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
+
+			logger.Error("Failed opening file to copy: %v", err)
+			return
+		}
+		defer src.Close()
+
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
+
+			logger.Error("Failed opening file to copy: %v", err)
+			return
+		}
+	}
+
+	_, err = agent.ImportDatabase(req.ID, dbe.DBName, dbe.DBUser, dbe.DBPass, dbe.Dumpfile)
+	if err != nil {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.CreateFailed, err.Error())
+
+		db.Delete(dbe)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, dbe)
 }
 
 func createAPIDB(w http.ResponseWriter, r *http.Request) {
