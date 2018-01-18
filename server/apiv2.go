@@ -308,7 +308,6 @@ func importAPIDB(w http.ResponseWriter, r *http.Request) {
 
 	ensureValues(&req.DatabaseName, &req.Username, &req.Password, agent.DBVendor)
 
-	req.ID = registry.ID()
 	dbe := data.Row{
 		DBName:     req.DatabaseName,
 		DBUser:     req.Username,
@@ -322,7 +321,7 @@ func importAPIDB(w http.ResponseWriter, r *http.Request) {
 		DBAddress:  agent.DBAddr,
 		DBPort:     agent.DBPort,
 		DBVendor:   agent.DBVendor,
-		Status:     status.Success,
+		Status:     status.Accepted,
 	}
 
 	err = db.Insert(&dbe)
@@ -334,53 +333,73 @@ func importAPIDB(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.HasPrefix(dbe.Dumpfile, "/") {
-		if config.MountLoc == "" {
-			inet.SendFailure(w, http.StatusBadRequest, errs.NoFoldersMounted)
-			db.Delete(dbe)
-			return
-		}
+	if strings.HasPrefix(dbe.Dumpfile, "/") && config.MountLoc == "" {
+		inet.SendFailure(w, http.StatusBadRequest, errs.NoFoldersMounted)
+		db.Delete(dbe)
+		return
+	}
 
+	go startImport(agent, dbe)
+
+	inet.SendSuccess(w, http.StatusAccepted, dbe)
+}
+
+func startImport(agent model.Agent, dbe data.Row) {
+	defer db.Update(&dbe)
+
+	url := dbe.Dumpfile
+	if strings.HasPrefix(dbe.Dumpfile, "/") {
 		_, filename := filepath.Split(dbe.Dumpfile)
+		logger.Debug("Starting to copy %s to %s/web/dumps/", filename, workdir)
 		dst, err := os.OpenFile(fmt.Sprintf("%s/web/dumps/%s", workdir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
-			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
+			errMsg := fmt.Sprintf("Failed creating downloadable file at web/dumps: %v", err)
 
-			logger.Error("Failed creating file at web/dumps: %v", err)
-			db.Delete(dbe)
+			logger.Error(errMsg)
+			dbe.Status = status.ImportFailed
+			dbe.Message = errMsg
 			return
 		}
 		defer dst.Close()
 
-		src, err := os.Open(dbe.Dumpfile)
+		src, err := os.Open(filepath.Join(config.MountLoc, dbe.Dumpfile))
 		if err != nil {
-			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
+			errMsg := fmt.Sprintf("Failed opening dumpfile at %v: %v", dbe.Dumpfile, err)
 
-			logger.Error("Failed opening file to copy: %v", err)
-			db.Delete(dbe)
+			logger.Error(errMsg)
+			dbe.Status = status.ImportFailed
+			dbe.Message = errMsg
 			return
 		}
 		defer src.Close()
 
 		_, err = io.Copy(dst, src)
 		if err != nil {
-			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
+			errMsg := fmt.Sprintf("Failed copying dumpfile %s -> %s: %v", src.Name(), dst.Name(), err)
 
-			logger.Error("Failed opening file to copy: %v", err)
-			db.Delete(dbe)
+			logger.Error(errMsg)
+			dbe.Status = status.ImportFailed
+			dbe.Message = errMsg
 			return
 		}
+
+		logger.Debug("Copy successful, starting import")
+
+		url = fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
 	}
 
-	_, err = agent.ImportDatabase(req.ID, dbe.DBName, dbe.DBUser, dbe.DBPass, dbe.Dumpfile)
+	_, err := agent.ImportDatabase(dbe.ID, dbe.DBName, dbe.DBUser, dbe.DBPass, url)
 	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.CreateFailed, err.Error())
+		errMsg := fmt.Sprintf("Import failed: %v", err)
 
-		db.Delete(dbe)
+		logger.Error(errMsg)
+
+		dbe.Status = status.ImportFailed
+		dbe.Message = errMsg
 		return
 	}
 
-	inet.SendSuccess(w, http.StatusOK, dbe)
+	dbe.Status = status.ImportInProgress
 }
 
 func createAPIDB(w http.ResponseWriter, r *http.Request) {
