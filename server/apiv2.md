@@ -31,8 +31,6 @@ If the Authorization header is not specified, an error will be returned:
 }
 ```
 
-
-
 ## GET /api/agents
 Example
 
@@ -406,18 +404,24 @@ Example failed returns:
 }
 ```
 
+## POST /api/databases/import
+Example
+
+`curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10", "dumpfile_location":"/some_file_location"}' http://localhost:7010/api/databases/import`
+
+`curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10", "dumpfile_location":"http://localhost/somedumpfile.sql"}' http://localhost:7010/api/databases/import`
+
 ### Payload
 #### Required
 `agent_identifier` - Shortname of the agent
+`dumpfile_location` - Location of the dumpfile. Can be absolute path  (if folder is mounted) or http link to download.
 #### Optional
 `database_name` - Name of the database to be created.
-
 `username` - Name of the user to be created.
-
 `password` - Password to set for the created user
 
 ### Returns
-All data about the created database.
+All data about the imported database.
 
 
 Example success return:
@@ -431,7 +435,7 @@ Example success return:
       "dbuser":"gps_video",
       "dbpass":"air_viewer",
       "sid":"",
-      "dumplocation":"",
+      "dumplocation":"http://localhost/somedumpfile.sql",
       "createdate":"2018-01-16T01:14:33.41554638Z",
       "expirydate":"2018-02-16T01:14:33.415546478Z",
       "creator":"daniel.javorszky@liferay.com",
@@ -457,9 +461,18 @@ Example failed returns:
 
 {
     "success":false,
+    "error":["ERR_MISSING_PARAMETERS","dumpfile_location"]
+}
+
+// or
+
+{
+    "success":false,
     "error":["ERR_AGENT_NOT_FOUND","nonexistent_agent"]
 }
 ```
+
+
 
 ## PUT /api/databases/${id}/recreate
 Example

@@ -330,16 +330,24 @@ func importAPIDB(w http.ResponseWriter, r *http.Request) {
 		inet.SendFailure(w, http.StatusInternalServerError, errs.PersistFailed, err.Error())
 
 		logger.Error("failed inserting database: %v", err)
+		db.Delete(dbe)
 		return
 	}
 
 	if strings.HasPrefix(dbe.Dumpfile, "/") {
+		if config.MountLoc == "" {
+			inet.SendFailure(w, http.StatusBadRequest, errs.NoFoldersMounted)
+			db.Delete(dbe)
+			return
+		}
+
 		_, filename := filepath.Split(dbe.Dumpfile)
 		dst, err := os.OpenFile(fmt.Sprintf("%s/web/dumps/%s", workdir, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
 
 			logger.Error("Failed creating file at web/dumps: %v", err)
+			db.Delete(dbe)
 			return
 		}
 		defer dst.Close()
@@ -349,6 +357,7 @@ func importAPIDB(w http.ResponseWriter, r *http.Request) {
 			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
 
 			logger.Error("Failed opening file to copy: %v", err)
+			db.Delete(dbe)
 			return
 		}
 		defer src.Close()
@@ -358,6 +367,7 @@ func importAPIDB(w http.ResponseWriter, r *http.Request) {
 			inet.SendFailure(w, http.StatusInternalServerError, errs.FileIOFailed, err.Error())
 
 			logger.Error("Failed opening file to copy: %v", err)
+			db.Delete(dbe)
 			return
 		}
 	}
