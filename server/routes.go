@@ -216,6 +216,12 @@ var routes = Routes{
 		getAPIAgents,
 	},
 	route{
+		"/api/agents/active",
+		http.MethodGet,
+		"/api/agents/active",
+		getAPIActiveAgents,
+	},
+	route{
 		"api/agents/$agent-name",
 		http.MethodGet,
 		"/api/agents/{agent:[a-zA-Z0-9-_]+}",

@@ -82,6 +82,32 @@ func getAPIAgents(w http.ResponseWriter, r *http.Request) {
 	inet.SendSuccess(w, http.StatusOK, agents)
 }
 
+func getAPIActiveAgents(w http.ResponseWriter, r *http.Request) {
+	_, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	result := make([]model.Agent, 0)
+
+	agents := registry.List()
+	for _, agent := range agents {
+		if !agent.Up {
+			continue
+		}
+
+		result = append(result, agent)
+	}
+
+	if len(result) == 0 {
+		inet.SendFailure(w, http.StatusNotFound, errs.NoAgentsAvailable)
+		return
+	}
+
+	inet.SendSuccess(w, http.StatusOK, result)
+}
+
 // apiAgentByName returns an agent by its shortname
 func getAPIAgentByName(w http.ResponseWriter, r *http.Request) {
 	_, err := getAPIUser(r)

@@ -42,7 +42,50 @@ Example
 none
 
 ### Returns
-List of agents objects, each one containing all known information
+List of agents objects, each one containing all known information. Also returns agents that are not up.
+
+Example success return:
+```
+{
+   "success":true,
+   "data":[
+      {
+         "id":1,
+         "vendor":"mariadb",
+         "dbport":"3309",
+         "dbaddress":"172.17.0.2",
+         "sid":"",
+         "agent":"mariadb-10",
+         "agent_long":"mariadb 10.2.11",
+         "agent_identifier":"myhostname-mariadb-10",
+         "agent_port":"7005",
+         "agent_version":"3",
+         "agent_address":"http://172.16.20.230",
+         "agent_token":"",
+         "agent_up":true
+      }
+   ]
+}
+```
+
+Failed return:
+```
+{
+    "success":false,
+    "error":["ERR_NO_AGENTS_AVAILABLE"]
+}
+```
+
+## GET /api/agents/active
+Example
+
+`curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents/active`
+
+### Payload
+none
+
+### Returns
+List of agents objects, each one containing all known information. Only returns active agents
 
 Example success return:
 ```
