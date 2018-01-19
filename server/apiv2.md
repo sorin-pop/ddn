@@ -354,9 +354,12 @@ Example
 ### Payload
 #### Required
 `agent_identifier` - Shortname of the agent
+
 #### Optional
 `database_name` - Name of the database to be created.
+
 `username` - Name of the user to be created.
+
 `password` - Password to set for the created user
 
 ### Returns
@@ -407,17 +410,21 @@ Example failed returns:
 ## POST /api/databases/import
 Example
 
-`curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10", "dumpfile_location":"/some_file_location"}' http://localhost:7010/api/databases/import`
+`curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10", "dumpfile_location":"/folder/file.sql"}' http://localhost:7010/api/databases/import`
 
 `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10", "dumpfile_location":"http://localhost/somedumpfile.sql"}' http://localhost:7010/api/databases/import`
 
 ### Payload
 #### Required
 `agent_identifier` - Shortname of the agent
+
 `dumpfile_location` - Location of the dumpfile. Can be absolute path  (if folder is mounted) or http link to download.
+
 #### Optional
 `database_name` - Name of the database to be created.
+
 `username` - Name of the user to be created.
+
 `password` - Password to set for the created user
 
 ### Returns
@@ -471,8 +478,6 @@ Example failed returns:
     "error":["ERR_AGENT_NOT_FOUND","nonexistent_agent"]
 }
 ```
-
-
 
 ## PUT /api/databases/${id}/recreate
 Example
@@ -588,6 +593,7 @@ Examples:
 
 ### Payload
 `${id}` - the id of the metadata itself.
+
 `${vis}` - either public or private.
 
 ### Returns
@@ -624,9 +630,10 @@ Examples:
 
 ### Payload
 `${id}` - the id of the metadata itself.
-`${amount}` - integer
-`${unit}` - can be `days`, `months` or `years`
 
+`${amount}` - integer
+
+`${unit}` - can be `days`, `months` or `years`
 
 ### Returns
 Returns the new expiry date if successful, or error message if something went wrong.
