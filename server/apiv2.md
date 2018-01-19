@@ -31,7 +31,9 @@ If the Authorization header is not specified, an error will be returned:
 }
 ```
 
-## GET /api/agents
+## List all agents
+
+### GET /api/agents
 Example
 
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents`
@@ -73,8 +75,9 @@ Failed return:
     "error":["ERR_NO_AGENTS_AVAILABLE"]
 }
 ```
+## List all active agents
 
-## GET /api/agents/active
+### GET /api/agents/active
 Example
 
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents/active`
@@ -83,7 +86,7 @@ Example
 none
 
 ### Returns
-List of agents objects, each one containing all known information. Only returns active agents
+List of agents objects, each one containing all known information. Only returns active agents.
 
 Example success return:
 ```
@@ -117,7 +120,9 @@ Failed return:
 }
 ```
 
-## GET /api/agents/${agentName}
+## Get all information on a specific agent
+
+### GET /api/agents/${agentName}
 Example
 
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/agents/mariadb-10`
@@ -158,7 +163,8 @@ Failed returns:
 }
 ```
 
-## GET /api/databases
+## List databases
+### GET /api/databases
 Example
 
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases`
@@ -196,8 +202,9 @@ Example success return:
       // .. more
 }
 ```
+## Get metadata of specific database by id
 
-## GET /api/databases/${id}
+### GET /api/databases/${id}
 Example
 
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/15`
@@ -241,8 +248,9 @@ Example failed return:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
+## Get metadata of specific database by agent and database name
 
-## GET /api/databases/${agent}/${dbname}
+### GET /api/databases/${agent}/${dbname}
 Example
 
 `curl -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/mariadb-10/gel_component`
@@ -289,8 +297,9 @@ Example failed return:
 }
 ```
 
+## Drop database by its id
 
-## DELETE /api/databases/${id}
+### DELETE /api/databases/${id}
 Example
 
 `curl -X DELETE -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/15`
@@ -317,7 +326,9 @@ Example failed return:
 }
 ```
 
-## DELETE /api/databases/${agent}/${dbname}
+## Get metadata of specific database by agent and database name
+
+### DELETE /api/databases/${agent}/${dbname}
 Example
 
 `curl -X DELETE -H "Authorization:daniel.javorszky@liferay.com" http://localhost:7010/api/databases/mariadb-10/gel_component`
@@ -346,7 +357,9 @@ Example failed return:
 }
 ```
 
-## POST /api/databases/create
+## Create an empty database
+
+### POST /api/databases/create
 Example
 
 `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10"}' http://localhost:7010/api/databases/create`
@@ -407,7 +420,9 @@ Example failed returns:
 }
 ```
 
-## POST /api/databases/import
+## Import a database
+
+### POST /api/databases/import
 Example
 
 `curl -X POST  -H "Authorization:daniel.javorszky@liferay.com" -H "Content-Type: application/json" -d '{"agent_identifier":"mariadb-10", "dumpfile_location":"/folder/file.sql"}' http://localhost:7010/api/databases/import`
@@ -478,8 +493,11 @@ Example failed returns:
     "error":["ERR_AGENT_NOT_FOUND","nonexistent_agent"]
 }
 ```
+## Recreate a database
 
-## PUT /api/databases/${id}/recreate
+Recreates the database with the given ID. Basically drops the database and creates a new one with the same information
+
+### PUT /api/databases/${id}/recreate
 Example
 
 `curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/16/recreate`
@@ -488,8 +506,6 @@ Example
 `${id}` - the id of the metadata itself.
 
 ### Returns
-Recreates the database with the given ID. Basically drops the database and creates a new one with the same information
-
 Returns all information on the recreated database.
 
 Example success return:
@@ -525,8 +541,9 @@ Example failed return:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
+## List files in mounted folder
 
-## GET /api/browse/${loc}
+### GET /api/browse/${loc}
 List the files and folders in the mounted folder
 
 Examples:
@@ -582,8 +599,9 @@ Example failed returns:
    ]
 }
 ```
+## Update database visibility
 
-## PUT /api/databases/${id}/visibility/${vis}
+### PUT /api/databases/${id}/visibility/${vis}
 Change the visibility of database `${id}` to private or public
 Examples:
 
@@ -616,8 +634,8 @@ Example failed returns:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
-
-## PUT /api/databases/${id}/expiry/extend/${amount}/${unit}
+## Extend database expiry
+### PUT /api/databases/${id}/expiry/extend/${amount}/${unit}
 Extend the expiry of database `${id}` by `${amount}` `${unit}`
 Examples:
 
@@ -653,8 +671,8 @@ Example failed returns:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
-
-## GET /api/databases/${id}/accessinfo
+## Fetch access information of a database by id
+### GET /api/databases/${id}/accessinfo
 Get accesss info for the database denoted by meta id `${id}`
 Examples:
 
@@ -689,6 +707,8 @@ Example failed returns:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
+
+## Fetch access information of a database by agent and database name
 
 ## GET /api/databases/${agent}/${dbname}/accessinfo
 Get accesss info for the database `${agent}` and `${dbname}`
@@ -726,8 +746,8 @@ Example failed returns:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
-
-## PUT /api/loglevel/${level}
+## Change the loglevel of the server
+### PUT /api/loglevel/${level}
 Updates the loglevel of the server.
 
 Example
