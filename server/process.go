@@ -39,7 +39,15 @@ func maintain() {
 					continue
 				}
 
-				agent.DropDatabase(registry.ID(), dbe.DBName, dbe.DBUser)
+				_, err = agent.DropDatabase(registry.ID(), dbe.DBName, dbe.DBUser)
+				if err != nil {
+					dbe.Status = status.DropDatabaseFailed
+					dbe.Message = err.Error()
+					db.Update(&dbe)
+
+					logger.Error("failed dropping database: %v", err)
+					continue
+				}
 				db.Delete(dbe)
 
 				mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Database %q dropped", dbe.DBName), fmt.Sprintf(`
