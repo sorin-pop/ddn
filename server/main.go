@@ -60,7 +60,7 @@ func main() {
 
 	if *logname != "std" {
 		if _, err = os.Stat(*logname); err == nil {
-			rotated := fmt.Sprintf("%s.%d", *logname, time.Now().Unix())
+			rotated := fmt.Sprintf("%s.%s", *logname, time.Now().Format("2006-01-02_03:04"))
 
 			logger.Debug("Rotated logfile to %s", rotated)
 
