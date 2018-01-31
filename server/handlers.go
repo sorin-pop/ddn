@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -424,29 +423,16 @@ func unregister(w http.ResponseWriter, r *http.Request) {
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
-	var buf bytes.Buffer
-
-	buf.WriteString("ba-bump")
-
 	inet.WriteHeader(w, http.StatusOK)
-	w.Write(buf.Bytes())
+	w.Write([]byte("ba-bump"))
 }
 
 func alive(w http.ResponseWriter, r *http.Request) {
-	var buf bytes.Buffer
-
-	vars := mux.Vars(r)
-	shortname := vars["shortname"]
-
-	if registry.Exists(shortname) {
-		buf.WriteString("yup")
+	if registry.Exists(mux.Vars(r)["shortname"]) {
 		inet.WriteHeader(w, http.StatusOK)
 	} else {
-		buf.WriteString("nope")
 		inet.WriteHeader(w, http.StatusNotFound)
 	}
-
-	w.Write(buf.Bytes())
 }
 
 func login(w http.ResponseWriter, r *http.Request) {

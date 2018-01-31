@@ -13,9 +13,13 @@ import (
 // WriteHeader updates the header's Content-Type to application/json and charset to
 // UTF-8. Additionally, it also adds the http status to it.
 func WriteHeader(w http.ResponseWriter, status int) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(status)
+	header := w.Header()
+	header.Set("Content-Type", "application/json; charset=utf-8")
+	header.Set("Access-Control-Allow-Origin", "*")
+
+	if status != http.StatusOK {
+		w.WriteHeader(status)
+	}
 }
 
 // DownloadFile downloads the file from the url and places it into the
