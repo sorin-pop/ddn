@@ -326,7 +326,7 @@ Example failed return:
 }
 ```
 
-## Get metadata of specific database by agent and database name
+## Drop database by agent and database name
 
 ### DELETE /api/databases/${agent}/${dbname}
 Example
