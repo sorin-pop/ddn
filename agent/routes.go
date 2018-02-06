@@ -44,6 +44,12 @@ var routes = Routes{
 		importDatabase,
 	},
 	route{
+		"exportDatabase",
+		"POST",
+		"/export-database",
+		exportDatabase,
+	},
+	route{
 		"whoami",
 		"GET",
 		"/whoami",

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -122,6 +123,49 @@ func startImport(dbreq model.DBRequest) {
 
 	logger.Debug("Import succeded in %v", time.Since(start))
 	ch <- notif.Y{StatusCode: status.Success, Msg: "Completed"}
+}
+
+func startExport(dbreq model.DBRequest) {
+	upd8Path := fmt.Sprintf("%s/%s", conf.MasterAddress, "upd8")
+
+	ch := notif.New(dbreq.ID, upd8Path)
+	defer close(ch)
+
+	logger.Debug("Exporting database: %v", dbreq.DatabaseName)
+	ch <- notif.Y{StatusCode: status.ExportInProgress, Msg: "Exporting"}
+
+	start := time.Now()
+
+	fullDumpFilename, err := db.ExportDatabase(dbreq)
+	if err != nil {
+		logger.Error("could not export database: %v", err)
+
+		ch <- notif.Y{StatusCode: status.ExportFailed, Msg: "Exporting database failed: " + err.Error()}
+		return
+	}
+
+	// Archive (zip) the created dump file
+	ch <- notif.Y{StatusCode: status.ArchivingDump, Msg: "Zipping dump"}
+	logger.Debug("Zipping dump file: %v", fullDumpFilename)
+
+	inputFiles := []string{filepath.Join(".", "exports", fullDumpFilename)}
+	outputZipFilename := fmt.Sprintf("%s.zip", strings.TrimSuffix(fullDumpFilename, path.Ext(fullDumpFilename)))
+
+	err = zipFiles(filepath.Join(".", "exports", outputZipFilename), inputFiles)
+
+	if err != nil {
+		logger.Error("could not zip dump file: %v", err)
+
+		ch <- notif.Y{StatusCode: status.ZippingDumpFailed, Msg: "Zipping dump failed: " + err.Error()}
+		os.Remove(filepath.Join(".", "exports", outputZipFilename))
+		os.Remove(inputFiles[0])
+		return
+	}
+
+	os.Remove(inputFiles[0])
+
+	logger.Debug("Export succeeded in %v", time.Since(start))
+	ch <- notif.Y{StatusCode: status.Success, Msg: "Export completed:" + outputZipFilename}
 }
 
 // This method should always be called asynchronously

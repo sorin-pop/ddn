@@ -39,6 +39,10 @@ type Database interface {
 	// if it failed for some reason.
 	ImportDatabase(dbRequest model.DBRequest) error
 
+	// ExportDatabase exports a CloudDB database to a dump file and returns the file's name, or returns an error
+	// if it failed for some reason.
+	ExportDatabase(dbRequest model.DBRequest) (string, error)
+
 	// ListDatabase returns a list of strings - the names of the databases in the server
 	// All system tables are omitted from the returned list. If there's an error, it is returned.
 	ListDatabase() ([]string, error)

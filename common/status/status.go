@@ -12,9 +12,12 @@ func init() {
 	Labels[Started] = "Started"
 	Labels[InProgress] = "In Progress"
 	Labels[DownloadInProgress] = "Downloading"
+	Labels[UploadInProgress] = "Uploading"
 	Labels[ExtractingArchive] = "Extracting Archive"
+	Labels[ArchivingDump] = "Zipping dump"
 	Labels[ValidatingDump] = "Validating Dump"
 	Labels[ImportInProgress] = "Importing"
+	Labels[ExportInProgress] = "Exporting"
 	Labels[CopyInProgress] = "Copying"
 
 	// Success
@@ -37,9 +40,11 @@ func init() {
 	Labels[ExtractingArchiveFailed] = "Extracting archive failed"
 	Labels[ValidationFailed] = "Validation failed"
 	Labels[ImportFailed] = "Import failed"
+	Labels[ExportFailed] = "Export failed"
 	Labels[CreateDatabaseFailed] = "Creating database failed"
 	Labels[ListDatabaseFailed] = "Listing databases failed"
 	Labels[DropDatabaseFailed] = "Dropping database failed"
+	Labels[ZippingDumpFailed] = "Zipping dump failed"
 
 	// Warnings
 	Labels[DropInProgress] = "Drop in progress"
@@ -54,11 +59,14 @@ const (
 	Started    int = 1 // status.Started
 	InProgress int = 2 // status.InProgress
 
-	DownloadInProgress int = 3 // status.DownloadInProgress
-	ExtractingArchive  int = 4 // status.ExtractingArchive
-	ValidatingDump     int = 5 // status.ValidatingDump
-	ImportInProgress   int = 6 // status.ImportInProgress
-	CopyInProgress     int = 7 // status.CopyInProgress
+	DownloadInProgress int = 3  // status.DownloadInProgress
+	ExtractingArchive  int = 4  // status.ExtractingArchive
+	ValidatingDump     int = 5  // status.ValidatingDump
+	ImportInProgress   int = 6  // status.ImportInProgress
+	CopyInProgress     int = 7  // status.CopyInProgress
+	ExportInProgress   int = 8  // status.ExportInProgress
+	UploadInProgress   int = 9  // status.UploadInProgress
+	ArchivingDump      int = 10 // status.ArchivingDump
 )
 
 // Success statuses are used to convey a successful result.
@@ -93,6 +101,8 @@ const (
 	DropDatabaseFailed       int = 307 // status.DropDatabaseFailed
 	SaveSubscriptionFailed   int = 308 // status.SaveSubscriptionFailed
 	DeleteSubscriptionFailed int = 309 // status.DeleteSubscriptionFailed
+	ExportFailed             int = 310 // status.ExportFailed
+	ZippingDumpFailed        int = 311 // status.ZippingDumpFailed
 )
 
 // Warnings are for issuing warnings.

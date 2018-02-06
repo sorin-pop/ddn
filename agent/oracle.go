@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/djavorszky/ddn/common/model"
 )
@@ -81,6 +83,22 @@ func (db *oracle) ImportDatabase(dbRequest model.DBRequest) error {
 	return nil
 }
 
+func (db *oracle) ExportDatabase(dbRequest model.DBRequest) (string, error) {
+	fullDumpFilename := fmt.Sprintf("%s_%s.dmp", dbRequest.DatabaseName, time.Now().Format("20060102150405"))
+	// Start the export
+	args := []string{fmt.Sprintf("%s/%s", conf.User, conf.Password), fmt.Sprintf("schemas=%s", dbRequest.DatabaseName), "directory=EXP_DIR",
+		fmt.Sprintf("dumpfile=%s", fullDumpFilename),
+		fmt.Sprintf("logfile=%s.log", strings.TrimSuffix(fullDumpFilename, path.Ext(fullDumpFilename)))}
+
+	res := RunCommand("expdp", args...)
+
+	if res.exitCode != 0 {
+		return "", fmt.Errorf("Schema export seems to have failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+	}
+
+	return fullDumpFilename, nil
+}
+
 func (db *oracle) ListDatabase() ([]string, error) {
 	return nil, nil
 }
@@ -126,6 +144,18 @@ func (db *oracle) RefreshImportStoredProcedure() error {
 		missingGrantsMessage = fmt.Sprintf("%sgrant create any directory to %s;\n", missingGrantsMessage, conf.User)
 		missingGrantsMessage = fmt.Sprintf("%sgrant create external job to %s;\n", missingGrantsMessage, conf.User)
 		return fmt.Errorf("Creating import procedure failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d\n%s", res.stdout, res.stderr, res.exitCode, missingGrantsMessage)
+	}
+
+	return nil
+}
+
+func (db *oracle) CreateExpDir(expDirPath string) error {
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_exp_dir.sql", expDirPath}
+
+	res := RunCommand(conf.Exec, args...)
+
+	if res.exitCode != 0 {
+		return fmt.Errorf("Creating EXP_DIR directory failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d\n", res.stdout, res.stderr, res.exitCode)
 	}
 
 	return nil

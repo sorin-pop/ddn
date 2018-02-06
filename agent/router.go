@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/pprof"
 
@@ -24,6 +25,10 @@ func Router() *mux.Router {
 			Name(route.Name).
 			Handler(handler)
 	}
+
+	// Add static serving of files in exports directory.
+	exports := http.StripPrefix("/exports/", http.FileServer(http.Dir(fmt.Sprintf("%s/exports/", workdir))))
+	router.PathPrefix("/exports/").Handler(exports)
 
 	attachProfiler(router)
 
