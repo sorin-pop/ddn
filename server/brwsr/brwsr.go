@@ -142,7 +142,7 @@ func (e Entry) Importable() bool {
 	case ".sql", ".dmp", ".dpdmp", ".bak":
 		return true
 	// supported archive settings
-	case ".zip", ".tar", ".gz":
+	case ".zip", ".tar", ".gz", ".bz2":
 		return true
 	}
 
