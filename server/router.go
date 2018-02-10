@@ -6,11 +6,12 @@ import (
 	"net/http/pprof"
 
 	"github.com/djavorszky/ddn/common/srv"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 // Router creates a new router that registers all routes.
-func Router() *mux.Router {
+func Router() http.Handler {
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
@@ -40,7 +41,12 @@ func Router() *mux.Router {
 
 	attachProfiler(router)
 
-	return router
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	headersOk := handlers.AllowedHeaders([]string{"Authorization"})
+
+	routerHandler := handlers.CORS(originsOk, headersOk)(router)
+
+	return routerHandler
 }
 
 func attachProfiler(router *mux.Router) {

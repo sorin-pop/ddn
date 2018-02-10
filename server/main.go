@@ -151,6 +151,7 @@ func main() {
 	logger.Info("Starting to listen on port %s", config.ServerPort)
 
 	port := fmt.Sprintf(":%s", config.ServerPort)
+
 	logger.Error("%v", http.ListenAndServe(port, Router()))
 
 	if len(config.AdminEmail) != 0 {

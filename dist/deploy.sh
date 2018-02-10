@@ -25,7 +25,7 @@ docker stop ddn-server
 docker rm ddn-server
 
 echo "starting container.."
-docker run -dit -p 7010:7010 --name ddn-server -v /home/javdaniel/go/src/github.com/djavorszky/ddn/dist/data:/ddn/data -v /home/javdaniel/go/src/github.com/djavorszky/ddn/dist/ftp:/ddn/ftp djavorszky/ddn:latest
+docker run -dit -p 7010:7010 --name ddn-server -v $rootloc/dist/data:/ddn/data -v $rootloc/dist/ftp:/ddn/ftp djavorszky/ddn:latest
 
 echo "removing artefacts.."
 rm -rf server web 

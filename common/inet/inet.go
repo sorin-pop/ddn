@@ -15,7 +15,6 @@ import (
 func WriteHeader(w http.ResponseWriter, status int) {
 	header := w.Header()
 	header.Set("Content-Type", "application/json; charset=utf-8")
-	header.Set("Access-Control-Allow-Origin", "*")
 
 	if status != http.StatusOK {
 		w.WriteHeader(status)
