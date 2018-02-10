@@ -107,6 +107,8 @@ func ReadRow(result *sql.Row) (data.Row, error) {
 		return row, fmt.Errorf("failed reading row: %v", err)
 	}
 
+	row.Label = row.StatusLabel()
+
 	return row, nil
 }
 
@@ -135,6 +137,8 @@ func ReadRows(rows *sql.Rows) (data.Row, error) {
 	if err != nil && err != sql.ErrNoRows {
 		return row, fmt.Errorf("failed reading row: %v", err)
 	}
+
+	row.Label = row.StatusLabel()
 
 	return row, nil
 }

@@ -59,7 +59,7 @@ func main() {
 	loadProperties(*filename)
 
 	if _, err := os.Stat(conf.Exec); os.IsNotExist(err) {
-		logger.Fatal("database executable doesn't exist:", conf.Exec)
+		logger.Fatal("database executable doesn't exist: %v", conf.Exec)
 	}
 
 	if *logname != "std" {
