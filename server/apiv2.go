@@ -230,13 +230,19 @@ func dropAPIDatabaseByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.Delete(meta)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.DeleteFailed)
+	agent, ok := registry.Get(meta.AgentName)
+	if !ok {
+		inet.SendFailure(w, http.StatusForbidden, errs.AgentNotFound)
 		return
 	}
 
-	inet.SendSuccess(w, http.StatusOK, "Delete successful")
+	meta.Status = status.DropInProgress
+
+	db.Update(&meta)
+
+	go dropAsync(agent, meta.ID, meta.DBName, meta.DBUser)
+
+	inet.SendSuccess(w, http.StatusOK, "Started dropping database")
 }
 
 func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
@@ -247,10 +253,10 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	agent, dbname := vars["agent"], vars["dbname"]
+	agentName, dbname := vars["agent"], vars["dbname"]
 
 	// Get private ones
-	meta, err := db.FetchByDBNameAgent(dbname, agent)
+	meta, err := db.FetchByDBNameAgent(dbname, agentName)
 	if err != nil {
 		inet.SendFailure(w, http.StatusInternalServerError, errs.QueryFailed, err.Error())
 
@@ -263,13 +269,19 @@ func dropAPIDatabaseByAgentDBName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.Delete(meta)
-	if err != nil {
-		inet.SendFailure(w, http.StatusInternalServerError, errs.DeleteFailed)
+	agent, ok := registry.Get(meta.AgentName)
+	if !ok {
+		inet.SendFailure(w, http.StatusForbidden, errs.AgentNotFound)
 		return
 	}
 
-	inet.SendSuccess(w, http.StatusOK, "Delete successful")
+	meta.Status = status.DropInProgress
+
+	db.Update(&meta)
+
+	go dropAsync(agent, meta.ID, meta.DBName, meta.DBUser)
+
+	inet.SendSuccess(w, http.StatusOK, "Started dropping database")
 }
 
 func importAPIDB(w http.ResponseWriter, r *http.Request) {
