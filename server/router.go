@@ -43,8 +43,9 @@ func Router() http.Handler {
 
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	headersOk := handlers.AllowedHeaders([]string{"Authorization"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"})
 
-	routerHandler := handlers.CORS(originsOk, headersOk)(router)
+	routerHandler := handlers.CORS(originsOk, headersOk, methodsOk)(router)
 
 	return routerHandler
 }
