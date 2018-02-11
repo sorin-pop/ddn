@@ -705,18 +705,25 @@ func apiAccessInfoByID(w http.ResponseWriter, r *http.Request) {
 }
 
 type dbAccess struct {
-	JDBCDriver string `json:"jdbc-driver"`
-	JDBCUrl    string `json:"jdbc-url"`
-	User       string `json:"user"`
-	Password   string `json:"password"`
-	URL        string `json:"url"`
+	JDBCDriver  string `json:"jdbc_driver"`
+	JDBCUrl     string `json:"jdbc_url"`
+	JDBCUrl6210 string `json:"jdbc_url_6210,omitempty"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	Database    string `json:"database, omitempty"`
+	URL         string `json:"url"`
 }
 
 func getDBAccess(meta data.Row) dbAccess {
-	var jdbc liferay.JDBC
+	var (
+		jdbc     liferay.JDBC
+		jdbc6210 liferay.JDBC
+	)
+
 	switch meta.DBVendor {
 	case "mysql":
-		jdbc = liferay.MysqlJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
+		jdbc = liferay.MysqlJDBCDXP(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
+		jdbc6210 = liferay.MysqlJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
 	case "mariadb":
 		jdbc = liferay.MariaDBJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
 	case "postgres":
@@ -727,13 +734,23 @@ func getDBAccess(meta data.Row) dbAccess {
 		jdbc = liferay.MSSQLJDBC(meta.DBAddress, meta.DBPort, meta.DBName, meta.DBUser, meta.DBPass)
 	}
 
-	return dbAccess{
+	dba := dbAccess{
 		JDBCDriver: jdbc.Driver,
 		JDBCUrl:    jdbc.URL,
 		User:       meta.DBUser,
 		Password:   meta.DBPass,
 		URL:        meta.DBAddress + ":" + meta.DBPort,
 	}
+
+	if jdbc6210.URL != "" {
+		dba.JDBCUrl6210 = jdbc6210.URL
+	}
+
+	if meta.DBVendor != "oracle" {
+		dba.Database = meta.DBName
+	}
+
+	return dba
 }
 
 func getAPIUser(r *http.Request) (string, error) {

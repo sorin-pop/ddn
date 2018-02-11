@@ -684,18 +684,20 @@ Examples:
 
 
 ### Returns
-Returns the database access information
+Returns the database access information. May contain a jdbc_url_6210 key-value as well in case it's different from the dxp one. Also contains "database" in case vendor is not oracle.
 
 Example success return:
 ```
 {  
    "success":true,
    "data":{  
-      "jdbc-driver":"jdbc.default.driverClassName=org.mariadb.jdbc.Driver",
-      "jdbc-url":"jdbc.default.url=jdbc:mariadb://172.17.0.2:3309/electric_adapter?useUnicode=true\u0026characterEncoding=UTF-8\u0026useFastDateParsing=false",
-      "user":"electric_adapter",
-      "password":"tag_tuner",
-      "url":"172.17.0.2:3309"
+      database: "gel_controller"
+      jdbc_driver: "jdbc.default.driverClassName=com.mysql.jdbc.Driver"
+      jdbc_url: "jdbc.default.url=jdbc:mysql://127.0.0.1:3306/gel_controller?characterEncoding=UTF-8&dontTrackOpenResources=true&holdResultsOpenOverStatementClose=true&useFastDateParsing=false&useUnicode=true&useSSL=false"
+      jdbc_url_6210: "jdbc.default.url=jdbc:mysql://127.0.0.1:3306/gel_controller?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false&useSSL=false"
+      password: "auto_air"
+      url: "127.0.0.1:3306"
+      user: "gel_controller"
    }
 }
 ```
@@ -723,18 +725,20 @@ Examples:
 `${dbname}` - Database name (or in some cases like Oracle, the name of the user)
 
 ### Returns
-Returns the database access information
+Returns the database access information. May contain a jdbc_url_6210 key-value as well in case it's different from the dxp one. Also contains "database" in case vendor is not oracle.
 
 Example success return:
 ```
 {  
    "success":true,
    "data":{  
-      "jdbc-driver":"jdbc.default.driverClassName=org.mariadb.jdbc.Driver",
-      "jdbc-url":"jdbc.default.url=jdbc:mariadb://172.17.0.2:3309/electric_adapter?useUnicode=true\u0026characterEncoding=UTF-8\u0026useFastDateParsing=false",
-      "user":"electric_adapter",
-      "password":"tag_tuner",
-      "url":"172.17.0.2:3309"
+      database: "gel_controller"
+      jdbc_driver: "jdbc.default.driverClassName=com.mysql.jdbc.Driver"
+      jdbc_url: "jdbc.default.url=jdbc:mysql://127.0.0.1:3306/gel_controller?characterEncoding=UTF-8&dontTrackOpenResources=true&holdResultsOpenOverStatementClose=true&useFastDateParsing=false&useUnicode=true&useSSL=false"
+      jdbc_url_6210: "jdbc.default.url=jdbc:mysql://127.0.0.1:3306/gel_controller?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false&useSSL=false"
+      password: "auto_air"
+      url: "127.0.0.1:3306"
+      user: "gel_controller"
    }
 }
 ```
