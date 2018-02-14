@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"archive/zip"
+	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -88,6 +89,42 @@ func ungzip(path string) ([]string, error) {
 	}
 
 	if filepath.Ext(dst.Name()) == ".tar" {
+		dst.Close()
+		return untar(fmt.Sprintf("%s/%s", filepath.Dir(dst.Name()), dst.Name()))
+	}
+
+	return []string{dst.Name()}, nil
+}
+
+func unbzip2(path string) ([]string, error) {
+	defer os.Remove(path)
+
+	reader, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("opening bzip2 file failed: %s", err.Error())
+	}
+	defer reader.Close()
+
+	archive := bzip2.NewReader(reader)
+
+	ext := filepath.Ext(path)
+	dstName := filepath.Base(path)
+
+	name := dstName[:len(dstName)-len(ext)]
+
+	dst, err := os.Create(name)
+	if err != nil {
+		return nil, fmt.Errorf("could not create output file: %s", err.Error())
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, archive)
+	if err != nil {
+		return nil, fmt.Errorf("uncompressing bzip2 failed: %s", err.Error())
+	}
+
+	if filepath.Ext(dst.Name()) == ".tar" {
+		dst.Close()
 		return untar(fmt.Sprintf("%s/%s", filepath.Dir(dst.Name()), dst.Name()))
 	}
 
@@ -148,7 +185,7 @@ func untar(path string) ([]string, error) {
 
 func isArchive(path string) bool {
 	switch filepath.Ext(path) {
-	case ".zip", ".tar", ".gz":
+	case ".zip", ".tar", ".gz", ".bz2":
 		return true
 	}
 

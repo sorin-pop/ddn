@@ -49,6 +49,8 @@ func startImport(dbreq model.DBRequest) {
 			files, err = unzip(path)
 		case ".gz":
 			files, err = ungzip(path)
+		case ".bz2":
+			files, err = unbzip2(path)
 		case ".tar":
 			files, err = untar(path)
 		default:
