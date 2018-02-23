@@ -56,6 +56,9 @@ tablespace_position NUMBER;
 tablespace_name_start NUMBER;
 tablespace_name_end NUMBER;
 dump_tablespace VARCHAR2(2048);
+schema_name_start NUMBER;
+schema_name_end NUMBER;
+dump_schema VARCHAR2(2048);
 datafile1 VARCHAR2(2000);
 datafile2 VARCHAR2(2000);
 file_clause VARCHAR2(4000) :='';
@@ -324,7 +327,7 @@ BEGIN
 		file_clause := 'file="' || file_clause || '"';
 		
 		--DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 2, 'file="' || dump_dir || '/' ||  fn || '"');
-		dbms_output.put_line(file_clause);
+		--dbms_output.put_line(file_clause);
 		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 2, file_clause);
 		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 3, 'full=Y');
 		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 4, 'log="' || dump_dir || '/' || jn || '.log' || '"');
@@ -332,7 +335,9 @@ BEGIN
 		DBMS_SCHEDULER.RUN_JOB(JOB_NAME => jn, USE_CURRENT_SESSION => TRUE);
 		DBMS_SCHEDULER.DROP_JOB(jn);
 		
-		-- 2. Edit <ts>_objects.sql (remove 'REM  ' from line beginnings, remove lines starting with 'REM  ...', replace tablespace name everywhere with our target tablespace)
+		-- 2. Edit <ts>_objects.sql (remove 'REM  ' from line beginnings, remove lines starting with 'REM  ...', 
+		-- replace tablespace name everywhere with our target tablespace, remove the line starting with "CONNECT ",
+		-- remove the schema name in CREATE/ALTER TABLE and CREATE (UNIQUE) INDEX commands, as it turned out that it can be inconsistent - see DDN-263)
 		object_file := UTL_FILE.FOPEN('DATA_PUMP_DIR', object_file_name,'R',32767);
 		new_object_file := UTL_FILE.FOPEN('DATA_PUMP_DIR', 'new_' || object_file_name,'W',32767);
 		ends_with_tablespace := FALSE;
@@ -357,10 +362,22 @@ BEGIN
 					new_object_file_line := SUBSTR(new_object_file_line,6);
 				END IF;
 			END IF;
-			
+
 			-- ignore the CONNECT line, we won't need it, and it doesn't have the password anyway. 
-			IF UPPER(new_object_file_line) LIKE 'CONNECT ' || UPPER(ts) || ';%' THEN
+			IF UPPER(new_object_file_line) LIKE 'CONNECT %' THEN
 				CONTINUE;
+			END IF;
+
+			-- remove the schema name in CREATE/ALTER TABLE and CREATE (UNIQUE) INDEX commands
+			IF new_object_file_line LIKE 'CREATE TABLE %' OR
+				new_object_file_line LIKE 'ALTER TABLE %' OR
+				new_object_file_line LIKE 'CREATE INDEX %' OR
+				new_object_file_line LIKE 'CREATE UNIQUE INDEX %' THEN
+
+					schema_name_start := INSTR(new_object_file_line, '"', 1, 1) ;
+					schema_name_end := INSTR(new_object_file_line, '"', 1, 2);
+					dump_schema := SUBSTR(new_object_file_line, schema_name_start, schema_name_end - schema_name_start + 2);
+					new_object_file_line := REPLACE(new_object_file_line, dump_schema);
 			END IF;
 			
 			-- if TABLESPACE keyword present in the line, replace tablespace name with our target tablespace
@@ -401,6 +418,13 @@ BEGIN
 		UTL_FILE.FREMOVE('DATA_PUMP_DIR', object_file_name);
 		UTL_FILE.FRENAME('DATA_PUMP_DIR', 'new_' || object_file_name, 'DATA_PUMP_DIR', object_file_name, TRUE);
 
+		-- we keep in mind the schema name generated in the output file, after removing the quotes and the point around it
+		-- if it's not the same as our target schema, it is the schema from the dump, and we will need
+		-- to use the fromuser parameter with this name in step 4
+		dump_schema := REPLACE(dump_schema, '"');
+		dump_schema := REPLACE(dump_schema, '.');
+		
+
 		-- 3. As the target schema, run the edited <ts>_objects.sql
 		jn := SUBSTR('run_' || REPLACE(object_file_name,'.sql',''),1,30);
 		DBMS_SCHEDULER.CREATE_JOB(JOB_NAME => jn, JOB_TYPE => 'EXECUTABLE', JOB_ACTION => 'sqlplus', NUMBER_OF_ARGUMENTS => 2); 
@@ -410,17 +434,28 @@ BEGIN
 		DBMS_SCHEDULER.DROP_JOB(jn);
 		
 		-- 4. Run imp with IGNORE=Y (so that it does not error out on object creations. They are already there, created in step 3.)
-		-- imp ts/ts_pwd file=fn full=Y log=jn.log IGNORE=Y
+		-- if dump_schema is the same as our target schema, then run imp ts/ts_pwd file=fn log=jn.log IGNORE=Y full=Y
+		-- if dump_schema is not the same as our target schema, then run imp ts/ts_pwd file=fn log=jn.log IGNORE=Y fromuser=dump_schema touser=ts
 		--jn := SUBSTR('imp_' || REPLACE(fn, '.','_'),1,30);
 		jn := SUBSTR('imp_' || ts,1,30);
-		dbms_output.put_line('job name: ' || jn);
-		DBMS_SCHEDULER.CREATE_JOB(JOB_NAME => jn,JOB_TYPE => 'EXECUTABLE',JOB_ACTION =>'?/bin/imp', NUMBER_OF_ARGUMENTS => 5); 
+		--dbms_output.put_line('job name: ' || jn);
+		IF dump_schema = ts THEN
+			DBMS_SCHEDULER.CREATE_JOB(JOB_NAME => jn,JOB_TYPE => 'EXECUTABLE',JOB_ACTION =>'?/bin/imp', NUMBER_OF_ARGUMENTS => 5);
+		ELSE
+			DBMS_SCHEDULER.CREATE_JOB(JOB_NAME => jn,JOB_TYPE => 'EXECUTABLE',JOB_ACTION =>'?/bin/imp', NUMBER_OF_ARGUMENTS => 6);
+		END IF;
+
 		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 1, ts || '/' || ts_pwd);
 		--DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 2, 'file="' || dump_dir || '/' ||  fn || '"');
 		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 2, file_clause);
-		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 3, 'full=Y');
-		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 4, 'log="' || dump_dir || '/' || jn || '.log' || '"');
-		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 5, 'ignore=Y');
+		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 3, 'log="' || dump_dir || '/' || jn || '.log' || '"');
+		DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 4, 'ignore=Y');
+		IF dump_schema = ts THEN
+			DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 5, 'full=Y');
+		ELSE
+			DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 5, 'fromuser=' || dump_schema);
+			DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE(jn, 6, 'touser=' || ts);
+		END IF;
 
 		--DBMS_SCHEDULER.ENABLE(NAME => jn); -run job asynchronously, this pl/sql block will return immediately and the job will run in the background
 		DBMS_SCHEDULER.RUN_JOB(JOB_NAME => jn, use_current_session => TRUE);  --run job synchronously, in this session
