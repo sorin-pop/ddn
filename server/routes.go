@@ -128,6 +128,12 @@ var routes = Routes{
 		drop,
 	},
 	route{
+		"export",
+		http.MethodGet,
+		"/export/{id:[0-9]+}",
+		exportAction,
+	},
+	route{
 		"portalext",
 		http.MethodGet,
 		"/portalext/{id:[0-9]+}",

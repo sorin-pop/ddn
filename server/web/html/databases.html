@@ -43,6 +43,7 @@
                         {{end}}
                         <a class="btn btn-secondary" href="/recreate/{{.ID}}" title="Recreate Database" onclick="return confirm('Are you sure you wish to drop the database \'{{.DBName}}\' and create an empty one with the same credentials? ')"><i class="fa fa-refresh" aria-hidden="true"></i></a>                        
                         <a class="btn btn-danger" href="/drop/{{.ID}}" title="Drop Database" onclick="return confirm('Are you sure you wish to drop database \'{{.DBName}}\'?')"><i class="fa fa-trash" aria-hidden="true"></i></a>
+                        <a class="btn btn-secondary" href="/export/{{.ID}}" title="Export Database" onclick="return confirm('Are you sure you wish to export database \'{{.DBName}}\'?')"><i class="fa fa-arrow-up" aria-hidden="true"></i></a>
                     </div>
                     {{end}}
                 </td>

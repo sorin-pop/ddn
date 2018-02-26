@@ -572,6 +572,63 @@ func dropAsync(agent model.Agent, ID int, dbname, dbuser string) {
 	db.Delete(dbe)
 }
 
+func exportAction(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	session, err := store.Get(r, "user-session")
+	if err != nil {
+		http.Error(w, "Failed getting session: "+err.Error(), http.StatusInternalServerError)
+	}
+	defer session.Save(r, w)
+
+	user := getUser(r)
+
+	if user == "" {
+		logger.Error("Export database tried without a logged in user.")
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	ID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "couldn't convert id to int.", http.StatusInternalServerError)
+		return
+	}
+
+	dbe, err := db.FetchByID(ID)
+	if err != nil {
+		logger.Error("FetchById: %v", err)
+		session.AddFlash("Failed querying database", "fail")
+		return
+	}
+
+	if dbe.Creator != user {
+		logger.Error("User %q tried to export database of user %q.", user, dbe.Creator)
+		session.AddFlash("Failed exporting database: You can only export databases you created.", "fail")
+		return
+	}
+
+	conn, ok := registry.Get(dbe.AgentName)
+	if !ok {
+		logger.Error("Agent %q is offline, can't export database with id '%d'", dbe.AgentName, ID)
+		session.AddFlash("Unable to export database: Agent is down.", "fail")
+		return
+	}
+
+	dbe.Status = status.ExportInProgress
+
+	db.Update(&dbe)
+
+	resp, err := conn.ExportDatabase(ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	if err != nil {
+		session.AddFlash(err.Error(), "fail")
+		return
+	}
+
+	session.AddFlash(resp, "msg")
+}
+
 func portalext(w http.ResponseWriter, r *http.Request) {
 	defer http.Redirect(w, r, "/", http.StatusSeeOther)
 
@@ -657,9 +714,13 @@ func recreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go recreateAsync(conn, dbe)
+	resp, err := conn.ExportDatabase(ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	if err != nil {
+		session.AddFlash(err.Error(), "fail")
+		return
+	}
 
-	session.AddFlash("Started to recreate", "msg")
+	session.AddFlash(resp, "msg")
 }
 
 func recreateAsync(conn model.Agent, dbe data.Row) {
@@ -753,25 +814,26 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 			jdbcDXP liferay.JDBC
 		)
 
-		switch dbe.DBVendor {
-		case "mysql":
-			jdbc62x = liferay.MysqlJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
-			jdbcDXP = liferay.MysqlJDBCDXP(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
-		case "mariadb":
-			jdbc62x = liferay.MariaDBJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
-			jdbcDXP = jdbc62x
-		case "postgres":
-			jdbc62x = liferay.PostgreJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
-			jdbcDXP = jdbc62x
-		case "oracle":
-			jdbc62x = liferay.OracleJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBSID, dbe.DBUser, dbe.DBPass)
-			jdbcDXP = jdbc62x
-		case "mssql":
-			jdbc62x = liferay.MSSQLJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
-			jdbcDXP = jdbc62x
-		}
+		if msg.Message == "Completed" {
+			switch dbe.DBVendor {
+			case "mysql":
+				jdbc62x = liferay.MysqlJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+				jdbcDXP = liferay.MysqlJDBCDXP(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+			case "mariadb":
+				jdbc62x = liferay.MariaDBJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+				jdbcDXP = jdbc62x
+			case "postgres":
+				jdbc62x = liferay.PostgreJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+				jdbcDXP = jdbc62x
+			case "oracle":
+				jdbc62x = liferay.OracleJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBSID, dbe.DBUser, dbe.DBPass)
+				jdbcDXP = jdbc62x
+			case "mssql":
+				jdbc62x = liferay.MSSQLJDBC(dbe.DBAddress, dbe.DBPort, dbe.DBName, dbe.DBUser, dbe.DBPass)
+				jdbcDXP = jdbc62x
+			}
 
-		mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q succeeded", dbe.DBName), fmt.Sprintf(`<h3>Import database successful</h3>
+			mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Importing %q succeeded", dbe.DBName), fmt.Sprintf(`<h3>Import database successful</h3>
 		
 <p>The %s import that you started completed successfully.</p>
 <p>Below you can find the portal-exts, should you need them:</p>
@@ -795,9 +857,28 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 <p>Visit <a href="http://cloud-db.liferay.int">Cloud DB</a> for more awesomeness.</p>
 <p>Cheers</p>`, dbe.DBVendor, jdbc62x.Driver, jdbc62x.URL, jdbc62x.User, jdbc62x.Password, jdbcDXP.Driver, jdbcDXP.URL, jdbcDXP.User, jdbcDXP.Password))
 
-		err = sendUserNotifications(dbe.Creator, fmt.Sprintf("Finished importing %s", dbe.DBName))
-		if err != nil {
-			logger.Error("failed notifying user: %v", err)
+			err = sendUserNotifications(dbe.Creator, fmt.Sprintf("Finished importing %s", dbe.DBName))
+			if err != nil {
+				logger.Error("failed notifying user: %v", err)
+			}
+		}
+
+		if strings.HasPrefix(msg.Message, "Export completed:") {
+
+			agent, _ := registry.Get(dbe.AgentName)
+			exportDumpFileName := strings.TrimPrefix(msg.Message, "Export completed:")
+
+			mail.Send(dbe.Creator, fmt.Sprintf("[Cloud DB] Exporting %q succeeded", dbe.DBName), fmt.Sprintf(`<h3>Export database successful</h3>
+		
+<p>The %s export that you started completed successfully.</p>
+<p>It will be available to download through the link below for 24 hours, then it will be deleted.</p>
+<p><a href="%s:%s/exports/%s">Download dump</a></p>
+<p>Cheers</p>`, dbe.DBName, agent.Address, agent.AgentPort, exportDumpFileName))
+
+			err = sendUserNotifications(dbe.Creator, fmt.Sprintf("Finished exporting %s", dbe.DBName))
+			if err != nil {
+				logger.Error("failed notifying user: %v", err)
+			}
 		}
 	}
 }

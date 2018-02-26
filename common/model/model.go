@@ -109,6 +109,20 @@ func (a Agent) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string) (s
 	return a.executeAction(dbreq, "import-database")
 }
 
+// ExportDatabase starts the import on the agent.
+func (a Agent) ExportDatabase(id int, dbname string, dbuser string, dbpass string) (string, error) {
+
+	dbreq := DBRequest{
+		ID:           id,
+		DatabaseName: dbname,
+		Username:     dbuser,
+		Password:     dbpass,
+		DumpLocation: "",
+	}
+
+	return a.executeAction(dbreq, "export-database")
+}
+
 // DropDatabase sends a request to the agent to drop the specified database.
 func (a Agent) DropDatabase(id int, dbname, dbuser string) (string, error) {
 

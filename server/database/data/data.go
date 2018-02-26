@@ -86,7 +86,7 @@ func (row Row) Progress() int {
 		return 25
 	case status.ValidatingDump:
 		return 50
-	case status.ImportInProgress:
+	case status.ImportInProgress,status.ExportInProgress:
 		return 75
 	default:
 		return 0
