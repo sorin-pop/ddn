@@ -257,6 +257,8 @@ func (db *mysql) ImportDatabase(dbreq model.DBRequest) error {
 
 	// Start the import
 	args := []string{
+		fmt.Sprintf("--host=%s", conf.LocalDBAddr),
+		fmt.Sprintf("--port=%s", conf.LocalDBPort),
 		fmt.Sprintf("-u%s", dbreq.Username),
 		fmt.Sprintf("-p%s", dbreq.Password),
 		dbreq.DatabaseName,
@@ -290,6 +292,8 @@ func (db *mysql) ExportDatabase(dbreq model.DBRequest) (string, error) {
 	defer outputfile.Close()
 
 	args := []string{
+		fmt.Sprintf("--host=%s", conf.LocalDBAddr),
+		fmt.Sprintf("--port=%s", conf.LocalDBPort),
 		fmt.Sprintf("-u%s", dbreq.Username),
 		fmt.Sprintf("-p%s", dbreq.Password),
 		dbreq.DatabaseName,

@@ -375,7 +375,7 @@ func apiRemoveSubscription(w http.ResponseWriter, r *http.Request) {
 
 		inet.SendResponse(w, http.StatusInternalServerError, inet.Message{
 			Status:  http.StatusInternalServerError,
-			Message: errs.DeleteFailed,
+			Message: errs.DropFailed,
 		})
 		return
 	}

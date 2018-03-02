@@ -276,6 +276,12 @@ var routes = Routes{
 		recreateAPIDB,
 	},
 	route{
+		"api/databases/id/export",
+		http.MethodPut,
+		"/api/databases/{id:[0-9]+}/export",
+		exportAPIDB,
+	},
+	route{
 		"api/browse",
 		http.MethodGet,
 		"/api/browse",

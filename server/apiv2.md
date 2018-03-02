@@ -493,6 +493,57 @@ Example failed returns:
     "error":["ERR_AGENT_NOT_FOUND","nonexistent_agent"]
 }
 ```
+
+## Export a database
+
+Exports the database with the given ID.
+
+### PUT /api/databases/${id}/export
+Example
+
+`curl -X PUT -H 'Authorization:daniel.javorszky@liferay.com'  http://localhost:7010/api/databases/15/export`
+
+### Payload
+`${id}` - the id of the metadata itself.
+
+### Returns
+Returns all information on the exported database.
+
+Example success return:
+```
+{
+   "success":true,
+   "data":{
+      "id":15,
+      "vendor":"mariadb",
+      "dbname":"gel_component",
+      "dbuser":"performance_air",
+      "dbpass":"gel_gel",
+      "sid":"",
+      "dumplocation":"",
+      "createdate":"2017-12-11T15:14:27.03707071Z",
+      "expirydate":"2018-01-11T15:14:27.037070856Z",
+      "creator":"daniel.javorszky@liferay.com",
+      "agent":"mariadb-10",
+      "dbaddress":"172.17.0.2",
+      "dbport":"3309",
+      "status":100,
+      "comment":"",
+      "message":"",
+      "public":0
+   }
+}
+```
+
+Example failed return:
+```
+{
+    "success":false,
+    "error":["ERR_DATABASE_NO_RESULT"]
+}
+```
+
+
 ## Recreate a database
 
 Recreates the database with the given ID. Basically drops the database and creates a new one with the same information
@@ -541,6 +592,7 @@ Example failed return:
     "error":["ERR_DATABASE_NO_RESULT"]
 }
 ```
+
 ## List files in mounted folder
 
 ### GET /api/browse/${loc}

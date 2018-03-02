@@ -481,6 +481,45 @@ func createAPIDB(w http.ResponseWriter, r *http.Request) {
 	inet.SendSuccess(w, http.StatusOK, dbe)
 }
 
+func exportAPIDB(w http.ResponseWriter, r *http.Request) {
+	user, err := getAPIUser(r)
+	if err != nil {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	vars := mux.Vars(r)
+	meta, errr := getDatabaseByIDFrom(vars)
+	if errr.httpStatus != 0 {
+		inet.SendFailure(w, errr.httpStatus, errr.errors...)
+		return
+	}
+
+	if !hasAccess(meta, user) {
+		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
+		return
+	}
+
+	agent, ok := registry.Get(meta.AgentName)
+	if !ok {
+		inet.SendFailure(w, http.StatusInternalServerError, errs.AgentNotFound, meta.AgentName)
+		return
+	}
+
+	resp, err := agent.ExportDatabase(meta.ID, meta.DBName, meta.DBUser, meta.DBPass)
+	if err != nil {
+		meta.Status = status.ExportFailed
+		db.Update(&meta)
+
+		inet.SendFailure(w, http.StatusInternalServerError, errs.ExportFailed)
+		return
+	}
+
+	logger.Info("Um ok done I guess")
+
+	inet.SendSuccess(w, http.StatusOK, resp)
+}
+
 func recreateAPIDB(w http.ResponseWriter, r *http.Request) {
 	user, err := getAPIUser(r)
 	if err != nil {
@@ -511,7 +550,7 @@ func recreateAPIDB(w http.ResponseWriter, r *http.Request) {
 		meta.Status = status.DropDatabaseFailed
 		db.Update(&meta)
 
-		inet.SendFailure(w, http.StatusInternalServerError, errs.AgentNotFound, meta.AgentName)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.DropFailed)
 		return
 	}
 
@@ -520,7 +559,7 @@ func recreateAPIDB(w http.ResponseWriter, r *http.Request) {
 		meta.Status = status.CreateDatabaseFailed
 		db.Update(&meta)
 
-		inet.SendFailure(w, http.StatusInternalServerError, errs.AgentNotFound, meta.AgentName)
+		inet.SendFailure(w, http.StatusInternalServerError, errs.CreateFailed)
 		return
 	}
 
