@@ -39,6 +39,7 @@ dist
 !srv.conf
 !default.conf
 
+agent/exports
 agent/agent*
 server/server*
 server/web/dumps/*

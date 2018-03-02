@@ -159,6 +159,7 @@ func main() {
 	}
 
 	go keepAlive()
+	go checkExports()
 
 	logger.Info("Starting to listen on port %s", conf.AgentPort)
 

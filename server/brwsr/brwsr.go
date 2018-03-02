@@ -76,7 +76,6 @@ func List(relPath string) (FileList, error) {
 	}
 
 	var res []Entry
-
 	for _, item := range list {
 		if strings.HasPrefix(item.Name(), ".") {
 			continue
@@ -103,10 +102,7 @@ func List(relPath string) (FileList, error) {
 
 		if strings.Contains(relPath, "/") {
 			flist.Parent = relPath[0:strings.LastIndex(relPath, "/")]
-		} else {
-			flist.Parent = ""
 		}
-
 	}
 
 	return flist, nil

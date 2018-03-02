@@ -13,6 +13,7 @@ import (
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 	"github.com/djavorszky/ddn/common/status"
+	"github.com/djavorszky/ddn/server/brwsr"
 	"github.com/djavorszky/notif"
 )
 
@@ -206,6 +207,31 @@ func keepAlive() {
 		err := registerAgent()
 		if err != nil {
 			logger.Error("couldn't register with master: %v", err)
+		}
+	}
+}
+
+func checkExports() {
+	ticker := time.NewTicker(1 * time.Hour)
+	for range ticker.C {
+		files, err := brwsr.List(filepath.Join(workdir, "exports"))
+		if err != nil {
+			logger.Error("failed to list exports directory: %v", err)
+		}
+
+		for _, file := range files.Entries {
+			info, _ := os.Stat(file.Path)
+			duration := time.Since(info.ModTime())
+
+			// Removing file in 72 hours to make sure that if a database has been
+			// exported on a Friday that it will still be available on Monday.
+			if duration.Hours() > 72 {
+				logger.Debug("Removing %v", info.Name())
+				err := os.Remove(info.Name())
+				if err != nil {
+					logger.Error("couldn't remove file %s: %v", info.Name(), err)
+				}
+			}
 		}
 	}
 }
