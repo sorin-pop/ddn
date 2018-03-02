@@ -256,7 +256,11 @@ func (db *mysql) ImportDatabase(dbreq model.DBRequest) error {
 	defer file.Close()
 
 	// Start the import
-	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
+	args := []string{
+		fmt.Sprintf("-u%s", dbreq.Username),
+		fmt.Sprintf("-p%s", dbreq.Password),
+		dbreq.DatabaseName,
+	}
 
 	cmd := exec.Command(conf.Exec, args...)
 
@@ -285,7 +289,11 @@ func (db *mysql) ExportDatabase(dbreq model.DBRequest) (string, error) {
 	}
 	defer outputfile.Close()
 
-	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
+	args := []string{
+		fmt.Sprintf("-u%s", dbreq.Username),
+		fmt.Sprintf("-p%s", dbreq.Password),
+		dbreq.DatabaseName,
+	}
 
 	cmd := exec.Command("mysqldump", args...)
 
