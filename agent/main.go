@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"os/user"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -24,7 +23,6 @@ var (
 	conf       Config
 	db         Database
 	port       string
-	usr        *user.User
 	hostname   string
 	startup    time.Time
 	registered bool
@@ -33,7 +31,6 @@ var (
 )
 
 func main() {
-
 	defer func() {
 		if p := recover(); p != nil {
 			logger.Error("Panic... Unregistering")
@@ -57,12 +54,6 @@ func main() {
 
 	flag.Parse()
 
-	workdir, err = os.Getwd()
-
-	if err != nil {
-		logger.Fatal("could not determine current directory")
-	}
-
 	loadProperties(*filename)
 
 	if _, err := os.Stat(conf.Exec); os.IsNotExist(err) {
@@ -85,11 +76,6 @@ func main() {
 		defer logOut.Close()
 
 		log.SetOutput(logOut)
-	}
-
-	usr, err = user.Current()
-	if err != nil {
-		logger.Fatal("couldn't get default user: ", err.Error())
 	}
 
 	hostname, err = os.Hostname()
@@ -125,9 +111,15 @@ func main() {
 		conf.Version = ver
 	}
 
+	workdir, err = os.Getwd()
+	if err != nil {
+		logger.Fatal("could not determine current directory")
+	}
+
 	// Check and create the 'dumps' folder
-	if _, err = os.Stat(filepath.Join(".", "dumps")); os.IsNotExist(err) {
-		err = os.Mkdir("dumps", os.ModePerm)
+	dumps := filepath.Join(workdir, "dumps")
+	if _, err = os.Stat(dumps); os.IsNotExist(err) {
+		err = os.Mkdir(dumps, os.ModePerm)
 		if err != nil {
 			logger.Fatal("Couldn't create dumps folder, please create it manually: %v", err)
 		}
@@ -136,8 +128,9 @@ func main() {
 	}
 
 	// Check and create the 'exports' folder
-	if _, err = os.Stat(filepath.Join(".", "exports")); os.IsNotExist(err) {
-		err = os.Mkdir("exports", os.ModePerm)
+	exports := filepath.Join(workdir, "exports")
+	if _, err = os.Stat(exports); os.IsNotExist(err) {
+		err = os.Mkdir(exports, os.ModePerm)
 		if err != nil {
 			logger.Fatal("Couldn't create 'exports' folder, please create it manually: %v", err)
 		}
