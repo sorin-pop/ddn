@@ -119,7 +119,7 @@ func doImport(dbID int, dumpfile string) {
 	dbe.Dumpfile = url
 	db.Update(&dbe)
 
-	conn, ok := registry.Get(dbe.AgentName)
+	agent, ok := registry.Get(dbe.AgentName)
 	if !ok {
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: agent went offline."
@@ -129,7 +129,7 @@ func doImport(dbID int, dumpfile string) {
 		return
 	}
 
-	_, err = conn.ImportDatabase(int(dbID), dbe.DBName, dbe.DBUser, dbe.DBPass, url)
+	_, err = agent.ImportDatabase(int(dbID), dbe.DBName, dbe.DBUser, dbe.DBPass, url)
 	if err != nil {
 		dbe.Status = status.ImportFailed
 		dbe.Message = "Server error: " + err.Error()
@@ -142,26 +142,26 @@ func doImport(dbID int, dumpfile string) {
 
 }
 
-func doPrepImport(creator, agent, dumpfile, dbname, dbuser, dbpass, public string) (int, error) {
-	conn, ok := registry.Get(agent)
+func doPrepImport(creator, agentName, dumpfile, dbname, dbuser, dbpass, public string) (int, error) {
+	agent, ok := registry.Get(agentName)
 	if !ok {
 		return 0, fmt.Errorf("agent went offline")
 	}
 
-	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
+	ensureValues(&dbname, &dbuser, &dbpass, agent.DBVendor)
 
 	entry := data.Row{
 		DBName:     dbname,
 		DBUser:     dbuser,
 		DBPass:     dbpass,
-		DBSID:      conn.DBSID,
+		DBSID:      agent.DBSID,
 		CreateDate: time.Now(),
 		ExpiryDate: time.Now().AddDate(0, 1, 0),
-		AgentName:  agent,
+		AgentName:  agentName,
 		Creator:    creator,
-		DBAddress:  conn.DBAddr,
-		DBPort:     conn.DBPort,
-		DBVendor:   conn.DBVendor,
+		DBAddress:  agent.DBAddr,
+		DBPort:     agent.DBPort,
+		DBVendor:   agent.DBVendor,
 		Status:     status.Started,
 	}
 
@@ -212,11 +212,11 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(32 << 24)
 
 	var (
-		agent  = r.PostFormValue("agent")
-		dbname = r.PostFormValue("dbname")
-		dbuser = r.PostFormValue("user")
-		dbpass = r.PostFormValue("password")
-		public = r.PostFormValue("public")
+		agentName = r.PostFormValue("agent")
+		dbname    = r.PostFormValue("dbname")
+		dbuser    = r.PostFormValue("user")
+		dbpass    = r.PostFormValue("password")
+		public    = r.PostFormValue("public")
 	)
 
 	session, err := store.Get(r, "user-session")
@@ -256,29 +256,29 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Could not removeall multipartform: %v", err)
 	}
 
-	conn, ok := registry.Get(agent)
+	agent, ok := registry.Get(agentName)
 	if !ok {
-		session.AddFlash(fmt.Sprintf("Failed importing database, agent %s went offline", agent), "fail")
+		session.AddFlash(fmt.Sprintf("Failed importing database, agent %s went offline", agentName), "fail")
 		os.Remove(fmt.Sprintf("%s/web/dumps/%s", workdir, filename))
 		return
 	}
 
-	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
+	ensureValues(&dbname, &dbuser, &dbpass, agent.DBVendor)
 
 	url := fmt.Sprintf("http://%s:%s/dumps/%s", config.ServerHost, config.ServerPort, filename)
 	entry := data.Row{
 		DBName:     dbname,
 		DBUser:     dbuser,
 		DBPass:     dbpass,
-		DBSID:      conn.DBSID,
+		DBSID:      agent.DBSID,
 		CreateDate: time.Now(),
 		ExpiryDate: time.Now().AddDate(0, 1, 0),
-		AgentName:  agent,
+		AgentName:  agentName,
 		Creator:    getUser(r),
 		Dumpfile:   url,
-		DBAddress:  conn.DBAddr,
-		DBPort:     conn.DBPort,
-		DBVendor:   conn.DBVendor,
+		DBAddress:  agent.DBAddr,
+		DBPort:     agent.DBPort,
+		DBVendor:   agent.DBVendor,
 		Status:     status.Started,
 	}
 
@@ -294,7 +294,7 @@ func importAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := conn.ImportDatabase(entry.ID, dbname, dbuser, dbpass, url)
+	resp, err := agent.ImportDatabase(entry.ID, dbname, dbuser, dbpass, url)
 	if err != nil {
 		session.AddFlash(err.Error(), "fail")
 
@@ -312,11 +312,11 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	var (
-		agent  = r.PostFormValue("agent")
-		dbname = r.PostFormValue("dbname")
-		dbuser = r.PostFormValue("user")
-		dbpass = r.PostFormValue("password")
-		public = r.PostFormValue("public")
+		agentName = r.PostFormValue("agent")
+		dbname    = r.PostFormValue("dbname")
+		dbuser    = r.PostFormValue("user")
+		dbpass    = r.PostFormValue("password")
+		public    = r.PostFormValue("public")
 	)
 
 	session, err := store.Get(r, "user-session")
@@ -325,26 +325,26 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Save(r, w)
 
-	conn, ok := registry.Get(agent)
+	agent, ok := registry.Get(agentName)
 	if !ok {
-		session.AddFlash(fmt.Sprintf("Failed creating database, agent %s went offline", agent), "fail")
+		session.AddFlash(fmt.Sprintf("Failed creating database, agent %s went offline", agentName), "fail")
 		return
 	}
 
-	ensureValues(&dbname, &dbuser, &dbpass, conn.DBVendor)
+	ensureValues(&dbname, &dbuser, &dbpass, agent.DBVendor)
 
 	entry := data.Row{
 		DBName:     dbname,
 		DBUser:     dbuser,
 		DBPass:     dbpass,
-		DBSID:      conn.DBSID,
+		DBSID:      agent.DBSID,
 		CreateDate: time.Now(),
 		ExpiryDate: time.Now().AddDate(0, 1, 0),
-		AgentName:  agent,
+		AgentName:  agentName,
 		Creator:    getUser(r),
-		DBAddress:  conn.DBAddr,
-		DBPort:     conn.DBPort,
-		DBVendor:   conn.DBVendor,
+		DBAddress:  agent.DBAddr,
+		DBPort:     agent.DBPort,
+		DBVendor:   agent.DBVendor,
 		Status:     status.Success,
 	}
 
@@ -361,7 +361,7 @@ func createAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ID := registry.ID()
-	resp, err := conn.CreateDatabase(ID, dbname, dbuser, dbpass)
+	resp, err := agent.CreateDatabase(ID, dbname, dbuser, dbpass)
 	if err != nil {
 		session.AddFlash(err.Error(), "fail")
 		return
@@ -535,7 +535,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, ok := registry.Get(dbe.AgentName)
+	agent, ok := registry.Get(dbe.AgentName)
 	if !ok {
 		logger.Error("Agent %q is offline, can't drop database with id '%d'", dbe.AgentName, ID)
 		session.AddFlash("Unable to drop database: Agent is down.", "fail")
@@ -546,7 +546,7 @@ func drop(w http.ResponseWriter, r *http.Request) {
 
 	db.Update(&dbe)
 
-	go dropAsync(conn, ID, dbe.DBName, dbe.DBUser)
+	go dropAsync(agent, ID, dbe.DBName, dbe.DBUser)
 
 	session.AddFlash("Started to drop the database.", "msg")
 }
@@ -582,7 +582,6 @@ func exportAction(w http.ResponseWriter, r *http.Request) {
 	defer session.Save(r, w)
 
 	user := getUser(r)
-
 	if user == "" {
 		logger.Error("Export database tried without a logged in user.")
 		return
@@ -609,7 +608,7 @@ func exportAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, ok := registry.Get(dbe.AgentName)
+	agent, ok := registry.Get(dbe.AgentName)
 	if !ok {
 		logger.Error("Agent %q is offline, can't export database with id '%d'", dbe.AgentName, ID)
 		session.AddFlash("Unable to export database: Agent is down.", "fail")
@@ -620,7 +619,7 @@ func exportAction(w http.ResponseWriter, r *http.Request) {
 
 	db.Update(&dbe)
 
-	resp, err := conn.ExportDatabase(ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	resp, err := agent.ExportDatabase(ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
 	if err != nil {
 		session.AddFlash(err.Error(), "fail")
 		return
@@ -707,14 +706,14 @@ func recreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, ok := registry.Get(dbe.AgentName)
+	agent, ok := registry.Get(dbe.AgentName)
 	if !ok {
 		logger.Error("Agent %q is offline, can't recreate database with id '%d'", dbe.AgentName, ID)
 		session.AddFlash("Unable to recreate database: Agent is down.", "fail")
 		return
 	}
 
-	resp, err := conn.ExportDatabase(ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	resp, err := agent.ExportDatabase(ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
 	if err != nil {
 		session.AddFlash(err.Error(), "fail")
 		return
@@ -723,27 +722,27 @@ func recreate(w http.ResponseWriter, r *http.Request) {
 	session.AddFlash(resp, "msg")
 }
 
-func recreateAsync(conn model.Agent, dbe data.Row) {
-	_, err := conn.DropDatabase(dbe.ID, dbe.DBName, dbe.DBUser)
+func recreateAsync(agent model.Agent, dbe data.Row) {
+	_, err := agent.DropDatabase(dbe.ID, dbe.DBName, dbe.DBUser)
 	if err != nil {
 		dbe.Status = status.DropDatabaseFailed
 		dbe.Message = err.Error()
 
 		db.Update(&dbe)
 
-		logger.Error("Recreate: couldn't drop database %q on agent %q: %s", dbe.DBName, conn.ShortName, err)
+		logger.Error("Recreate: couldn't drop database %q on agent %q: %s", dbe.DBName, agent.ShortName, err)
 
 		return
 	}
 
-	_, err = conn.CreateDatabase(dbe.ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
+	_, err = agent.CreateDatabase(dbe.ID, dbe.DBName, dbe.DBUser, dbe.DBPass)
 	if err != nil {
 		dbe.Status = status.CreateDatabaseFailed
 		dbe.Message = err.Error()
 
 		db.Update(&dbe)
 
-		logger.Error("Recreate: couldn't create database %q on agent %q: %s", dbe.DBName, conn.ShortName, err)
+		logger.Error("Recreate: couldn't create database %q on agent %q: %s", dbe.DBName, agent.ShortName, err)
 
 		return
 	}
@@ -864,7 +863,6 @@ func upd8(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if strings.HasPrefix(msg.Message, "Export completed:") {
-
 			agent, _ := registry.Get(dbe.AgentName)
 			exportDumpFileName := strings.TrimPrefix(msg.Message, "Export completed:")
 
