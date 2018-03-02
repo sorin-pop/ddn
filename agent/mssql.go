@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
@@ -94,9 +93,9 @@ func (db *mssql) ImportDatabase(dbRequest model.DBRequest) error {
 }
 
 func (db *mssql) ExportDatabase(dbRequest model.DBRequest) (string, error) {
-	fullDumpFilename := fmt.Sprintf("%s_%s.dmp", dbRequest.DatabaseName, time.Now().Format("20060102150405"))
+	//fullDumpFilename := fmt.Sprintf("%s_%s.dmp", dbRequest.DatabaseName, time.Now().Format("20060102150405"))
 
-	return fullDumpFilename, nil
+	return "", fmt.Errorf("export not yet implemented for MSSQL")
 }
 
 func (db *mssql) ListDatabase() ([]string, error) {

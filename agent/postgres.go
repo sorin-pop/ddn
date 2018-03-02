@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
@@ -229,9 +228,9 @@ func (db *postgres) ImportDatabase(dbreq model.DBRequest) error {
 }
 
 func (db *postgres) ExportDatabase(dbRequest model.DBRequest) (string, error) {
-	fullDumpFilename := fmt.Sprintf("%s_%s.dmp", dbRequest.DatabaseName, time.Now().Format("20060102150405"))
+	//fullDumpFilename := fmt.Sprintf("%s_%s.dmp", dbRequest.DatabaseName, time.Now().Format("20060102150405"))
 
-	return fullDumpFilename, nil
+	return "", fmt.Errorf("export not yet implemented for PostgreSQL")
 }
 
 func (db *postgres) Version() (string, error) {
