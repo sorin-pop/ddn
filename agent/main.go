@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"os/user"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -24,12 +23,11 @@ var (
 	conf       Config
 	db         Database
 	port       string
-	usr        *user.User
 	hostname   string
 	startup    time.Time
 	registered bool
-
-	agent model.Agent
+	workdir    string
+	agent      model.Agent
 )
 
 func main() {
@@ -80,11 +78,6 @@ func main() {
 		log.SetOutput(logOut)
 	}
 
-	usr, err = user.Current()
-	if err != nil {
-		logger.Fatal("couldn't get default user: ", err.Error())
-	}
-
 	hostname, err = os.Hostname()
 	if err != nil {
 		logger.Fatal("couldn't get hostname: ", err.Error())
@@ -118,14 +111,31 @@ func main() {
 		conf.Version = ver
 	}
 
+	workdir, err = os.Getwd()
+	if err != nil {
+		logger.Fatal("could not determine current directory")
+	}
+
 	// Check and create the 'dumps' folder
-	if _, err = os.Stat(filepath.Join(".", "dumps")); os.IsNotExist(err) {
-		err = os.Mkdir("dumps", os.ModePerm)
+	dumps := filepath.Join(workdir, "dumps")
+	if _, err = os.Stat(dumps); os.IsNotExist(err) {
+		err = os.Mkdir(dumps, os.ModePerm)
 		if err != nil {
 			logger.Fatal("Couldn't create dumps folder, please create it manually: %v", err)
 		}
 
 		logger.Info("Created 'dumps' folder")
+	}
+
+	// Check and create the 'exports' folder
+	exports := filepath.Join(workdir, "exports")
+	if _, err = os.Stat(exports); os.IsNotExist(err) {
+		err = os.Mkdir(exports, os.ModePerm)
+		if err != nil {
+			logger.Fatal("Couldn't create 'exports' folder, please create it manually: %v", err)
+		}
+
+		logger.Info("Created 'exports' folder")
 	}
 
 	// For Oracle, create or replace the stored procedure that executes the import, by running the sql/oracle/import_procedure.sql file
@@ -134,6 +144,12 @@ func main() {
 		err := odb.RefreshImportStoredProcedure()
 		if err != nil {
 			logger.Fatal("oracle: %v", err)
+		}
+
+		logger.Info("Creating or replacing the EXP_DIR directory object.")
+		err = odb.CreateExpDir(filepath.Join(workdir, "exports"))
+		if err != nil {
+			logger.Fatal("Error creating or replacing the EXP_DIR directory object: %v", err)
 		}
 	}
 

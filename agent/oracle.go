@@ -3,10 +3,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
 )
 
@@ -27,13 +30,20 @@ func (db *oracle) Alive() error {
 }
 
 func (db *oracle) CreateDatabase(dbRequest model.DBRequest) error {
-
 	err := db.Alive()
 	if err != nil {
 		return fmt.Errorf("alive check failed: %s", err.Error())
 	}
 
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_schema.sql", dbRequest.Username, dbRequest.Password, conf.DatafileDir}
+	args := []string{
+		"-L",
+		"-S",
+		fmt.Sprintf("%s/%s", conf.User, conf.Password),
+		"@./sql/oracle/create_schema.sql",
+		dbRequest.Username,
+		dbRequest.Password,
+		conf.DatafileDir,
+	}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -42,15 +52,20 @@ func (db *oracle) CreateDatabase(dbRequest model.DBRequest) error {
 	}
 
 	if res.exitCode != 0 {
-		return fmt.Errorf("unable to create database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		return fmt.Errorf("unable to create database: %v", res)
 	}
 
 	return nil
 }
 
 func (db *oracle) DropDatabase(dbRequest model.DBRequest) error {
-
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/drop_schema.sql", dbRequest.Username}
+	args := []string{
+		"-L",
+		"-S",
+		fmt.Sprintf("%s/%s", conf.User, conf.Password),
+		"@./sql/oracle/drop_schema.sql",
+		dbRequest.Username,
+	}
 
 	res := RunCommand(conf.Exec, args...)
 
@@ -59,26 +74,54 @@ func (db *oracle) DropDatabase(dbRequest model.DBRequest) error {
 	}
 
 	if res.exitCode != 0 {
-		return fmt.Errorf("Unable to drop database:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		return fmt.Errorf("unable to drop database: %v", res)
 	}
 
 	return nil
 }
 
 func (db *oracle) ImportDatabase(dbRequest model.DBRequest) error {
-
 	dumpDir, fileName := filepath.Split(dbRequest.DumpLocation)
 
-	// Start the import
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/import_dump.sql", dumpDir, fileName, dbRequest.Username, dbRequest.Password, conf.DatafileDir}
+	args := []string{
+		"-L",
+		"-S",
+		fmt.Sprintf("%s/%s", conf.User, conf.Password),
+		"@./sql/oracle/import_dump.sql",
+		dumpDir,
+		fileName,
+		dbRequest.Username,
+		dbRequest.Password,
+		conf.DatafileDir,
+	}
 
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		return fmt.Errorf("Dump import seems to have failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		return fmt.Errorf("dump import seems to have failed: %v", res)
 	}
 
 	return nil
+}
+
+func (db *oracle) ExportDatabase(dbRequest model.DBRequest) (string, error) {
+	fullDumpFilename := fmt.Sprintf("%s_%s.dmp", dbRequest.DatabaseName, time.Now().Format("20060102150405"))
+	// Start the export
+	args := []string{
+		fmt.Sprintf("%s/%s", conf.User, conf.Password),
+		fmt.Sprintf("schemas=%s", dbRequest.DatabaseName),
+		"directory=EXP_DIR",
+		fmt.Sprintf("dumpfile=%s", fullDumpFilename),
+		fmt.Sprintf("logfile=%s.log", strings.TrimSuffix(fullDumpFilename, path.Ext(fullDumpFilename))),
+	}
+
+	res := RunCommand("expdp", args...)
+
+	if res.exitCode != 0 {
+		return "", fmt.Errorf("schema export seems to have failed: %v", res)
+	}
+
+	return fullDumpFilename, nil
 }
 
 func (db *oracle) ListDatabase() ([]string, error) {
@@ -86,13 +129,17 @@ func (db *oracle) ListDatabase() ([]string, error) {
 }
 
 func (db *oracle) Version() (string, error) {
-
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/get_db_version.sql"}
+	args := []string{
+		"-L",
+		"-S",
+		fmt.Sprintf("%s/%s", conf.User, conf.Password),
+		"@./sql/oracle/get_db_version.sql",
+	}
 
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		return "", fmt.Errorf("Unable to get Oracle version:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d", res.stdout, res.stderr, res.exitCode)
+		return "", fmt.Errorf("unable to get Oracle version: %v", res)
 	}
 
 	return strings.TrimSpace(res.stdout), nil
@@ -116,16 +163,34 @@ func (db *oracle) ValidateDump(path string) (string, error) {
 }
 
 func (db *oracle) RefreshImportStoredProcedure() error {
-	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/import_procedure.sql"}
+	args := []string{
+		"-L",
+		"-S",
+		fmt.Sprintf("%s/%s", conf.User, conf.Password),
+		"@./sql/oracle/import_procedure.sql",
+	}
 
 	res := RunCommand(conf.Exec, args...)
 
 	if res.exitCode != 0 {
-		missingGrantsMessage := fmt.Sprintf("\nMissing grants from SYS perhaps?\n")
-		missingGrantsMessage = fmt.Sprintf("%sgrant select on dba_datapump_jobs to %s;\n", missingGrantsMessage, conf.User)
-		missingGrantsMessage = fmt.Sprintf("%sgrant create any directory to %s;\n", missingGrantsMessage, conf.User)
-		missingGrantsMessage = fmt.Sprintf("%sgrant create external job to %s;\n", missingGrantsMessage, conf.User)
-		return fmt.Errorf("Creating import procedure failed:\n> stdout:\n'%s'\n> stderr:\n'%s'\n> exitCode: %d\n%s", res.stdout, res.stderr, res.exitCode, missingGrantsMessage)
+		logger.Error("Missing grants from SYS perhaps?")
+		logger.Error("sgrant select on dba_datapump_jobs to %s;", conf.User)
+		logger.Error("%sgrant create any directory to %s;\n", conf.User)
+		logger.Error("%sgrant create external job to %s;\n", conf.User)
+
+		return fmt.Errorf("creating import procedure failed: %v", res)
+	}
+
+	return nil
+}
+
+func (db *oracle) CreateExpDir(expDirPath string) error {
+	args := []string{"-L", "-S", fmt.Sprintf("%s/%s", conf.User, conf.Password), "@./sql/oracle/create_exp_dir.sql", expDirPath}
+
+	res := RunCommand(conf.Exec, args...)
+
+	if res.exitCode != 0 {
+		return fmt.Errorf("creating EXP_DIR directory failed: %v", res)
 	}
 
 	return nil

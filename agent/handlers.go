@@ -194,6 +194,31 @@ func importDatabase(w http.ResponseWriter, r *http.Request) {
 	go startImport(dbreq)
 }
 
+// exportDatabase will export the specified database to a dump file
+func exportDatabase(w http.ResponseWriter, r *http.Request) {
+	var (
+		dbreq model.DBRequest
+		msg   inet.Message
+	)
+
+	err := json.NewDecoder(r.Body).Decode(&dbreq)
+	if err != nil {
+		logger.Error("couldn't decode json request: %v", err)
+
+		inet.SendResponse(w, http.StatusBadRequest, inet.ErrorJSONResponse(err))
+		return
+	}
+
+	logger.Debug("Starting export process for database %q", dbreq.DatabaseName)
+
+	msg.Status = status.Accepted
+	msg.Message = "Understood request, starting export process."
+
+	inet.SendResponse(w, http.StatusOK, msg)
+
+	go startExport(dbreq)
+}
+
 func apiSetLogLevel(w http.ResponseWriter, r *http.Request) {
 	var lvl logger.LogLevel
 

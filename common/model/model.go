@@ -77,7 +77,6 @@ type PushSubscription struct {
 
 // CreateDatabase sends a request to the agent to create a database.
 func (a Agent) CreateDatabase(id int, dbname, dbuser, dbpass string) (string, error) {
-
 	if ok := sutils.Present(dbname, dbuser, dbpass); !ok {
 		return "", fmt.Errorf("asked to create database with missing values: dbname: %q, dbuser: %q, dbpass: %q", dbname, dbuser, dbpass)
 	}
@@ -109,9 +108,20 @@ func (a Agent) ImportDatabase(id int, dbname, dbuser, dbpass, dumploc string) (s
 	return a.executeAction(dbreq, "import-database")
 }
 
+// ExportDatabase starts the export on the agent.
+func (a Agent) ExportDatabase(id int, dbname string, dbuser string, dbpass string) (string, error) {
+	dbreq := DBRequest{
+		ID:           id,
+		DatabaseName: dbname,
+		Username:     dbuser,
+		Password:     dbpass,
+	}
+
+	return a.executeAction(dbreq, "export-database")
+}
+
 // DropDatabase sends a request to the agent to drop the specified database.
 func (a Agent) DropDatabase(id int, dbname, dbuser string) (string, error) {
-
 	if ok := sutils.Present(dbname, dbuser); !ok {
 		return "", fmt.Errorf("asked to drop database with missing values: dbname: %q, dbuser: %q", dbname, dbuser)
 	}

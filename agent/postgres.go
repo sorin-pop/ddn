@@ -227,6 +227,12 @@ func (db *postgres) ImportDatabase(dbreq model.DBRequest) error {
 	return nil
 }
 
+func (db *postgres) ExportDatabase(dbRequest model.DBRequest) (string, error) {
+	//fullDumpFilename := fmt.Sprintf("%s_%s.dmp", dbRequest.DatabaseName, time.Now().Format("20060102150405"))
+
+	return "", fmt.Errorf("export not yet implemented for PostgreSQL")
+}
+
 func (db *postgres) Version() (string, error) {
 	var buf bytes.Buffer
 

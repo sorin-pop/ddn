@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/djavorszky/ddn/common/logger"
 	"github.com/djavorszky/ddn/common/model"
@@ -255,7 +256,11 @@ func (db *mysql) ImportDatabase(dbreq model.DBRequest) error {
 	defer file.Close()
 
 	// Start the import
-	args := []string{fmt.Sprintf("-u%s", dbreq.Username), fmt.Sprintf("-p%s", dbreq.Password), dbreq.DatabaseName}
+	args := []string{
+		fmt.Sprintf("-u%s", dbreq.Username),
+		fmt.Sprintf("-p%s", dbreq.Password),
+		dbreq.DatabaseName,
+	}
 
 	cmd := exec.Command(conf.Exec, args...)
 
@@ -269,6 +274,39 @@ func (db *mysql) ImportDatabase(dbreq model.DBRequest) error {
 	}
 
 	return nil
+}
+
+// ExportDatabase exports the database to dumpfile or returns an error
+// if it failed for some reason.
+func (db *mysql) ExportDatabase(dbreq model.DBRequest) (string, error) {
+	var errBuf bytes.Buffer
+
+	fullDumpFilename := fmt.Sprintf("%s_%s.sql", dbreq.DatabaseName, time.Now().Format("20060102150405"))
+
+	outputfile, err := os.Create(filepath.Join(workdir, "exports", fullDumpFilename))
+	if err != nil {
+		return "", fmt.Errorf("could not create dumpfile '%s': %s", fullDumpFilename, err.Error())
+	}
+	defer outputfile.Close()
+
+	args := []string{
+		fmt.Sprintf("-u%s", dbreq.Username),
+		fmt.Sprintf("-p%s", dbreq.Password),
+		dbreq.DatabaseName,
+	}
+
+	cmd := exec.Command("mysqldump", args...)
+
+	cmd.Stdout = outputfile
+	cmd.Stderr = &errBuf
+
+	err = cmd.Run()
+
+	if err != nil {
+		return "", fmt.Errorf("could not execute mysqldump command: %s", strip(errBuf.String()))
+	}
+
+	return fullDumpFilename, nil
 }
 
 func (db *mysql) Version() (string, error) {
