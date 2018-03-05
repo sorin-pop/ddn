@@ -515,8 +515,6 @@ func exportAPIDB(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info("Um ok done I guess")
-
 	inet.SendSuccess(w, http.StatusOK, resp)
 }
 
