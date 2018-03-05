@@ -507,31 +507,14 @@ Example
 `${id}` - the id of the metadata itself.
 
 ### Returns
-Returns all information on the exported database.
+
+Returns a success message if export started, or error if not.
 
 Example success return:
 ```
 {
-   "success":true,
-   "data":{
-      "id":15,
-      "vendor":"mariadb",
-      "dbname":"gel_component",
-      "dbuser":"performance_air",
-      "dbpass":"gel_gel",
-      "sid":"",
-      "dumplocation":"",
-      "createdate":"2017-12-11T15:14:27.03707071Z",
-      "expirydate":"2018-01-11T15:14:27.037070856Z",
-      "creator":"daniel.javorszky@liferay.com",
-      "agent":"mariadb-10",
-      "dbaddress":"172.17.0.2",
-      "dbport":"3309",
-      "status":100,
-      "comment":"",
-      "message":"",
-      "public":0
-   }
+  "success": true,
+  "data": "Understood request, starting export process."
 }
 ```
 
