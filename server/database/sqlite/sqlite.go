@@ -205,6 +205,16 @@ func (lite *DB) Insert(row *data.Row) error {
 		return fmt.Errorf("database down: %s", err.Error())
 	}
 
+	var count int
+	err := lite.conn.QueryRow("SELECT count(*) FROM `databases` WHERE dbName = ? AND agentName = ?", row.DBName, row.AgentName).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed existence check: %v", err)
+	}
+
+	if count == 1 {
+		return fmt.Errorf("Database with name %q on agent %q already exists", row.DBName, row.AgentName)
+	}
+
 	query := "INSERT INTO `databases` (`dbname`, `dbuser`, `dbpass`, `dbsid`, `dumpfile`, `createDate`, `expiryDate`, `creator`, `agentName`, `dbAddress`, `dbPort`, `dbvendor`, `status`, `message`, `visibility`, `comment`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	res, err := lite.conn.Exec(query,
