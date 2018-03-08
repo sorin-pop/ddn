@@ -188,6 +188,21 @@ func TestFetchByID(t *testing.T) {
 	}
 }
 
+func TestDupInsert(t *testing.T) {
+	insertTest := getTestEntry("testDupInsert", "quack")
+	err := lite.Insert(&insertTest)
+	if err != nil {
+		t.Errorf("lite.Insert(insertTest) failed with error: %v", err)
+		return
+	}
+
+	err = lite.Insert(&insertTest)
+	if err == nil {
+		t.Errorf("Second lite.Insert(insertTest) should have failed.")
+		return
+	}
+}
+
 func TestFetchByDBNameAgent(t *testing.T) {
 	fetchTest2 := getTestEntry("testFetch2", "thirdDB")
 	err := lite.Insert(&fetchTest2)
@@ -567,35 +582,6 @@ func TestDeleteUserPushNotification(t *testing.T) {
 
 			if err := lite.DeletePushSubscription(tmpSub, tt.subscriber); (err != nil) != tt.wantErr {
 				t.Errorf("DB.FetchUserPushSubscriptions() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestDB_Insert(t *testing.T) {
-	type fields struct {
-		DBLocation string
-		conn       *sql.DB
-	}
-	type args struct {
-		row *data.Row
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			lite := &DB{
-				DBLocation: tt.fields.DBLocation,
-				conn:       tt.fields.conn,
-			}
-			if err := lite.Insert(tt.args.row); (err != nil) != tt.wantErr {
-				t.Errorf("DB.Insert() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
