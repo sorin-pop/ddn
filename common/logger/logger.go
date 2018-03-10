@@ -36,7 +36,7 @@ const (
 )
 
 // Level is to be used to control the log level of the application.
-var Level = DEBUG
+var Level = INFO
 
 // Fatal should be used to log a critical incident and exit the application
 func Fatal(msg string, args ...interface{}) {
