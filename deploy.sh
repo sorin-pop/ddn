@@ -1,18 +1,19 @@
 #!/bin/bash
 
-rootloc="`pwd`/.."
+rootloc=`pwd`
 
 echo "building binary of server.."
-cd $rootloc/server
-go build -ldflags "-X main.version=`date -u +%Y%m%d.%H%M%S`"
+docker build -f Dockerfile.build -t djavorszky/ddn:build .
+
+docker container create --name extract djavorszky/ddn:build  
+docker container cp extract:/go/src/github.com/djavorszky/ddn/server/server ./dist/server
+docker container rm -f extract
 
 echo "updating libraries"
 cd $rootloc/server/web
 npm install -u
-cd ..
 
 echo "copying server.."
-cp $rootloc/server/server $rootloc/dist/server
 cp -r $rootloc/server/web $rootloc/dist/web
 
 cd $rootloc/dist
@@ -28,4 +29,4 @@ echo "starting container.."
 docker run -dit -p 7010:7010 --name ddn-server -v $rootloc/dist/data:/ddn/data -v $rootloc/dist/ftp:/ddn/ftp djavorszky/ddn:latest
 
 echo "removing artefacts.."
-rm -rf server web 
+#rm -rf $rootloc/dist/server $rootloc/dist/web 

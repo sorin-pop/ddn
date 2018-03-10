@@ -1,0 +1,6 @@
+FROM golang:1.10.0
+WORKDIR /go/src/github.com/djavorszky/ddn
+COPY agent ./agent
+COPY common ./common
+COPY server ./server
+RUN go get -d ./... && cd server && go build -ldflags "-X main.version=`date -u +%Y%m%d.%H%M%S`"
