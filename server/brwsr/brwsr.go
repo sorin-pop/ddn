@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var root string
@@ -27,10 +28,11 @@ type FileList struct {
 
 // Entry corresponds to an item on the path - can be either a file or a folder
 type Entry struct {
-	Name   string
-	Path   string
-	Size   int64
-	Folder bool
+	Name    string
+	Path    string
+	ModTime time.Time
+	Size    int64
+	Folder  bool
 }
 
 // Mount checks if the path is "mountable", meaning, it's accessible
@@ -82,10 +84,11 @@ func List(relPath string) (FileList, error) {
 		}
 
 		entry := Entry{
-			Name:   item.Name(),
-			Path:   filepath.Join(relPath, item.Name()),
-			Size:   item.Size(),
-			Folder: item.IsDir(),
+			Name:    item.Name(),
+			Path:    filepath.Join(relPath, item.Name()),
+			Size:    item.Size(),
+			ModTime: item.ModTime(),
+			Folder:  item.IsDir(),
 		}
 
 		res = append(res, entry)

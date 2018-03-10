@@ -8,11 +8,12 @@
             <tr>
                 <th>Name</th>
                 <th>Size</th>
+                <th>Last modified</th>
             </tr>
         </thead>
         <tbody>
         {{if not .FileList.OnRoot}}
-            <tr><td colspan=2><a href="/browse/{{.FileList.Parent}}"><i class="fa fa-level-up" aria-hidden="true"></i> Go up..</a></td></tr>
+            <tr><td colspan=3><a href="/browse/{{.FileList.Parent}}"><i class="fa fa-level-up" aria-hidden="true"></i> Go up..</a></td></tr>
         {{end}}
 
         {{range .FileList.Entries}}
@@ -22,10 +23,12 @@
                     <a href="/browse/{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i> {{.Name}} </a>
                 </td>
                 <td>n/a</td>
+                <td data-order="{{.ModTime.Unix}}">{{ .ModTime.Format "January 02, 2006 15:04:05"}}</td>
             {{else}}
                 <td><i class="fa fa-file" aria-hidden="true"></i> {{.Name}}
                 {{if .Importable}} - <a href="/srvimport?dump={{.Path}}">IMPORT</a> {{end}}
                 <td>{{.FriendlySize}}</td>
+                <td data-order="{{.ModTime.Unix}}">{{ .ModTime.Format "January 02, 2006 15:04:05"}}</td>
             {{end}}
         </tr>
         {{end}}
