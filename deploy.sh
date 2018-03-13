@@ -29,4 +29,4 @@ echo "starting container.."
 docker run -dit -p 7010:7010 --name ddn-server -v $rootloc/dist/data:/ddn/data -v $rootloc/dist/ftp:/ddn/ftp djavorszky/ddn:latest
 
 echo "removing artefacts.."
-#rm -rf $rootloc/dist/server $rootloc/dist/web 
+rm -rf $rootloc/dist/server $rootloc/dist/web 
