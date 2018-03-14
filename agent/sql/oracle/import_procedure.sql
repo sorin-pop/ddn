@@ -45,6 +45,7 @@ source_db_version VARCHAR2(2048);
 
 job_doesnt_exist EXCEPTION;
 PRAGMA EXCEPTION_INIT( job_doesnt_exist, -27475 );
+err_msg VARCHAR2(200);
 
 object_file_name VARCHAR2(2048);
 object_file UTL_FILE.FILE_TYPE;
@@ -465,13 +466,15 @@ BEGIN
 	end if;
 EXCEPTION
     WHEN OTHERS THEN
-		dbms_output.put_line('An error has occurred: ' || SQLERRM);
+      	err_msg := 'An error has occurred: ' || SUBSTR(SQLERRM, 1, 200);
+		dbms_output.put_line(err_msg);
 		DBMS_DATAPUMP.DETACH(handle1);
 		begin
 			DBMS_SCHEDULER.DROP_JOB(jn);
 		exception when job_doesnt_exist then
 			null;
 		end;
+		raise_application_error(-20000, err_msg);
 
 END import_dump;
 /
