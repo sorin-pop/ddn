@@ -607,7 +607,7 @@ func apiSetVisibility(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !hasAccess(meta, user) {
+	if !isOwner(meta, user) {
 		inet.SendFailure(w, http.StatusForbidden, errs.AccessDenied)
 		return
 	}
@@ -811,6 +811,10 @@ func hasAccess(meta data.Row, user string) bool {
 		return false
 	}
 	return true
+}
+
+func isOwner(meta data.Row, user string) bool {
+	return meta.Creator == user
 }
 
 type errResult struct {
