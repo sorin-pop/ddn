@@ -40,7 +40,6 @@ seconds_string VARCHAR2(100) := '';
 master_table_present VARCHAR2(2048);
 metadata_encrypted VARCHAR2(2048);
 data_encrypted	VARCHAR2(2048);
-dump_encrypted BOOLEAN := FALSE;
 source_db_version VARCHAR2(2048);
 
 job_doesnt_exist EXCEPTION;
@@ -143,9 +142,10 @@ BEGIN
 			END IF;
 		EXCEPTION
 			WHEN NO_DATA_FOUND THEN
-				dbms_output.put_line('Could not determine if dump file ' || dump_files(dump_file_iterator) || ' contains the master table.');
-				dbms_output.put_line('This could be due to the fact that you are running this script on a different major version of Oracle than the one the dump originates from.');
-				RETURN;
+				err_msg := 'Could not determine if dump file ' || dump_files(dump_file_iterator) || ' contains the master table.';
+				err_msg := err_msg || chr(10) || 'This could be due to the fact that you are running this script on a different major version of Oracle than the one the dump originates from.';
+				dbms_output.put_line(err_msg);
+				raise_application_error(-20000, err_msg);
 		END;
 		
 		-- is it encrypted?(possible only if the export was done from at least Oracle 11g)
@@ -159,14 +159,15 @@ BEGIN
 				IF NOT (metadata_encrypted = '0' AND data_encrypted = '0') THEN
 					-- dump is encrypted
 					dbms_output.put_line('Dump file is encrypted!');
-					dump_encrypted := TRUE;
+					raise_application_error(-20000, 'Dump is encrypted! Handling encrypted dumps is currently not a feature in CloudDB. Please contact CloudDB admins for further help.');
 				END IF;
 			END IF;	
 		EXCEPTION
 			WHEN NO_DATA_FOUND THEN
-				dbms_output.put_line('Could not determine source database version or could not determine whether dump is encrypted or not.');
-				dbms_output.put_line('This could be due to the fact that you are running this script on a different major version of Oracle than the one the dump originates from.');
-				RETURN;
+				err_msg := 'Could not determine source database version or could not determine whether dump is encrypted or not.';
+				err_msg := err_msg || chr(10) || 'This could be due to the fact that you are running this script on a different major version of Oracle than the one the dump originates from.';
+				dbms_output.put_line(err_msg);
+				raise_application_error(-20000, err_msg);
 		END;
 		
 		-- list full info contents
@@ -244,7 +245,7 @@ BEGIN
 		
 		
 		-- start a datapump job to import the dump file
-		handle1 := dbms_datapump.open (operation => 'IMPORT', job_mode => 'SCHEMA', job_name => ts);
+		handle1 := dbms_datapump.open (operation => 'IMPORT', job_mode => 'FULL', job_name => ts);
 		dbms_datapump.add_file(handle => handle1, filename => ts || '.LOG', directory => 'DATA_PUMP_DIR', filetype => DBMS_DATAPUMP.KU$_FILE_TYPE_LOG_FILE); 
 		dbms_datapump.metadata_filter(handle => handle1, name => 'SCHEMA_EXPR', value => 'IN(' || LTRIM(o_schemas,',') || ')');
 		
@@ -266,6 +267,7 @@ BEGIN
 		import_start := CURRENT_TIMESTAMP;
 		dbms_datapump.start_job(handle => handle1);
 		dbms_datapump.wait_for_job(handle => handle1, job_state => js);
+		
 		import_stop := CURRENT_TIMESTAMP;
 		dbms_output.put_line('Import of ' || fn || ' has been ' || js);
 		duration := import_stop - import_start;
